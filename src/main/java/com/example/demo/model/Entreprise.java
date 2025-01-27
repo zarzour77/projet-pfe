@@ -1,0 +1,30 @@
+package com.example.demo.model;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
+
+import java.util.List;
+
+@Entity
+public class Entreprise extends Utilisateur {
+    @OneToMany(mappedBy = "entreprise")
+    private List<Mission> missions;
+
+    public Entreprise(List<Mission> missions) {
+        this.missions = missions;
+    }
+    public Entreprise(String adresse, List<Avis> avisRecus, List<Avis> avisRediges, String email, Long id, String nom, List<Notification> notifications, String password, String telephone, List<Mission> missions) {
+        super(avisRecus, adresse, avisRediges, email, id, nom, notifications, password, telephone);
+        this.missions = missions;
+    }
+
+    public Entreprise() {}
+
+    public List<Mission> getMissions() {
+        return missions;
+    }
+
+    public void setMissions(List<Mission> missions) {
+        this.missions = missions;
+    }
+}
