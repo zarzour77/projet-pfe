@@ -19,14 +19,14 @@ public class Competence {
     private List<Mission> missions;
 
     @ManyToMany(mappedBy = "competences")
-    private List<Utilisateur> utilisateurs;
+    private List<User> users;
     public Competence() {}
-    public Competence(List<Consultant> consultants, Long id, List<Mission> missions, String nom, List<Utilisateur> utilisateurs) {
+    public Competence(List<Consultant> consultants, Long id, List<Mission> missions, String nom, List<User> users) {
         this.consultants = consultants;
         this.id = id;
         this.missions = missions;
         this.nom = nom;
-        this.utilisateurs = utilisateurs;
+        this.users = users;
     }
 
     public List<Consultant> getConsultants() {
@@ -61,11 +61,11 @@ public class Competence {
         this.nom = nom;
     }
 
-    public List<Utilisateur> getUtilisateurs() {
-        return utilisateurs;
+    public List<User> getUtilisateurs() {
+        return users;
     }
 
-    public void setUtilisateurs(List<Utilisateur> utilisateurs) {
-        this.utilisateurs = utilisateurs;
+    public void setUtilisateurs(List<User> users) {
+        this.users = users;
     }
 }

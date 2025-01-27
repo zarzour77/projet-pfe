@@ -16,11 +16,11 @@ public class Transaction {
 
     @ManyToOne
     @JoinColumn(name = "debiteur_id")
-    private Utilisateur expéditeur;
+    private User expéditeur;
 
     @ManyToOne
     @JoinColumn(name = "destinataire_id")
-    private Utilisateur destinataire;
+    private User destinataire;
 
     @ManyToOne
     @JoinColumn(name = "mission_id")
@@ -28,7 +28,7 @@ public class Transaction {
 
     public Transaction() {}
 
-    public Transaction(String type, Double montant, Mission mission, Long id, Utilisateur expéditeur, Utilisateur destinataire, Date date) {
+    public Transaction(String type, Double montant, Mission mission, Long id, User expéditeur, User destinataire, Date date) {
         this.type = type;
         this.montant = montant;
         this.mission = mission;
@@ -46,19 +46,19 @@ public class Transaction {
         this.date = date;
     }
 
-    public Utilisateur getDestinataire() {
+    public User getDestinataire() {
         return destinataire;
     }
 
-    public void setDestinataire(Utilisateur destinataire) {
+    public void setDestinataire(User destinataire) {
         this.destinataire = destinataire;
     }
 
-    public Utilisateur getExpéditeur() {
+    public User getExpéditeur() {
         return expéditeur;
     }
 
-    public void setExpéditeur(Utilisateur expéditeur) {
+    public void setExpéditeur(User expéditeur) {
         this.expéditeur = expéditeur;
     }
 

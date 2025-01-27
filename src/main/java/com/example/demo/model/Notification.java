@@ -10,19 +10,19 @@ public class Notification {
 
     @ManyToOne
     @JoinColumn(name = "utilisateur_id")
-    private Utilisateur utilisateur;
+    private User user;
 
     private String message;
     private Boolean estLu;
     private String type;
     public Notification() {}
 
-    public Notification(Boolean estLu, Long id, String message, String type, Utilisateur utilisateur) {
+    public Notification(Boolean estLu, Long id, String message, String type, User user) {
         this.estLu = estLu;
         this.id = id;
         this.message = message;
         this.type = type;
-        this.utilisateur = utilisateur;
+        this.user = user;
     }
 
     public Boolean getEstLu() {
@@ -57,11 +57,11 @@ public class Notification {
         this.type = type;
     }
 
-    public Utilisateur getUtilisateur() {
-        return utilisateur;
+    public User getUtilisateur() {
+        return user;
     }
 
-    public void setUtilisateur(Utilisateur utilisateur) {
-        this.utilisateur = utilisateur;
+    public void setUtilisateur(User user) {
+        this.user = user;
     }
 }

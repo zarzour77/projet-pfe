@@ -6,7 +6,7 @@ import java.util.List;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-public class Utilisateur {
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -17,7 +17,8 @@ public class Utilisateur {
     private String telephone;
     private String adresse;
     private String password;
-    @OneToMany(mappedBy = "utilisateur")
+    private String role;
+    @OneToMany(mappedBy = "user")
     private List<Notification> notifications;
 
     @ManyToMany
@@ -30,9 +31,9 @@ public class Utilisateur {
     private List<Avis> avisRecus;
 
 
-    public Utilisateur() {}
+    public User() {}
 
-    public Utilisateur(String adresse, List<Avis> avisRecus, List<Avis> avisRediges, List<Competence> competences, String email, Long id, String nom, List<Notification> notifications, String password, String prenom, String telephone) {
+    public User(String adresse, List<Avis> avisRecus, List<Avis> avisRediges, List<Competence> competences, String email, Long id, String nom, List<Notification> notifications, String password, String prenom, String telephone , String role) {
         this.adresse = adresse;
         this.avisRecus = avisRecus;
         this.avisRediges = avisRediges;
@@ -44,9 +45,10 @@ public class Utilisateur {
         this.password = password;
         this.prenom = prenom;
         this.telephone = telephone;
+        this.role = role;
     }
 
-    public Utilisateur(List<Avis> avisRecus, String adresse, List<Avis> avisRediges, String email, Long id, String nom, List<Notification> notifications, String password, String telephone) {
+    public User(List<Avis> avisRecus, String adresse, List<Avis> avisRediges, String email, Long id, String nom, List<Notification> notifications, String password, String telephone) {
         this.avisRecus = avisRecus;
         this.adresse = adresse;
         this.avisRediges = avisRediges;
@@ -56,6 +58,15 @@ public class Utilisateur {
         this.notifications = notifications;
         this.password = password;
         this.telephone = telephone;
+    }
+
+    public User(String nom, String prenom, String telephone, String email, String encodedPassword, String role) {
+        this.nom = nom;
+        this.prenom = prenom;
+        this.telephone = telephone;
+        this.email = email;
+        this.password = encodedPassword;
+        this.role = role;
     }
 
     public String getAdresse() {
@@ -136,6 +147,14 @@ public class Utilisateur {
 
     public void setPrenom(String prenom) {
         this.prenom = prenom;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     public String getTelephone() {
