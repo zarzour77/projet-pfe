@@ -6,7 +6,7 @@ import jakarta.persistence.OneToMany;
 import java.util.List;
 
 @Entity
-public class Entreprise extends Utilisateur {
+public class Entreprise extends User {
     @OneToMany(mappedBy = "entreprise")
     private List<Mission> missions;
 

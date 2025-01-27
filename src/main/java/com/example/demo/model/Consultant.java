@@ -7,7 +7,7 @@ import jakarta.persistence.OneToMany;
 import java.util.List;
 
 @Entity
-public class Consultant extends Utilisateur {
+public class Consultant extends User {
     @ManyToMany
     private List<Competence> competences;
 
@@ -16,8 +16,8 @@ public class Consultant extends Utilisateur {
     private String portfolio;
     public Consultant() {}
 
-    public Consultant(String adresse, List<Avis> avisRecus, List<Avis> avisRediges, List<Competence> competences, String email, Long id, String nom, List<Notification> notifications, String password, String prenom, String telephone, List<Competence> competences1, String portfolio, List<Proposition> propositions) {
-        super(adresse, avisRecus, avisRediges, competences, email, id, nom, notifications, password, prenom, telephone);
+    public Consultant(String adresse, List<Avis> avisRecus, List<Avis> avisRediges, List<Competence> competences, String email, Long id, String nom, List<Notification> notifications, String password, String prenom, String telephone, List<Competence> competences1, String portfolio, List<Proposition> propositions,String role) {
+        super(adresse, avisRecus, avisRediges, competences, email, id, nom, notifications, password, prenom, telephone,role);
         this.competences = competences1;
         this.portfolio = portfolio;
         this.propositions = propositions;
