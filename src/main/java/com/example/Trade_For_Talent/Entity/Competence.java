@@ -1,4 +1,4 @@
-package com.example.demo.model;
+package com.example.Trade_For_Talent.Entity;
 
 import jakarta.persistence.*;
 
@@ -19,14 +19,14 @@ public class Competence {
     private List<Mission> missions;
 
     @ManyToMany(mappedBy = "competences")
-    private List<Utilisateur> utilisateurs;
+    private List<User> Users;
     public Competence() {}
-    public Competence(List<Consultant> consultants, Long id, List<Mission> missions, String nom, List<Utilisateur> utilisateurs) {
+    public Competence(List<Consultant> consultants, Long id, List<Mission> missions, String nom, List<User> Users) {
         this.consultants = consultants;
         this.id = id;
         this.missions = missions;
         this.nom = nom;
-        this.utilisateurs = utilisateurs;
+        this.Users = Users;
     }
 
     public List<Consultant> getConsultants() {
@@ -61,11 +61,11 @@ public class Competence {
         this.nom = nom;
     }
 
-    public List<Utilisateur> getUtilisateurs() {
-        return utilisateurs;
+    public List<User> getUsers() {
+        return Users;
     }
 
-    public void setUtilisateurs(List<Utilisateur> utilisateurs) {
-        this.utilisateurs = utilisateurs;
+    public void setUsers(List<User> Users) {
+        this.Users = Users;
     }
 }

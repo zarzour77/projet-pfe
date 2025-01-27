@@ -1,4 +1,5 @@
-package com.example.demo.model;
+package com.example.Trade_For_Talent.Entity;
+
 
 import jakarta.persistence.*;
 
@@ -12,16 +13,16 @@ public class Avis {
 
     @ManyToOne
     @JoinColumn(name = "auteur_id")
-    private Utilisateur auteur;
+    private User auteur;
 
     @ManyToOne
     @JoinColumn(name = "cible_id")
-    private Utilisateur cible;
+    private User cible;
 
     private String commentaire;
     private Date dateAvis;
 
-    public Avis(Utilisateur auteur, Utilisateur cible, String commentaire, Date dateAvis, Long id) {
+    public Avis(User auteur, User cible, String commentaire, Date dateAvis, Long id) {
         this.auteur = auteur;
         this.cible = cible;
         this.commentaire = commentaire;
@@ -31,19 +32,19 @@ public class Avis {
 
     public Avis() {}
 
-    public Utilisateur getAuteur() {
+    public User getAuteur() {
         return auteur;
     }
 
-    public void setAuteur(Utilisateur auteur) {
+    public void setAuteur(User auteur) {
         this.auteur = auteur;
     }
 
-    public Utilisateur getCible() {
+    public User getCible() {
         return cible;
     }
 
-    public void setCible(Utilisateur cible) {
+    public void setCible(User cible) {
         this.cible = cible;
     }
 

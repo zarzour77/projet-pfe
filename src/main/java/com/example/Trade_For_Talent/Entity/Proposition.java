@@ -1,4 +1,4 @@
-package com.example.demo.model;
+package com.example.Trade_For_Talent.Entity;
 
 import jakarta.persistence.*;
 

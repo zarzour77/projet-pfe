@@ -1,7 +1,10 @@
 package com.example.Trade_For_Talent.Entity;
 
+
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.util.List;
 
 @Entity
 @Data
@@ -17,16 +20,51 @@ public class User {
     private String email;
     private String password;
     private String role;  // Role as a String
+    @OneToMany(mappedBy = "user")
+    private List<Notification> notifications;
 
+    @ManyToMany
+    private List<Competence> competences;
+
+    @OneToMany(mappedBy = "auteur")
+    private List<Avis> avisRediges;
+
+    @OneToMany(mappedBy = "cible")
+    private List<Avis> avisRecus;
     public User() {}
 
-    public User(String nom, String prenom, String telephone, String email, String password, String role) {
+    public User(Long id, String prenom, String nom, String telephone, String email, String password, String role, List<Notification> notifications, List<Competence> competences, List<Avis> avisRediges, List<Avis> avisRecus) {
+        this.id = id;
+        this.prenom = prenom;
+        this.nom = nom;
+        this.telephone = telephone;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+        this.notifications = notifications;
+        this.competences = competences;
+        this.avisRediges = avisRediges;
+        this.avisRecus = avisRecus;
+    }
+
+
+    public User(String nom, String prenom, String telephone, String email, String encodedPassword, String role) {
         this.nom = nom;
         this.prenom = prenom;
         this.telephone = telephone;
         this.email = email;
+        this.password = encodedPassword;
+    }
+
+    public User(Long id, String nom, String telephone, String email, String password, List<Notification> notifications, List<Avis> avisRediges, List<Avis> avisRecus) {
+        this.id = id;
+        this.nom = nom;
+        this.telephone = telephone;
+        this.email = email;
         this.password = password;
-        this.role = role;  // Directly setting role as String
+        this.notifications = notifications;
+        this.avisRediges = avisRediges;
+        this.avisRecus = avisRecus;
     }
 
     public Long getId() {
@@ -83,5 +121,37 @@ public class User {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public List<Notification> getNotifications() {
+        return notifications;
+    }
+
+    public void setNotifications(List<Notification> notifications) {
+        this.notifications = notifications;
+    }
+
+    public List<Competence> getCompetences() {
+        return competences;
+    }
+
+    public void setCompetences(List<Competence> competences) {
+        this.competences = competences;
+    }
+
+    public List<Avis> getAvisRediges() {
+        return avisRediges;
+    }
+
+    public void setAvisRediges(List<Avis> avisRediges) {
+        this.avisRediges = avisRediges;
+    }
+
+    public List<Avis> getAvisRecus() {
+        return avisRecus;
+    }
+
+    public void setAvisRecus(List<Avis> avisRecus) {
+        this.avisRecus = avisRecus;
     }
 }

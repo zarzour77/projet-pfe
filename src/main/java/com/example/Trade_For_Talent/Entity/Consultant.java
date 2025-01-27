@@ -1,4 +1,5 @@
-package com.example.demo.model;
+package com.example.Trade_For_Talent.Entity;
+
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToMany;
@@ -7,7 +8,7 @@ import jakarta.persistence.OneToMany;
 import java.util.List;
 
 @Entity
-public class Consultant extends Utilisateur {
+public class Consultant extends User {
     @ManyToMany
     private List<Competence> competences;
 
@@ -16,11 +17,17 @@ public class Consultant extends Utilisateur {
     private String portfolio;
     public Consultant() {}
 
-    public Consultant(String adresse, List<Avis> avisRecus, List<Avis> avisRediges, List<Competence> competences, String email, Long id, String nom, List<Notification> notifications, String password, String prenom, String telephone, List<Competence> competences1, String portfolio, List<Proposition> propositions) {
-        super(adresse, avisRecus, avisRediges, competences, email, id, nom, notifications, password, prenom, telephone);
-        this.competences = competences1;
-        this.portfolio = portfolio;
+    public Consultant(List<Competence> competences, List<Proposition> propositions, String portfolio) {
+        this.competences = competences;
         this.propositions = propositions;
+        this.portfolio = portfolio;
+    }
+
+    public Consultant(Long id, String prenom, String nom, String telephone, String email, String password, String role, List<Notification> notifications, List<Competence> competences, List<Avis> avisRediges, List<Avis> avisRecus, List<Competence> competences1, List<Proposition> propositions, String portfolio) {
+        super(id, prenom, nom, telephone, email, password, role, notifications, competences, avisRediges, avisRecus);
+        this.competences = competences1;
+        this.propositions = propositions;
+        this.portfolio = portfolio;
     }
 
     @Override
