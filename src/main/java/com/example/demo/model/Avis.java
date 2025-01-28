@@ -18,16 +18,17 @@ public class Avis {
     @ManyToOne
     @JoinColumn(name = "cible_id")
     private User cible;
-
+    private double note;
     private String commentaire;
     private Date dateAvis;
 
-    public Avis(User auteur, User cible, String commentaire, Date dateAvis, Long id) {
+    public Avis(User auteur, User cible, String commentaire, Date dateAvis, Long id,double note) {
         this.auteur = auteur;
         this.cible = cible;
         this.commentaire = commentaire;
         this.dateAvis = dateAvis;
         this.id = id;
+        this.note = note;
     }
 
     public Avis() {}

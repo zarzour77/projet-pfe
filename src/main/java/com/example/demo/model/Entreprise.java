@@ -13,8 +13,8 @@ public class Entreprise extends User {
     public Entreprise(List<Mission> missions) {
         this.missions = missions;
     }
-    public Entreprise(String adresse, List<Avis> avisRecus, List<Avis> avisRediges, String email, Long id, String nom, List<Notification> notifications, String password, String telephone, List<Mission> missions) {
-        super(avisRecus, adresse, avisRediges, email, id, nom, notifications, password, telephone);
+    public Entreprise(String adresse, List<Avis> avisRecus, List<Avis> avisRediges, String email, Long id, String nom, List<Notification> notifications, String password, String telephone, List<Mission> missions,String photoprofil) {
+        super(avisRecus, adresse, avisRediges, email, id, nom, notifications, password, telephone,photoprofil);
         this.missions = missions;
     }
 

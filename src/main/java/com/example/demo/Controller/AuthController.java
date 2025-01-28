@@ -43,7 +43,8 @@ public class AuthController {
     private PasswordEncoder passwordEncoder;
 
     @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser( @RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+        // Authenticate the user
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
         String jwt = jwtUtils.generateJwtToken(authentication);
@@ -60,14 +61,13 @@ public class AuthController {
     }
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
-        String encodedPassword = passwordEncoder.encode(signUpRequest.getPassword());
-        User user = new User(signUpRequest.getEmail(), encodedPassword, "ROLE_USER");
+        // Debugging log
+        System.out.println("SignUp request received for: " + signUpRequest.getEmail());
 
-        // Save the user to the database
-        userRepository.save(user);
-
-        // You can return a message response indicating successful registration
-        MessageResponse response = new MessageResponse("User registered successfully!");
+        MessageResponse response = authService.registerUser(signUpRequest);
+        if (response.getMessage().contains("Error")) {
+            return ResponseEntity.badRequest().body(response);
+        }
         return ResponseEntity.ok(response);
     }
 

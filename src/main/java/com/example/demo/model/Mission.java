@@ -16,7 +16,7 @@ public class Mission {
     private Double budget;
     private Date deadline;
     private String statut;
-
+    private String domaine;
     @ManyToOne
     @JoinColumn(name = "entreprise_id")
     private Entreprise entreprise;
@@ -29,7 +29,7 @@ public class Mission {
 
     public Mission() {}
 
-    public Mission(Double budget, List<Competence> competencesRequises, Date deadline, String description, Entreprise entreprise, Long id, List<Proposition> propositions, String statut, String titre) {
+    public Mission(Double budget, List<Competence> competencesRequises, Date deadline, String description, Entreprise entreprise, Long id, List<Proposition> propositions, String statut, String titre,String domaine) {
         this.budget = budget;
         this.competencesRequises = competencesRequises;
         this.deadline = deadline;
@@ -39,6 +39,15 @@ public class Mission {
         this.propositions = propositions;
         this.statut = statut;
         this.titre = titre;
+        this.domaine = domaine;
+    }
+
+    public String getDomaine() {
+        return domaine;
+    }
+
+    public void setDomaine(String domaine) {
+        this.domaine = domaine;
     }
 
     public Double getBudget() {
