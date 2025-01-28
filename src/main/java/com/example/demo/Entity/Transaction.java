@@ -1,4 +1,4 @@
-package com.example.demo.model;
+package com.example.demo.Entity;
 
 import jakarta.persistence.*;
 
@@ -13,7 +13,7 @@ public class Transaction {
     private Double montant;
     private Date date;
     private String type;
-
+    private String statut;
     @ManyToOne
     @JoinColumn(name = "debiteur_id")
     private User expéditeur;
@@ -28,7 +28,7 @@ public class Transaction {
 
     public Transaction() {}
 
-    public Transaction(String type, Double montant, Mission mission, Long id, User expéditeur, User destinataire, Date date) {
+    public Transaction(String type, Double montant, Mission mission, Long id, User expéditeur, User destinataire, Date date,String statut) {
         this.type = type;
         this.montant = montant;
         this.mission = mission;
@@ -36,6 +36,7 @@ public class Transaction {
         this.expéditeur = expéditeur;
         this.destinataire = destinataire;
         this.date = date;
+        this.statut = statut;
     }
 
     public Date getDate() {

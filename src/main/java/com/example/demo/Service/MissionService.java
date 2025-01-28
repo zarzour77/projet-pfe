@@ -1,6 +1,6 @@
 package com.example.demo.Service;
 
-import com.example.demo.model.Mission;
+import com.example.demo.Entity.Mission;
 import com.example.demo.repository.MissionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

@@ -1,4 +1,4 @@
-package com.example.demo.model;
+package com.example.demo.Entity;
 
 import jakarta.persistence.*;
 
@@ -18,6 +18,8 @@ public class User {
     private String adresse;
     private String password;
     private String role;
+    private String photoprofile;
+    private String statut;
     @OneToMany(mappedBy = "user")
     private List<Notification> notifications;
 
@@ -30,10 +32,13 @@ public class User {
     @OneToMany(mappedBy = "cible")
     private List<Avis> avisRecus;
 
+    public User(String nom) {
+        this.nom = nom;
+    }
 
     public User() {}
 
-    public User(String adresse, List<Avis> avisRecus, List<Avis> avisRediges, List<Competence> competences, String email, Long id, String nom, List<Notification> notifications, String password, String prenom, String telephone , String role) {
+    public User(String adresse, List<Avis> avisRecus, List<Avis> avisRediges, List<Competence> competences, String email, Long id, String nom, List<Notification> notifications, String password, String prenom, String telephone , String role,String photoprofile,String statut) {
         this.adresse = adresse;
         this.avisRecus = avisRecus;
         this.avisRediges = avisRediges;
@@ -46,9 +51,11 @@ public class User {
         this.prenom = prenom;
         this.telephone = telephone;
         this.role = role;
+        this.photoprofile = photoprofile;
+        this.statut = statut;
     }
 
-    public User(List<Avis> avisRecus, String adresse, List<Avis> avisRediges, String email, Long id, String nom, List<Notification> notifications, String password, String telephone) {
+    public User(List<Avis> avisRecus, String adresse, List<Avis> avisRediges, String email, Long id, String nom, List<Notification> notifications, String password, String telephone,String photoprofile) {
         this.avisRecus = avisRecus;
         this.adresse = adresse;
         this.avisRediges = avisRediges;
@@ -58,6 +65,7 @@ public class User {
         this.notifications = notifications;
         this.password = password;
         this.telephone = telephone;
+        this.photoprofile = photoprofile;
     }
 
     public User(String nom, String prenom, String telephone, String email, String encodedPassword, String role) {
@@ -67,6 +75,22 @@ public class User {
         this.email = email;
         this.password = encodedPassword;
         this.role = role;
+    }
+
+    public String getStatut() {
+        return statut;
+    }
+
+    public void setStatut(String statut) {
+        this.statut = statut;
+    }
+
+    public String getPhotoprofile() {
+        return photoprofile;
+    }
+
+    public void setPhotoprofile(String photoprofile) {
+        this.photoprofile = photoprofile;
     }
 
     public String getAdresse() {
