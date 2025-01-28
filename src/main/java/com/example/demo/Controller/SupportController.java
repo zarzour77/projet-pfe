@@ -1,6 +1,6 @@
 package com.example.demo.Controller;
 
-import com.example.demo.Entity.Support;
+import com.example.demo.model.Support;
 import com.example.demo.Service.SupportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

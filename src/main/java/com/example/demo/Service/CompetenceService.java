@@ -1,7 +1,7 @@
 package com.example.demo.Service;
 
 
-import com.example.demo.Entity.Competence;
+import com.example.demo.model.Competence;
 import com.example.demo.repository.CompetenceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

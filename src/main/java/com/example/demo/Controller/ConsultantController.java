@@ -3,7 +3,7 @@ package com.example.demo.Controller;
 
 
 import com.example.demo.Service.ConsultantService;
-import com.example.demo.Entity.Consultant;
+import com.example.demo.model.Consultant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

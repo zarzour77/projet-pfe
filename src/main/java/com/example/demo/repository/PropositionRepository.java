@@ -1,7 +1,7 @@
 package com.example.demo.repository;
 
 
-import com.example.demo.Entity.Proposition;
+import com.example.demo.model.Proposition;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
