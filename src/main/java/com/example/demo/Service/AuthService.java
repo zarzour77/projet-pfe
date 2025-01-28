@@ -1,6 +1,5 @@
 package com.example.demo.Service;
 
-import com.example.demo.model.User;
 import com.example.demo.Payload.SignupRequest;
 import com.example.demo.Response.MessageResponse;
 import com.example.demo.Sec.UserDetailsServiceImpl;

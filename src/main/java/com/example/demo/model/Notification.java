@@ -1,4 +1,4 @@
-package com.example.Trade_For_Talent.Entity;
+package com.example.demo.model;
 
 import jakarta.persistence.*;
 
@@ -57,11 +57,7 @@ public class Notification {
         this.type = type;
     }
 
-<<<<<<< HEAD:src/main/java/com/example/Trade_For_Talent/Entity/Notification.java
-    public User getUser() {
-=======
     public User getUtilisateur() {
->>>>>>> 7a9975fca109a84f1345bf1a4c460d7f6dbf917d:src/main/java/com/example/demo/model/Notification.java
         return user;
     }
 

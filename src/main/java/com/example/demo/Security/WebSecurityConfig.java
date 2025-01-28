@@ -69,6 +69,7 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers("/api/auth/**").permitAll()  // Permit authentication routes
                                 .requestMatchers("/api/test/**").permitAll()  // Permit test routes
+                                .requestMatchers("/api/users").permitAll()  // Permit access to the /api/users route without authentication
                                 .anyRequest().authenticated()  // Authenticate other requests
                 );
 
@@ -80,6 +81,7 @@ public class WebSecurityConfig {
 
         return http.build();
     }
+
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

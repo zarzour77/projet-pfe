@@ -7,7 +7,6 @@ import com.example.demo.Response.JwtResponse;
 import com.example.demo.Response.MessageResponse;
 import com.example.demo.Sec.UserDetailsImpl;
 import com.example.demo.Sec.UserDetailsServiceImpl;
-import com.example.demo.model.User;
 import jakarta.validation.Valid;
 import com.example.demo.jwt.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;

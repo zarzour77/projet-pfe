@@ -1,5 +1,4 @@
-package com.example.Trade_For_Talent.Entity;
-
+package com.example.demo.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
@@ -14,9 +13,8 @@ public class Entreprise extends User {
     public Entreprise(List<Mission> missions) {
         this.missions = missions;
     }
-
-    public Entreprise(Long id, String prenom, String nom, String telephone, String email, String password, String role, List<Notification> notifications, List<Competence> competences, List<Avis> avisRediges, List<Avis> avisRecus, List<Mission> missions) {
-        super(id, prenom, nom, telephone, email, password, role, notifications, competences, avisRediges, avisRecus);
+    public Entreprise(String adresse, List<Avis> avisRecus, List<Avis> avisRediges, String email, Long id, String nom, List<Notification> notifications, String password, String telephone, List<Mission> missions) {
+        super(avisRecus, adresse, avisRediges, email, id, nom, notifications, password, telephone);
         this.missions = missions;
     }
 

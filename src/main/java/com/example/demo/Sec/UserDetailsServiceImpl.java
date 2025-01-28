@@ -1,6 +1,5 @@
 package com.example.demo.Sec;
 
-import com.example.demo.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -15,9 +14,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String mail) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(mail)
-                .orElseThrow(() -> new UsernameNotFoundException("User Not Found with mail: " + mail));
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User Not Found with mail: " + email));
         return UserDetailsImpl.build(user);
     }
 }
