@@ -2,7 +2,7 @@ package com.example.demo.Controller;
 
 
 import com.example.demo.Service.NotificationService;
-import com.example.demo.Entity.Notification;
+import com.example.demo.model.Notification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -1,4 +1,4 @@
-package com.example.demo.Entity;
+package com.example.demo.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToMany;

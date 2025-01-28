@@ -1,7 +1,7 @@
 package com.example.demo.Service;
 
 
-import com.example.demo.Entity.Proposition;
+import com.example.demo.model.Proposition;
 import com.example.demo.repository.PropositionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
