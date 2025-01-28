@@ -2,7 +2,7 @@ package com.example.demo.Controller;
 
 
 import com.example.demo.Service.MissionService;
-import com.example.demo.model.Mission;
+import com.example.demo.Entity.Mission;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

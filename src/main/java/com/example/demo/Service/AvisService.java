@@ -1,7 +1,7 @@
 package com.example.demo.Service;
 
 
-import com.example.demo.model.Avis;
+import com.example.demo.Entity.Avis;
 import com.example.demo.repository.AvisRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

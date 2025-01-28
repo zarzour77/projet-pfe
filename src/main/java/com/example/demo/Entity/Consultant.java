@@ -1,4 +1,4 @@
-package com.example.demo.model;
+package com.example.demo.Entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToMany;
@@ -16,8 +16,8 @@ public class Consultant extends User {
     private String portfolio;
     public Consultant() {}
 
-    public Consultant(String adresse, List<Avis> avisRecus, List<Avis> avisRediges, List<Competence> competences, String email, Long id, String nom, List<Notification> notifications, String password, String prenom, String telephone, List<Competence> competences1, String portfolio, List<Proposition> propositions,String role) {
-        super(adresse, avisRecus, avisRediges, competences, email, id, nom, notifications, password, prenom, telephone,role);
+    public Consultant(String adresse, List<Avis> avisRecus, List<Avis> avisRediges, List<Competence> competences, String email, Long id, String nom, List<Notification> notifications, String password, String prenom, String telephone, List<Competence> competences1, String portfolio, List<Proposition> propositions,String role,String photoprofil,String statut) {
+        super(adresse, avisRecus, avisRediges, competences, email, id, nom, notifications, password, prenom, telephone,role,photoprofil,statut);
         this.competences = competences1;
         this.portfolio = portfolio;
         this.propositions = propositions;
