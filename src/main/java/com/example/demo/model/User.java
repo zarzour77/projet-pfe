@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.List;
@@ -20,17 +21,20 @@ public class User {
     private String role;
     private String photoprofile;
     private String statut;
-    @OneToMany(mappedBy = "user")
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Notification> notifications;
-
+    @JsonIgnore
     @ManyToMany
     private List<Competence> competences;
 
-    @OneToMany(mappedBy = "auteur")
-    private List<Avis> avisRediges;
-
-    @OneToMany(mappedBy = "cible")
+    @JsonIgnore // Prevent serialization of lazy-loaded collection
+    @OneToMany(mappedBy = "cible", fetch = FetchType.LAZY)
     private List<Avis> avisRecus;
+
+    @JsonIgnore // Prevent serialization of eager-loaded collection if not needed
+    @OneToMany(mappedBy = "auteur", fetch = FetchType.EAGER)
+    private List<Avis> avisRediges;
 
     public User(String nom) {
         this.nom = nom;
