@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
@@ -12,6 +13,7 @@ public class Consultant extends User {
     private List<Competence> competences;
 
     @OneToMany(mappedBy = "consultant")
+    @JsonIgnore // Prevents serialization of this field
     private List<Proposition> propositions;
     private String portfolio;
     public Consultant() {}

@@ -23,7 +23,7 @@ public class Transaction {
     private User destinataire;
 
     @ManyToOne
-    @JoinColumn(name = "mission_id")
+    @JoinColumn(name = "mission_id", nullable = true)
     private Mission mission;
 
     public Transaction() {}
