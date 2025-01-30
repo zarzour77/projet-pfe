@@ -19,13 +19,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
 public class AuthEntryPoint implements AuthenticationEntryPoint {
-
     private static final Logger logger = LoggerFactory.getLogger(AuthEntryPoint.class);
 
     @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
-            throws IOException, ServletException {
+    public void commence(HttpServletRequest request, HttpServletResponse response,
+                         AuthenticationException authException) throws IOException {
         logger.error("Unauthorized error: {}", authException.getMessage());
+        logger.debug("Unauthorized path: {}", request.getServletPath());
 
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -33,10 +33,9 @@ public class AuthEntryPoint implements AuthenticationEntryPoint {
         final Map<String, Object> body = new HashMap<>();
         body.put("status", HttpServletResponse.SC_UNAUTHORIZED);
         body.put("error", "Unauthorized");
-        body.put("message", authException.getMessage());
+        body.put("message", "Full authentication required");
         body.put("path", request.getServletPath());
 
-        final ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(response.getOutputStream(), body);
+        new ObjectMapper().writeValue(response.getOutputStream(), body);
     }
 }

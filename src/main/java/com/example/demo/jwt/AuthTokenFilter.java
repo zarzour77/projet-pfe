@@ -25,34 +25,29 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     private UserDetailsServiceImpl userDetailsService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String requestURI = request.getRequestURI();
-
-        // Allow unrestricted access to the /api/users endpoint
-        if (requestURI.startsWith("/api/users")) {
-            filterChain.doFilter(request, response);  // Skip authentication filter for this path
-            return;
-        }
-
-        // Proceed with token validation for other requests
-        String token = parseJwt(request);  // Use parseJwt here instead of getJwtFromRequest
-        if (token != null && jwtUtils.validateJwtToken(token)) {
-            String username = jwtUtils.getUsernameFromJwtToken(token);
-
-            // Fetch user details from the database or your service
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
-            // If authentication is successful, set the authentication context
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    userDetails, null, userDetails.getAuthorities());
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-            // Set the authentication context in the security context
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+        try {
+            String jwt = parseJwt(request);
+            System.out.println("Extracted JWT: " + jwt);
+            if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+                String username = jwtUtils.getUsernameFromJwtToken(jwt);
+                System.out.println("Authenticated User: " + username);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } else {
+                System.out.println("Invalid or missing JWT token");
+            }
+        } catch (Exception e) {
+            System.out.println("Cannot set user authentication: " + e.getMessage());
         }
 
         filterChain.doFilter(request, response);
     }
+
 
     private String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
@@ -67,7 +62,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
-        // Skip the filter for authentication routes like signup and login
-        return path.startsWith("/api/auth/");  // Exclude /api/auth/ from being filtered
+        // Skip the filter for authentication routes
+        return path.startsWith("/api/auth/");
     }
 }
