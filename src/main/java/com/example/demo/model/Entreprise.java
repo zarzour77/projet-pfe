@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 
@@ -7,6 +8,7 @@ import java.util.List;
 
 @Entity
 public class Entreprise extends User {
+    @JsonIgnore
     @OneToMany(mappedBy = "entreprise")
     private List<Mission> missions;
 

@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.Date;
@@ -20,10 +21,10 @@ public class Mission {
     @ManyToOne
     @JoinColumn(name = "entreprise_id")
     private Entreprise entreprise;
-
+    @JsonIgnore
     @ManyToMany
     private List<Competence> competencesRequises;
-
+    @JsonIgnore
     @OneToMany(mappedBy = "mission")
     private List<Proposition> propositions;
 
