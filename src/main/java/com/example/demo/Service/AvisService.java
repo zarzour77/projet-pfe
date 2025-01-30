@@ -34,6 +34,7 @@ public class AvisService {
         return avisRepository.findById(id).map(avis -> {
             avis.setAuteur(updatedAvis.getAuteur());
             avis.setCible(updatedAvis.getCible());
+            avis.setNote(updatedAvis.getNote());
             avis.setCommentaire(updatedAvis.getCommentaire());
             avis.setDateAvis(updatedAvis.getDateAvis());
             avis.setNote(updatedAvis.getNote());

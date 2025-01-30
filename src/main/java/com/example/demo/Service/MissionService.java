@@ -17,6 +17,7 @@ public class MissionService {
         this.missionRepository = missionRepository;
     }
 
+
     public List<Mission> getAllMissions() {
         return missionRepository.findAll();
     }

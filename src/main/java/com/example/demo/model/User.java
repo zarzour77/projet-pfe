@@ -33,7 +33,7 @@ public class User {
     private List<Avis> avisRecus;
 
     @JsonIgnore // Prevent serialization of eager-loaded collection if not needed
-    @OneToMany(mappedBy = "auteur", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "auteur", fetch = FetchType.LAZY)
     private List<Avis> avisRediges;
 
     public User(String nom) {
