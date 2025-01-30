@@ -36,6 +36,7 @@ public class AvisService {
             avis.setCible(updatedAvis.getCible());
             avis.setCommentaire(updatedAvis.getCommentaire());
             avis.setDateAvis(updatedAvis.getDateAvis());
+            avis.setNote(updatedAvis.getNote());
             return avisRepository.save(avis);
         }).orElseThrow(() -> new RuntimeException("Avis not found with id " + id));
     }
