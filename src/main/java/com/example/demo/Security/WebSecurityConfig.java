@@ -17,6 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -68,7 +69,10 @@ public class WebSecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers("/api/auth/**").permitAll()  // Permit authentication routes
-                                .requestMatchers("/api/test/**").permitAll()  // Permit test routes
+                                .requestMatchers("/api/test/**").permitAll()
+                                .requestMatchers("/api/payments/**").permitAll()
+                                .requestMatchers("/api/paymee/**" ).permitAll()
+                                .requestMatchers("/api/payment/callback").permitAll()
                                 .anyRequest().authenticated()  // Authenticate other requests
                 );
 
@@ -91,5 +95,9 @@ public class WebSecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);  // Apply CORS globally
         return source;
+    }
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
     }
 }
