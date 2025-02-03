@@ -1,0 +1,17 @@
+/* src/components/Header.module.css */
+.greatVibesRegular {
+  font-family: 'Great Vibes', serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 36px; /* Adjust size to suit your design */
+  color: #000; /* Set the color of the text */
+  position: absolute;
+  top: 10px; /* Distance from the top of the page */
+  left: 10px; /* Distance from the left of the page */
+  z-index: 1000; /* Ensure it stays on top of other elements */
+  text-decoration: none; /* Remove underline from Link */
+}
+
+.greatVibesRegular:hover {
+  color: white; /* Optional: Add hover color for visual feedback */
+}

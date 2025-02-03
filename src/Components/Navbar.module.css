@@ -1,0 +1,49 @@
+/* navbar.module.css */
+.navbar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  margin: 10px;
+  padding: 10px;
+  z-index: 1000; /* Ensures the navbar stays above other content */
+}
+
+.navList {
+  display: flex;
+  justify-content: space-between; /* Space out the buttons */
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.navItem {
+  margin: 0 8px; /* Adjust the margin between buttons */
+}
+
+.navLink {
+  color: white;
+  text-decoration: none;
+  font-size: 15px;
+  padding: 10px 20px; /* Add some padding to the buttons */
+  background-color: #007BFF; /* Blue background color */
+  border-radius: 15px; /* Add a border radius */
+  transition: background-color 0.3s ease; /* Add smooth transition for hover */
+}
+
+.navLink:hover {
+  text-decoration: none;
+  background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* For the Great Vibes font class */
+.greatVibesRegular {
+  font-family: 'Great Vibes', serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 36px; /* Adjust size to suit your design */
+  color: #000; /* Set the color of the text */
+  position: absolute;
+  top: 10px; /* Distance from the top of the page */
+  left: 10px; /* Distance from the left of the page */
+  z-index: 1000; /* Ensure it stays on top of other elements */
+}
