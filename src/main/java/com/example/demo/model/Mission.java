@@ -27,6 +27,10 @@ public class Mission {
     @JsonIgnore
     @OneToMany(mappedBy = "mission")
     private List<Proposition> propositions;
+    @OneToMany(mappedBy = "mission")
+    private List<Avis> avis;
+    private String localisation;
+    private int requiredExperience;
 
     public Mission() {}
 
@@ -41,6 +45,38 @@ public class Mission {
         this.statut = statut;
         this.titre = titre;
         this.domaine = domaine;
+    }
+
+    public Mission(List<Avis> avis, Double budget, List<Competence> competencesRequises, Date deadline, String description, String domaine, Entreprise entreprise, Long id, String localisation, List<Proposition> propositions, int requiredExperience, String statut, String titre) {
+        this.avis = avis;
+        this.budget = budget;
+        this.competencesRequises = competencesRequises;
+        this.deadline = deadline;
+        this.description = description;
+        this.domaine = domaine;
+        this.entreprise = entreprise;
+        this.id = id;
+        this.localisation = localisation;
+        this.propositions = propositions;
+        this.requiredExperience = requiredExperience;
+        this.statut = statut;
+        this.titre = titre;
+    }
+
+    public String getLocalisation() {
+        return localisation;
+    }
+
+    public void setLocalisation(String localisation) {
+        this.localisation = localisation;
+    }
+
+    public int getRequiredExperience() {
+        return requiredExperience;
+    }
+
+    public void setRequiredExperience(int requiredExperience) {
+        this.requiredExperience = requiredExperience;
     }
 
     public String getDomaine() {
@@ -121,5 +157,13 @@ public class Mission {
 
     public void setTitre(String titre) {
         this.titre = titre;
+    }
+
+    public List<Avis> getAvis() {
+        return avis;
+    }
+
+    public void setAvis(List<Avis> avis) {
+        this.avis = avis;
     }
 }

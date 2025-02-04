@@ -70,6 +70,7 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers("/api/auth/**").permitAll()  // Permit authentication routes
                                 .requestMatchers("/api/test/**").permitAll()
+                                .requestMatchers("/api/payments/subscribe").hasRole("PREMIUM")
                                 .requestMatchers("/api/payments/**").permitAll()
                                 .requestMatchers("/api/paymee/**" ).permitAll()
                                 .requestMatchers("/api/payment/callback").permitAll()

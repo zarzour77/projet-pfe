@@ -13,6 +13,7 @@ public class User {
     private Long id;
 
     private String nom;
+    @JsonIgnore
     private String prenom;
     private String email;
     private String telephone;
@@ -35,6 +36,8 @@ public class User {
     @JsonIgnore // Prevent serialization of eager-loaded collection if not needed
     @OneToMany(mappedBy = "auteur", fetch = FetchType.EAGER)
     private List<Avis> avisRediges;
+
+    private Double rating;
 
     public User(String nom) {
         this.nom = nom;
@@ -79,6 +82,14 @@ public class User {
         this.email = email;
         this.password = encodedPassword;
         this.role = role;
+    }
+
+    public Double getRating() {
+        return rating;
+    }
+
+    public void setRating(Double rating) {
+        this.rating = rating;
     }
 
     public String getStatut() {
