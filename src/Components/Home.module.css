@@ -1,0 +1,7 @@
+.customBackground{
+    min-height: 100vh; /* Ensure it covers the full height of the viewport */
+    display: flex;
+    justify-content: center; /* Center content horizontally */
+    align-items: center; /* Center content vertically */
+    padding: 20px; /* Optional padding to ensure spacing */
+}

@@ -13,10 +13,11 @@
   padding: 40px;
   border-radius: 12px;
   backdrop-filter: blur(10px); /* Glass effect */
-  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px 15px 50px rgba(0, 0, 0, 0.4); /* Intense box shadow */
   max-width: 600px;
   text-align: center;
 }
+
 
 /* Welcome Text */
 .texts h1 {

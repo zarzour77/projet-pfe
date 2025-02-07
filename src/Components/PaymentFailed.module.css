@@ -1,0 +1,48 @@
+/* 🎨 Background with floating animation */
+.paymentFailedContainer {
+    display: flex;
+    flex-direction: column; /* Ensure vertical stacking of elements */
+    align-items: center; /* Center vertically */
+    justify-content: center; /* Center horizontally */
+    height: 100vh; /* Full-screen height */
+    padding: 20px;
+    animation: floatBackground 8s infinite alternate ease-in-out;
+}
+
+@keyframes floatBackground {
+    0% { background-position: left; }
+    100% { background-position: right; }
+}
+
+
+
+@keyframes popIn {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* 📐 Flex layout for icon and text */
+.iconTextContainer {
+    display: flex;
+    align-items: center; /* Align icon and text vertically */
+    justify-content: center; /* Center horizontally */
+    gap: 15px; /* Space between icon and text */
+}
+
+/* ❌ Error Icon */
+.errorIcon {
+    color: red; /* Red color for error */
+    filter: drop-shadow(0px 0px 10px rgba(255, 63, 52, 0.7));
+    transition: transform 0.3s ease-in-out;
+}
+
+/* 🎉 Title */
+.errorTitle {
+    font-size: 16px; /* Reduce the font size */
+    font-weight: bold;
+}
+
+/* 📜 Message */
+.errorMessage {
+    font-size: 14px; /* Reduce the font size */
+}

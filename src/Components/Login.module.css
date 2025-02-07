@@ -6,17 +6,18 @@
     box-sizing: border-box;
     font-family: 'Montserrat', sans-serif;
 }
-
-body{
-    background-color: #c9d6ff;
-    background: linear-gradient(to right, #e2e2e2, #c9d6ff);
+.customBackground {
+    background: linear-gradient(135deg, #ffffe0, #f4f9e4); /* Light yellow to soft green */
+    min-height: 100vh; /* Ensure it covers the full height of the viewport */
     display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-}
+    justify-content: center; /* Center content horizontally */
+    align-items: center; /* Center content vertically */
+    padding: 20px; /* Optional padding to ensure spacing */
+  }
+
 
 .container{
+
     background-color: #fff;
     border-radius: 30px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35);
@@ -50,9 +51,10 @@ body{
     margin: 15px 0 10px;
 }
 
-.container button{
-    background-color: #0d47a1;
-    color: #fff;
+/* Default styling for all buttons */
+.loginButton {
+    background-color: black;
+    color: #ffcc00;
     font-size: 12px;
     padding: 10px 45px;
     border: 1px solid transparent;
@@ -64,16 +66,22 @@ body{
     cursor: pointer;
 }
 
-.container button.hidden{
-    background-color: transparent;
-    border-color: #fff;
+/* Button inside the left panel */
+.toggle-left button.hidden,.toggle-right button.hidden {
+    background-color: #ffcc00 ;
+    color: black;
+    font-size: 12px;
+    padding: 10px 45px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-top: 10px;
+    cursor: pointer;
+
 }
-.container button.hidden:hover{
-  background-color: transparent;
-  border-color: #fff;
-  background-color: white;
-color: #0d47a1;
-}
+
 .container form{
     background-color: #fff;
     display: flex;
@@ -195,9 +203,8 @@ color: #0d47a1;
 }
 
 .toggle{
-    background-color: #512da8;
     height: 100%;
-    background: #0d47a1;
+    background: black;
     color: #fff;
     position: relative;
     left: -100%;

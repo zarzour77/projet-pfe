@@ -1,8 +1,8 @@
 import { useState } from "react";
 import AuthService from "../Services/AuthService";
-import "./Login.css"; // Import styles
+import styles from "./Login.module.css"; // Import styles
 import "@fortawesome/fontawesome-free/css/all.min.css"; // Correct FontAwesome import
-import { useNavigate } from "react-router-dom";  // Import useNavigate
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 const Login = () => {
   const [isActive, setIsActive] = useState(false);
@@ -35,10 +35,7 @@ const Login = () => {
       };
       const response = await AuthService.signup(userData); // Assuming signup method exists in AuthService
       alert("Signup successful!"); // Display success alert
-       // Save user info in localStorage
-       localStorage.setItem("user", JSON.stringify(userData));
       navigate("/SignupSuccess");
-      
       console.log("User data:", response); // Log user data (optional)
       
     } catch (err) {
@@ -54,24 +51,27 @@ const Login = () => {
     try {
       console.log(signinEmail, signinPassword);
       const response = await AuthService.login(signinEmail, signinPassword);
-      alert("Login successful!"); // Display success alert
+      navigate("/CreateProfile")
       console.log("User data:", response); // Log user data (optional)
+      localStorage.setItem("user", JSON.stringify(response));      
+
     } catch  {
       alert("Login failed! Please check your credentials."); // Display error alert
     }
   };
 
-  return (
-    <div className={`container ${isActive ? "active" : ""}`} id="container">
+  return (<div className={`${styles.customBackground}`}>
+
+    <div className={`${styles.container} ${isActive ? styles.active : ""}`} id="container">
       {/* Sign Up Form */}
-      <div className="form-container sign-up">
+      <div className={`${styles['form-container']} ${styles['sign-up']}`}>
         <form onSubmit={handleSignup}>
           <h1>S&apos;inscrire</h1>
-          <div className="social-icons">
-            <a href="#" className="icon google"><i className="fa-brands fa-google-plus-g"></i></a>
-            <a href="#" className="icon facebook"><i className="fa-brands fa-facebook-f"></i></a>
-            <a href="#" className="icon github"><i className="fa-brands fa-github"></i></a>
-            <a href="#" className="icon linkedin"><i className="fa-brands fa-linkedin-in"></i></a>
+          <div className={styles['social-icons']}>
+            <a href="#" className={`${styles.icon} ${styles.google}`}><i className="fa-brands fa-google-plus-g"></i></a>
+            <a href="#" className={`${styles.icon} ${styles.facebook}`}><i className="fa-brands fa-facebook-f"></i></a>
+            <a href="#" className={`${styles.icon} ${styles.github}`}><i className="fa-brands fa-github"></i></a>
+            <a href="#" className={`${styles.icon} ${styles.linkedin}`}><i className="fa-brands fa-linkedin-in"></i></a>
           </div>
           <input
             type="text"
@@ -115,19 +115,19 @@ const Login = () => {
             value={adresse}
             onChange={(e) => setAdresse(e.target.value)}
           />
-          <button type="submit">S&apos;inscrire</button>
-        </form>
+<button type="submit" className={styles.loginButton}>S&apos;inscrire</button>
+</form>
       </div>
 
       {/* Sign In Form */}
-      <div className="form-container sign-in">
+      <div className={`${styles['form-container']} ${styles['sign-in']}`}>
         <form onSubmit={handleLogin}>
           <h1>Se connecter</h1>
-          <div className="social-icons">
-            <a href="#" className="icon google"><i className="fa-brands fa-google-plus-g"></i></a>
-            <a href="#" className="icon facebook"><i className="fa-brands fa-facebook-f"></i></a>
-            <a href="#" className="icon github"><i className="fa-brands fa-github"></i></a>
-            <a href="#" className="icon linkedin"><i className="fa-brands fa-linkedin-in"></i></a>
+          <div className={styles['social-icons']}>
+            <a href="#" className={`${styles.icon} ${styles.google}`}><i className="fa-brands fa-google-plus-g"></i></a>
+            <a href="#" className={`${styles.icon} ${styles.facebook}`}><i className="fa-brands fa-facebook-f"></i></a>
+            <a href="#" className={`${styles.icon} ${styles.github}`}><i className="fa-brands fa-github"></i></a>
+            <a href="#" className={`${styles.icon} ${styles.linkedin}`}><i className="fa-brands fa-linkedin-in"></i></a>
           </div>
           <input
             type="text"
@@ -144,25 +144,27 @@ const Login = () => {
             onChange={(e) => setSigninPassword(e.target.value)}
           />
           <a href="#">Mot de passe oublié ?</a>
-          <button type="submit">Se connecter</button>
-        </form>
+          <button type="submit" className={styles.loginButton}>Se connecter</button>
+          </form>
       </div>
 
       {/* Toggle Panel */}
-      <div className="toggle-container">
-        <div className="toggle">
-          <div className="toggle-panel toggle-left">
-            <h1>Bienvenue !</h1>
-            <p>Entrez vos informations personnelles pour utiliser toutes les fonctionnalités du site</p>
-            <button className="hidden" type="button" onClick={() => setIsActive(false)}>Se connecter</button>
-          </div>
-          <div className="toggle-panel toggle-right">
-            <h1>Bonjour !</h1>
-            <p>Inscrivez-vous avec vos informations personnelles pour utiliser toutes les fonctionnalités du site</p>
-            <button className="hidden" type="button" onClick={() => setIsActive(true)}>S&apos;inscrire</button>
-          </div>
-        </div>
-      </div>
+      <div className={styles['toggle-container']}>
+  <div className={styles.toggle}>
+    <div className={`${styles['toggle-panel']} ${styles['toggle-left']}`}>
+      <h1>Bienvenue !</h1>
+      <p>Entrez vos informations personnelles pour utiliser toutes les fonctionnalités du site</p>
+      <button className={styles.hidden} onClick={() => setIsActive(false)}>Se connecter</button>
+    </div>
+    <div className={`${styles['toggle-panel']} ${styles['toggle-right']}`}>
+      <h1>Bonjour !</h1>
+      <p>Inscrivez-vous avec vos informations personnelles pour utiliser toutes les fonctionnalités du site</p>
+      <button className={styles.hidden} onClick={() => setIsActive(true)}>S&apos;inscrire</button>
+    </div>
+  </div>
+</div>
+
+    </div>
     </div>
   );
 };

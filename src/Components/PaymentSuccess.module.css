@@ -1,0 +1,15 @@
+
+  /* ✅ Checkmark and Text Container */
+  .contentContainer {
+    display: flex;
+  align-items: center;
+  justify-content: center; /* Center everything */
+  height: 100vh; /* Full-screen height */
+  padding: 20px;
+  }
+  
+  /* ✅ Checkmark Icon */
+  .iconContainer {
+    margin-right: 30px; /* Add space between checkmark and text */
+  }
+  

@@ -5,18 +5,22 @@ import SignupSuccess from "./Components/SignupSuccess";
 import CreateProfile from "./Components/CreateProfile";
 import Header from "./Components/Header";
 import Experience from "./Components/Experience";
+import Subscription from "./Components/Subscription";
+import PaymentSuccess from "./Components/PaymentSuccess";
+import PaymentFailed from "./Components/PaymentFailed";
 const App = () => {
   return (
     <Router>
       <Header/>
       <Routes>
-        {/* Home page route */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login /> }  />
         <Route path="/SignupSuccess" element={<SignupSuccess /> }  />
         <Route path="/CreateProfile" element={<CreateProfile /> }  />
         <Route path="/Experience" element={<Experience /> }  />
-
+        <Route path="/Subscription" element={<Subscription /> }  />
+        <Route path="/PaymentSuccess" element={<PaymentSuccess /> }  />
+        <Route path="/PaymentFailed" element={<PaymentFailed /> }  />
 
       </Routes>
     </Router>
