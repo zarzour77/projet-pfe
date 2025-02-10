@@ -19,6 +19,7 @@ public class User {
     private String telephone;
     private String adresse;
     private String password;
+    @JsonIgnore
     private String role;
     private String photoprofile;
     private String statut;

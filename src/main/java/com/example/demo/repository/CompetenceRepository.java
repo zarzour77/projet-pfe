@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CompetenceRepository extends JpaRepository<Competence, Long> {
+    Competence findByNom(String nom);
 }

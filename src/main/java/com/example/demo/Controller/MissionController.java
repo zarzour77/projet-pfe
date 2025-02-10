@@ -35,4 +35,15 @@ public class MissionController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @PostMapping("/add")
+    public ResponseEntity<?> ajouterMission(@RequestBody Mission mission) {
+        try {
+            Mission nouvelleMission = missionService.ajouterMission(mission);
+            return ResponseEntity.ok(nouvelleMission);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
 }

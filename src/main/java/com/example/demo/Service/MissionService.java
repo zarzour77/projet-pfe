@@ -60,6 +60,10 @@ public class MissionService {
         mission.setStatut(newStatus);
         return missionRepository.save(mission);
     }
+    public Mission ajouterMission(Mission mission) {
+        return missionRepository.save(mission);
+    }
+    }
 
 
-}
+
