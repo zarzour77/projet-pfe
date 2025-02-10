@@ -13,6 +13,7 @@ public class User {
     private Long id;
 
     private String nom;
+    @JsonIgnore
     private String prenom;
     private String email;
     private String telephone;
@@ -35,15 +36,13 @@ public class User {
     private List<Avis> avisRecus;
 
     @JsonIgnore // Prevent serialization of eager-loaded collection if not needed
-    @OneToMany(mappedBy = "auteur", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "auteur", fetch = FetchType.EAGER)
     private List<Avis> avisRediges;
-
+    private Double rating;
+    public User() {}
     public User(String nom) {
         this.nom = nom;
     }
-
-    public User() {}
-
     public User(String adresse, List<Avis> avisRecus, List<Avis> avisRediges, List<Competence> competences, String email, Long id, String nom, List<Notification> notifications, String password, String prenom, String telephone , String role,String photoprofile,String statut) {
         this.adresse = adresse;
         this.avisRecus = avisRecus;
@@ -90,6 +89,13 @@ public class User {
         this.password = encodedPassword;
         this.role = role;
         this.subscriptionType = subscriptionType; // Initialize subscriptionType
+    }
+    public Double getRating() {
+        return rating;
+    }
+
+    public void setRating(Double rating) {
+        this.rating = rating;
     }
 
     public String getStatut() {

@@ -3,52 +3,46 @@ package com.example.demo.Controller;
 
 import com.example.demo.Service.AvisService;
 import com.example.demo.model.Avis;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import com.example.demo.exception.DuplicateReviewException;
+import com.example.demo.exception.SelfReviewException;
+import com.example.demo.model.AvisRequest;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/avis")
+@RequiredArgsConstructor
 public class AvisController {
+
     private final AvisService avisService;
 
-    @Autowired
-    public AvisController(AvisService avisService) {
-        this.avisService = avisService;
-    }
-
-    @GetMapping
-    public List<Avis> getAllAvis() {
-        return avisService.getAllAvis();
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Avis> getAvisById(@PathVariable Long id) {
-        return avisService.getAvisById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @PostMapping
-    public Avis createAvis(@RequestBody Avis avis) {
-        return avisService.createAvis(avis);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Avis> updateAvis(@PathVariable Long id, @RequestBody Avis avis) {
+    @PostMapping("/{missionId}")
+    public ResponseEntity<?> createAvis(
+            @PathVariable Long missionId,
+            @Valid @RequestBody AvisRequest request
+    ) {
         try {
-            Avis updatedAvis = avisService.updateAvis(id, avis);
-            return ResponseEntity.ok(updatedAvis);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+
+            Avis createdAvis = avisService.createReview(missionId,request );
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdAvis);
+        } catch (SelfReviewException | DuplicateReviewException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteAvis(@PathVariable Long id) {
-        avisService.deleteAvis(id);
-        return ResponseEntity.noContent().build();
+    @GetMapping("/users/{userId}/rating")
+    public ResponseEntity<Double> getUserRating(@PathVariable Long userId) {
+        return ResponseEntity.ok(avisService.getUserRating(userId));
+    }
+
+    private Avis mapRequestToAvis(AvisRequest request) {
+        Avis avis = new Avis();
+        avis.setNote(request.getNote());
+        avis.setCommentaire(request.getCommentaire());
+        // Implémenter la logique de récupération des utilisateurs
+        return avis;
     }
 }

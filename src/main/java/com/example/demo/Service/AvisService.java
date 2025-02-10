@@ -3,47 +3,62 @@ package com.example.demo.Service;
 
 import com.example.demo.model.Avis;
 import com.example.demo.repository.AvisRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import com.example.demo.exception.DuplicateReviewException;
+import com.example.demo.exception.MissionNotFoundException;
+import com.example.demo.exception.SelfReviewException;
+import com.example.demo.model.Avis;
+import com.example.demo.model.AvisRequest;
+import com.example.demo.model.Mission;
+import com.example.demo.model.User;
+import com.example.demo.repository.AvisRepository;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
-
 @Service
+@RequiredArgsConstructor
 public class AvisService {
+
     private final AvisRepository avisRepository;
+    private final UserService userService;
+    private final MissionService missionService;
 
-    @Autowired
-    public AvisService(AvisRepository avisRepository) {
-        this.avisRepository = avisRepository;
+    @Transactional
+    public Avis createReview(Long missionId, AvisRequest avisRequest) { // Corriger le type de avisRequest
+        Mission mission = (Mission) missionService.getMissionById(missionId)
+                .orElseThrow(() -> new MissionNotFoundException(missionId));
+
+        User auteur = userService.getUserById(avisRequest.getAuteurId()) // Utiliser avisRequest
+                .orElseThrow(() -> new RuntimeException("Auteur non trouvé"));
+
+        User cible = userService.getUserById(avisRequest.getCibleId()) // Utiliser avisRequest
+                .orElseThrow(() -> new RuntimeException("Cible non trouvée"));
+
+        if(auteur.getId().equals(cible.getId())) {
+            throw new SelfReviewException();
+        }
+
+        if(avisRepository.existsByMissionIdAndAuteurId(mission.getId(), auteur.getId())) {
+            throw new DuplicateReviewException();
+        }
+
+        Avis avis = new Avis();
+        avis.setAuteur(auteur);
+        avis.setCible(cible);
+        avis.setNote(avisRequest.getNote());
+        avis.setCommentaire(avisRequest.getCommentaire());
+        avis.setMission(mission);
+
+        Avis savedAvis = avisRepository.save(avis);
+
+        userService.updateUserRating(cible.getId());
+        missionService.markAsReviewed(missionId);
+
+        return savedAvis;
     }
 
-    public List<Avis> getAllAvis() {
-        return avisRepository.findAll();
-    }
-
-    public Optional<Avis> getAvisById(Long id) {
-        return avisRepository.findById(id);
-    }
-
-    public Avis createAvis(Avis avis) {
-        return avisRepository.save(avis);
-    }
-
-    public Avis updateAvis(Long id, Avis updatedAvis) {
-        return avisRepository.findById(id).map(avis -> {
-            avis.setAuteur(updatedAvis.getAuteur());
-            avis.setCible(updatedAvis.getCible());
-            avis.setNote(updatedAvis.getNote());
-            avis.setCommentaire(updatedAvis.getCommentaire());
-            avis.setDateAvis(updatedAvis.getDateAvis());
-            avis.setNote(updatedAvis.getNote());
-            return avisRepository.save(avis);
-        }).orElseThrow(() -> new RuntimeException("Avis not found with id " + id));
-    }
-
-    public void deleteAvis(Long id) {
-        avisRepository.deleteById(id);
+    public Double getUserRating(Long userId) {
+        return avisRepository.calculateAverageRatingByUserId(userId);
     }
 }
-

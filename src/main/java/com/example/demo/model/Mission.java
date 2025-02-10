@@ -18,6 +18,7 @@ public class Mission {
     private Date deadline;
     private String statut;
     private String domaine;
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "entreprise_id")
     private Entreprise entreprise;
@@ -27,20 +28,89 @@ public class Mission {
     @JsonIgnore
     @OneToMany(mappedBy = "mission")
     private List<Proposition> propositions;
+    @JsonIgnore
+    @OneToMany(mappedBy = "mission", fetch = FetchType.EAGER)
+    private List<Avis> avis;
+    //pour la localisation
+    private double latitude;
+    private double longitude;
+    private int requiredExperience;
+    private double matchScore; // Score de compatibilité mission-consultant
+    private Date startdate;
+    private Date enddate;
+
+    public double getMatchScore() {
+        return matchScore;
+    }
+
+    public void setMatchScore(double matchScore) {
+        this.matchScore = matchScore;
+    }
 
     public Mission() {}
 
     public Mission(Double budget, List<Competence> competencesRequises, Date deadline, String description, Entreprise entreprise, Long id, List<Proposition> propositions, String statut, String titre,String domaine) {
+        this.avis = avis;
         this.budget = budget;
         this.competencesRequises = competencesRequises;
         this.deadline = deadline;
         this.description = description;
+        this.domaine = domaine;
+        this.enddate = enddate;
         this.entreprise = entreprise;
         this.id = id;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.matchScore = matchScore;
         this.propositions = propositions;
+        this.requiredExperience = requiredExperience;
+        this.startdate = startdate;
         this.statut = statut;
         this.titre = titre;
         this.domaine = domaine;
+    }
+
+
+
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
+    }
+
+    public Date getEnddate() {
+        return enddate;
+    }
+
+    public void setEnddate(Date enddate) {
+        this.enddate = enddate;
+    }
+
+    public Date getStartdate() {
+        return startdate;
+    }
+
+    public void setStartdate(Date startdate) {
+        this.startdate = startdate;
+    }
+
+
+    public int getRequiredExperience() {
+        return requiredExperience;
+    }
+
+    public void setRequiredExperience(int requiredExperience) {
+        this.requiredExperience = requiredExperience;
     }
 
     public String getDomaine() {
@@ -121,5 +191,13 @@ public class Mission {
 
     public void setTitre(String titre) {
         this.titre = titre;
+    }
+
+    public List<Avis> getAvis() {
+        return avis;
+    }
+
+    public void setAvis(List<Avis> avis) {
+        this.avis = avis;
     }
 }

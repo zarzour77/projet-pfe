@@ -30,15 +30,7 @@ public class CompetenceService {
         return competenceRepository.save(competence);
     }
 
-    public Competence updateCompetence(Long id, Competence updatedCompetence) {
-        return competenceRepository.findById(id).map(competence -> {
-            competence.setNom(updatedCompetence.getNom());
-            competence.setConsultants(updatedCompetence.getConsultants());
-            competence.setMissions(updatedCompetence.getMissions());
-            competence.setUtilisateurs(updatedCompetence.getUtilisateurs());
-            return competenceRepository.save(competence);
-        }).orElseThrow(() -> new RuntimeException("Competence not found with id " + id));
-    }
+
 
     public void deleteCompetence(Long id) {
         competenceRepository.deleteById(id);

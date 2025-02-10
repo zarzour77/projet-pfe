@@ -2,7 +2,9 @@ package com.example.demo.Service;
 
 
 import com.example.demo.model.User;
+import com.example.demo.repository.AvisRepository;
 import com.example.demo.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,10 +17,14 @@ import java.util.Optional;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final AvisRepository avisRepository;
+
+
 
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, AvisRepository avisRepository) {
         this.userRepository = userRepository;
+        this.avisRepository = avisRepository;
     }
 
     public List<User> getAllUsers() {
@@ -67,6 +73,24 @@ public class UserService {
         user.setPhotoprofile(base64Image);
 
         return userRepository.save(user);
+    }
+
+
+    @Transactional
+    public void updateUserRating(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        Double averageRating = avisRepository.calculateAverageRatingByUserId(userId);
+
+        // Arrondir à 1 décimale et gérer les cas null
+        if(averageRating != null) {
+            user.setRating(Math.round(averageRating * 10.0) / 10.0);
+        } else {
+            user.setRating(0.0); // Valeur par défaut si pas d'avis
+        }
+
+        userRepository.save(user);
     }
 }
 

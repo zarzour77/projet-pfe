@@ -36,7 +36,7 @@ public class CompetenceController {
         return competenceService.createCompetence(competence);
     }
 
-    @PutMapping("/{id}")
+  /*@PutMapping("/{id}")
     public ResponseEntity<Competence> updateCompetence(@PathVariable Long id, @RequestBody Competence competence) {
         try {
             Competence updatedCompetence = competenceService.updateCompetence(id, competence);
@@ -44,7 +44,7 @@ public class CompetenceController {
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
-    }
+    }*/
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCompetence(@PathVariable Long id) {
