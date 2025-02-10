@@ -92,5 +92,12 @@ public class UserService {
 
         userRepository.save(user);
     }
+    public User updateSubscriptionType(Long id, String subscriptionType) {
+        return userRepository.findById(id).map(user -> {
+            user.setSubscriptionType(subscriptionType);
+            return userRepository.save(user);
+        }).orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
 }
 

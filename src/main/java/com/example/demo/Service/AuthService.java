@@ -30,6 +30,12 @@ public class AuthService {
         // Encode the password before saving
         String encodedPassword = passwordEncoder.encode(signUpRequest.getPassword());
 
+        // Set role to "ROLE_USER" if it's null or empty
+        String role = signUpRequest.getRole();
+        if (role == null || role.isEmpty()) {
+            role = "ROLE_USER";  // Set default role if null or empty
+        }
+
         // Create and save the user
         User user = new User(
                 signUpRequest.getNom(),
@@ -37,10 +43,11 @@ public class AuthService {
                 signUpRequest.getTelephone(),
                 signUpRequest.getEmail(),
                 encodedPassword,
-                signUpRequest.getRole()
+                role  // Ensure role is passed correctly
         );
 
         return userRepository.save(user);
     }
+
 
 }

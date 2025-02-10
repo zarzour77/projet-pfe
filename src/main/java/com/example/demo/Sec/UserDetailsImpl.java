@@ -40,9 +40,13 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Single role, so return just that one authority
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + this.role.toUpperCase()));
+        if (role == null) {
+            // Handle the case where role is null, maybe return an empty authority
+            return Collections.emptyList(); // Or any default role, e.g., "ROLE_USER"
+        }
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
     }
+
 
 
     @Override

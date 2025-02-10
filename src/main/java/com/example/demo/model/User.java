@@ -13,7 +13,6 @@ public class User {
     private Long id;
 
     private String nom;
-    @JsonIgnore
     private String prenom;
     private String email;
     private String telephone;
