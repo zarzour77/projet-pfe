@@ -3,7 +3,6 @@ import AuthService from "../Services/AuthService";
 import styles from "./Login.module.css"; // Import styles
 import "@fortawesome/fontawesome-free/css/all.min.css"; // Correct FontAwesome import
 import { useNavigate } from "react-router-dom"; // Import useNavigate
-
 const Login = () => {
   const [isActive, setIsActive] = useState(false);
 
@@ -37,7 +36,8 @@ const Login = () => {
       alert("Signup successful!"); // Display success alert
       navigate("/SignupSuccess");
       console.log("User data:", response); // Log user data (optional)
-      
+      localStorage.setItem("user", JSON.stringify(response));      
+
     } catch (err) {
       alert("Signup failed! Please check your information."); // Display error alert
       console.error(err);
@@ -45,20 +45,28 @@ const Login = () => {
   };
 
   // Handle Sign In
-  const handleLogin = async (e) => {
-    e.preventDefault(); // Prevent default form submission
+const handleLogin = async (e) => {
+  e.preventDefault(); // Prevent default form submission
 
-    try {
-      console.log(signinEmail, signinPassword);
-      const response = await AuthService.login(signinEmail, signinPassword);
-      navigate("/CreateProfile")
-      console.log("User data:", response); // Log user data (optional)
-      localStorage.setItem("user", JSON.stringify(response));      
-
-    } catch  {
-      alert("Login failed! Please check your credentials."); // Display error alert
+  try {
+    console.log(signinEmail, signinPassword);
+    const response = await AuthService.login(signinEmail, signinPassword);
+    localStorage.setItem("userWithToken", JSON.stringify(response));      
+    console.log(response)
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    // Check subscriptionType and redirect accordingly
+    if (storedUser.subscriptionType === null || storedUser.subscriptionType === "") {
+      navigate("/subscription"); // Redirect to subscription page
+    } else {
+      navigate("/TradeForTalent"); // Redirect to Trade for Talent page
     }
-  };
+
+    console.log("User data:", storedUser); // Log user data (optional)
+  } catch {
+    alert("Login failed! Please check your credentials."); // Display error alert
+  }
+};
+
 
   return (<div className={`${styles.customBackground}`}>
 

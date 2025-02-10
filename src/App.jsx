@@ -8,6 +8,7 @@ import Experience from "./Components/Experience";
 import Subscription from "./Components/Subscription";
 import PaymentSuccess from "./Components/PaymentSuccess";
 import PaymentFailed from "./Components/PaymentFailed";
+import TradeForTalent from "./Components/TradeForTalent";
 const App = () => {
   return (
     <Router>
@@ -21,6 +22,7 @@ const App = () => {
         <Route path="/Subscription" element={<Subscription /> }  />
         <Route path="/PaymentSuccess" element={<PaymentSuccess /> }  />
         <Route path="/PaymentFailed" element={<PaymentFailed /> }  />
+        <Route path="/TradeForTalent" element={<TradeForTalent /> }  />
 
       </Routes>
     </Router>

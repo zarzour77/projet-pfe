@@ -8,7 +8,7 @@ const SignupSuccess = () => {
   useEffect(() => {
     // Redirect to CreateProfile after 4 seconds
     const timer = setTimeout(() => {
-      navigate("/CreateProfile");
+      navigate("/Login");
     }, 4000);
 
     return () => clearTimeout(timer); // Cleanup on component unmount
