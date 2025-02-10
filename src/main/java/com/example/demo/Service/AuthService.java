@@ -21,19 +21,16 @@ public class AuthService {
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
 
-    public MessageResponse registerUser(SignupRequest signUpRequest) {
-        // Debugging logs
-        System.out.println("Registering user with email: " + signUpRequest.getEmail());
-
+    public User registerUser(SignupRequest signUpRequest) {
         // Check if the email already exists in the database
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            return new MessageResponse("Error: Email is already taken!");
+            throw new RuntimeException("Error: Email is already taken!");
         }
 
         // Encode the password before saving
         String encodedPassword = passwordEncoder.encode(signUpRequest.getPassword());
 
-        // Create the new user object
+        // Create and save the user
         User user = new User(
                 signUpRequest.getNom(),
                 signUpRequest.getPrenom(),
@@ -43,10 +40,7 @@ public class AuthService {
                 signUpRequest.getRole()
         );
 
-        // Save the user into the repository
-        userRepository.save(user);
-
-        return new MessageResponse("User registered successfully!");
+        return userRepository.save(user);
     }
 
 }

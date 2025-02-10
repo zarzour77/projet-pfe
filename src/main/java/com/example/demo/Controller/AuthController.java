@@ -7,6 +7,7 @@ import com.example.demo.Response.JwtResponse;
 import com.example.demo.Response.MessageResponse;
 import com.example.demo.Sec.UserDetailsImpl;
 import com.example.demo.Sec.UserDetailsServiceImpl;
+import com.example.demo.model.User;
 import jakarta.validation.Valid;
 import com.example.demo.jwt.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,15 +62,9 @@ public class AuthController {
         ));
     }
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
-        // Debugging log
-        System.out.println("SignUp request received for: " + signUpRequest.getEmail());
-
-        MessageResponse response = authService.registerUser(signUpRequest);
-        if (response.getMessage().contains("Error")) {
-            return ResponseEntity.badRequest().body(response);
-        }
-        return ResponseEntity.ok(response);
+    public ResponseEntity<User> registerUser(@RequestBody SignupRequest signUpRequest) {
+        User user = authService.registerUser(signUpRequest);
+        return ResponseEntity.ok(user);
     }
 
 }

@@ -21,6 +21,8 @@ public class User {
     private String role;
     private String photoprofile;
     private String statut;
+    private String subscriptionType;
+
     @JsonIgnore
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Notification> notifications;
@@ -79,6 +81,15 @@ public class User {
         this.email = email;
         this.password = encodedPassword;
         this.role = role;
+    }
+    public User(String nom, String prenom, String telephone, String email, String encodedPassword, String role, String subscriptionType) {
+        this.nom = nom;
+        this.prenom = prenom;
+        this.telephone = telephone;
+        this.email = email;
+        this.password = encodedPassword;
+        this.role = role;
+        this.subscriptionType = subscriptionType; // Initialize subscriptionType
     }
 
     public String getStatut() {
@@ -192,4 +203,7 @@ public class User {
     public void setTelephone(String telephone) {
         this.telephone = telephone;
     }
+    public String getSubscriptionType() {return subscriptionType;}
+
+    public void setSubscriptionType(String subscriptionType) {this.subscriptionType = subscriptionType;}
 }

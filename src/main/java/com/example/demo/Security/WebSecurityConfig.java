@@ -25,7 +25,7 @@ import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity  // Enable method security if needed (for @PreAuthorize or @Secured)
+@EnableMethodSecurity
 public class WebSecurityConfig {
 
     @Autowired
@@ -35,7 +35,7 @@ public class WebSecurityConfig {
     private AuthEntryPoint unauthorizedHandler;
 
     @Autowired
-    private AuthenticationConfiguration authenticationConfiguration; // Autowire AuthenticationConfiguration
+    private AuthenticationConfiguration authenticationConfiguration;
 
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter() {
@@ -52,18 +52,18 @@ public class WebSecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager() throws Exception {
-        // Get the AuthenticationManager from AuthenticationConfiguration
         return authenticationConfiguration.getAuthenticationManager();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(); // Password encoding using BCrypt
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // ✅ Explicitly enable CORS
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
@@ -78,10 +78,11 @@ public class WebSecurityConfig {
         return http.build();
     }
 
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173")); // Your frontend URL
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
         configuration.setAllowCredentials(true);
