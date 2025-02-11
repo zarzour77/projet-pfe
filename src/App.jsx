@@ -10,6 +10,7 @@ import PaymentSuccess from "./Components/PaymentSuccess";
 import PaymentFailed from "./Components/PaymentFailed";
 import TradeForTalent from "./Components/TradeForTalent";
 import ProfileSelection from "./Components/ProfileSelection";
+import UserInformation from ".Components/UserInformation";
 const App = () => {
   return (
     <Router>
@@ -25,7 +26,7 @@ const App = () => {
         <Route path="/PaymentFailed" element={<PaymentFailed /> }  />
         <Route path="/TradeForTalent" element={<TradeForTalent /> }  />
         <Route path="/ProfileSelection" element={<ProfileSelection /> }  />
-
+        <Route path="/UserInformation" element={<UserInformation /> }  />
       </Routes>
     </Router>
   );
