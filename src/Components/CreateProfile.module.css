@@ -1,0 +1,77 @@
+/* General Page Styling */
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center everything */
+  height: 100vh; /* Full-screen height */
+  padding: 20px;
+}
+
+/* Profile Container */
+.profileContainer {
+  background: rgba(255, 255, 255, 0.1); /* Semi-transparent background */
+  padding: 40px;
+  border-radius: 12px;
+  backdrop-filter: blur(10px); /* Glass effect */
+  box-shadow: 0px 15px 50px rgba(0, 0, 0, 0.4); /* Intense box shadow */
+  max-width: 600px;
+  text-align: center;
+}
+
+
+/* Welcome Text */
+.texts h1 {
+  font-size: 26px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+/* Additional Info */
+.additionalTexts {
+  margin-top: 45px;
+  font-size: 16px;
+}
+
+.additionalTexts p {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px; /* Space between icon and text */
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
+/* Bootstrap Icons Styling */
+.additionalTexts i {
+  font-size: 22px;
+  color: #ffcc00; /* Yellow for contrast */
+}
+
+/* Start Button */
+.buttonContainer {
+  margin-top: 30px;
+}
+
+.showExp {
+  background: #ffcc00;
+  color: #333;
+  font-size: 18px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: 0.3s ease-in-out;
+  font-weight: bold;
+}
+
+.showExp:hover {
+  background: #ffdb4d; /* Lighter yellow */
+  transform: scale(1.05);
+}
+
+/* Small Text Below Button */
+.timeInfo {
+  font-size: 14px;
+  margin-top: 10px;
+  opacity: 0.9;
+}

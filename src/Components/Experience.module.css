@@ -1,0 +1,221 @@
+/* General Styling */
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Center content vertically */
+  align-items: center; /* Center content horizontally */
+  height: 100vh; /* Ensure the container takes the full height of the page */
+  width: 100vw; /* Ensure the container takes the full width */
+  padding: 20px;
+  text-align: center;
+  box-sizing: border-box; /* Include padding in the container's total size */
+  position: relative; /* Allow positioning of the button */
+}
+
+/* Title */
+.title {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+/* Step Indicator */
+.stepIndicator {
+  font-size: 18px;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+/* Experience Selection */
+.phases {
+  display: flex;
+  gap: 20px;
+  margin-top: 30px;
+}
+
+/* Phase Box */
+.phase {
+  padding: 30px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 204, 0, 0.6);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+  width: 220px;
+  text-align: center;
+  cursor: pointer;
+  transition: 0.3s ease-in-out;
+  font-weight: bold;
+  color: #333; /* Text color */
+}
+
+/* Hover Effect */
+.phase:hover {
+  background: rgba(255, 204, 0, 0.2);
+  transform: scale(1.05);
+}
+
+/* Selected Phase */
+.selected {
+  background: #ffcc00 !important;  /* Yellow background */
+  color: #333;
+  border-color: #ffdb4d;
+  transform: scale(1.08);
+}
+
+/* Icons */
+.phase i {
+  font-size: 30px;
+  margin-bottom: 10px;
+  color: #ffcc00; /* Default icon color */
+  transition: color 0.3s ease-in-out;
+}
+
+/* White Icon When Selected */
+.selected i {
+  color: #fff !important; /* White icon when selected */
+}
+
+/* Step 3: Choose How You Prefer to Work - Phases */
+.step3 .phases {
+  display: flex;
+  gap: 20px;
+  margin-top: 30px;
+  font-size: 22px; /* Increased font size for phases */
+}
+
+/* Phase Box - Step 3 */
+.step3 .phase {
+  padding: 40px; /* Increased padding for larger phase box */
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 204, 0, 0.6);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+  width: 450px; /* Increased width */
+  text-align: center;
+  cursor: pointer;
+  transition: 0.3s ease-in-out;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Subtitle Styling in Step 3 */
+.step3 .subtitle {
+  font-size: 14px; /* Smaller font size for subtitle */
+  color: #777; /* Lighter color for subtitle */
+  margin-top: 10px; /* Adjust margin if needed */
+}
+
+/* Navigation Buttons */
+.buttonContainer {
+  display: flex;
+  justify-content: space-between; /* Space buttons apart */
+  width: 100%;
+  position: absolute; /* Position buttons below progress bar */
+  bottom: 20px; /* Adjust distance from the bottom */
+  left: 0;
+  right: 0;
+  padding: 0 20px; /* Adjust padding for better button placement */
+}
+
+.buttonDiv {
+  width: 8%; /* Ensure buttons occupy half the container */
+  margin: 30px;
+  }
+
+.nextButton, .prevButton {
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+  width: 100%;
+}
+
+.nextButton {
+  background: #ffcc00;
+  color: #333;
+}
+
+.nextButton:hover {
+  background: #e6b800;
+}
+
+.prevButton {
+  background: grey;
+  color: #fff;
+}
+
+.prevButton:hover {
+  background: #4d4d4d;
+}
+
+/* Progress Bar */
+.progressBar {
+  width: 100%;
+  height: 8px;
+  background: #eee;
+  border-radius: 10px;
+  margin-top: 50px;
+  border:inherit;
+}
+
+.progress {
+  height: 100%;
+  background: #ffcc00;
+  transition: width 0.3s ease-in-out;
+}
+
+/* Step 3 Summary */
+.summary {
+  font-size: 18px;
+  font-weight: bold;
+  color: #444;
+  margin: 10px 0;
+}
+
+.summaryFinal {
+  font-size: 20px;
+  font-weight: bold;
+  color: #222;
+  margin-top: 20px;
+}
+.subscribeButton {
+  margin-top: 30px;
+  padding: 12px 24px;
+  font-size: 18px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s ease-in-out;
+  background: #ffcc00;
+  color: #333;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.subscribeButton:hover {
+  background: #e6b800;
+  transform: scale(1.05);
+}
+/* Add animation for the phase when not selected */
+.animatePhase {
+  animation: pulse 0.5s ease-in-out infinite; /* Pulse effect */
+}
+
+/* Keyframes for the pulse animation */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1); /* Enlarge */
+  }
+  100% {
+    transform: scale(1); /* Shrink back */
+  }
+}
