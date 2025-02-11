@@ -34,7 +34,7 @@ const Login = () => {
       };
       const response = await AuthService.signup(userData); // Assuming signup method exists in AuthService
       alert("Signup successful!"); // Display success alert
-      navigate("/SignupSuccess");
+      navigate("/ProfileSelection");
       console.log("User data:", response); // Log user data (optional)
       localStorage.setItem("user", JSON.stringify(response));      
 
