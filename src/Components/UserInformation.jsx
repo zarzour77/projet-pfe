@@ -549,19 +549,7 @@ const UserInformation = () => {
                   <img src={preview} alt="Aperçu" style={{ width: '150px', height: '150px', borderRadius: '8px' }} />
                 </div>
               )}
-              <p><strong>Localisation:</strong> {modalData.latitude}, {modalData.longitude}</p>
               <p><strong>Domaines:</strong> {modalData.domaines.join(', ')}</p>
-              <p><strong>Compétences:</strong> {modalData.competences.join(', ')}</p>
-              {modalData.competences && modalData.competences.length > 0 && (
-                <div>
-                  <h5>Niveaux de compétence :</h5>
-                  {modalData.competences.map((comp, idx) => (
-                    <p key={idx}>
-                      <strong>{comp} :</strong> {modalData.competenceDetails && modalData.competenceDetails[comp] ? modalData.competenceDetails[comp] : 'Non renseigné'}
-                    </p>
-                  ))}
-                </div>
-              )}
               <p><strong>Portfolio:</strong> {modalData.portfolio}</p>
               <p><strong>Expérience (années):</strong> {modalData.experienceYears}</p>
               <p><strong>Budget Min:</strong> {modalData.budgetMin}</p>

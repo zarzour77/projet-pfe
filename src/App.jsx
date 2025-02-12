@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Home from "./Components/Home";
 import Login from "./Components/Login"
@@ -10,6 +9,7 @@ import Subscription from "./Components/Subscription";
 import PaymentSuccess from "./Components/PaymentSuccess";
 import PaymentFailed from "./Components/PaymentFailed";
 import UserInformation from "./components/UserInformation";
+import MissionTinder from "./components/MissionTinder";
 const App = () => {
   return (
     <Router>
@@ -24,6 +24,7 @@ const App = () => {
         <Route path="/PaymentSuccess" element={<PaymentSuccess /> }  />
         <Route path="/PaymentFailed" element={<PaymentFailed /> }  />
         <Route path="/UserInformation" element={<UserInformation /> }  />
+        <Route path="/MissionTinder" element={<MissionTinder /> }  />
 
       </Routes>
     </Router>
