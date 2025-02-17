@@ -1,15 +1,17 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Home from "./Components/Home";
+import Home from "./components/Home";
 import Login from "./Components/Login"
 import SignupSuccess from "./Components/SignupSuccess";
 import CreateProfile from "./Components/CreateProfile";
-import Header from "./Components/Header";
+import Header from "./components/Header";
 import Experience from "./Components/Experience";
 import Subscription from "./Components/Subscription";
 import PaymentSuccess from "./Components/PaymentSuccess";
 import PaymentFailed from "./Components/PaymentFailed";
 import UserInformation from "./components/UserInformation";
 import MissionTinder from "./components/MissionTinder";
+import SearchMission from "./components/SearchMission";
+import Messenger from "./components/Messenger";
 const App = () => {
   return (
     <Router>
@@ -25,7 +27,8 @@ const App = () => {
         <Route path="/PaymentFailed" element={<PaymentFailed /> }  />
         <Route path="/UserInformation" element={<UserInformation /> }  />
         <Route path="/MissionTinder" element={<MissionTinder /> }  />
-
+        <Route path="/SearchMission" element={<SearchMission /> }  />
+        <Route path="/Messenger" element={<Messenger /> }  />
       </Routes>
     </Router>
   );
