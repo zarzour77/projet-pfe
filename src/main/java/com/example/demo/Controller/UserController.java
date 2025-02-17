@@ -71,6 +71,17 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
     }
+    @PutMapping("/{id}/role")
+    public ResponseEntity<User> updateUserRole(@PathVariable Long id, @RequestBody User updatedUser) {
+        try {
+            User user = userService.updateUserRole(id, updatedUser.getRole());
+            return ResponseEntity.ok(user);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
 
 
 }

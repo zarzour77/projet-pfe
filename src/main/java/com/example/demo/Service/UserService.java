@@ -99,5 +99,12 @@ public class UserService {
         }).orElseThrow(() -> new RuntimeException("User not found"));
     }
 
+    public User updateUserRole(Long id, String role) {
+        return userRepository.findById(id).map(user -> {
+            user.setRole(role); // Set the new role
+            return userRepository.save(user);
+        }).orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
 }
 

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport
+        xmlns="http://jasperreports.sourceforge.net/jasperreports"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+                        http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+        name="SimpleCVReport"
+        pageWidth="595"
+        pageHeight="842"
+        columnWidth="535"
+        leftMargin="30"
+        rightMargin="30"
+        topMargin="20"
+        bottomMargin="20">
+
+    <!-- ========== PARAMETERS ========== -->
+    <parameter name="nom" class="java.lang.String"/>
+    <parameter name="prenom" class="java.lang.String"/>
+    <parameter name="email" class="java.lang.String"/>
+    <parameter name="telephone" class="java.lang.String"/>
+    <parameter name="experienceYears" class="java.lang.Integer"/>
+    <parameter name="profilePicture" class="java.io.InputStream"/>
+    <parameter name="domaines" class="java.lang.String"/>
+    <parameter name="competences" class="java.lang.String"/>
+    <parameter name="adresse" class="java.lang.String"/>
+
+    <!-- ========== TITLE SECTION ========== -->
+    <title>
+        <band height="30">
+            <textField>
+                <reportElement x="0" y="0" width="535" height="20"/>
+                <textElement textAlignment="Center">
+                    <font size="15" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{prenom} + " " + $P{nom}]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+
+    <!-- ========== DETAIL SECTION ========== -->
+    <detail>
+        <band height="240"> <!-- Adjusted the band height to ensure space for new sections -->
+            <staticText>
+                <reportElement x="10" y="25" width="200" height="20"/>
+                <textElement>
+                    <font size="14" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Informations personnelles]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="0" y="60" width="535" height="20"/>
+                <textFieldExpression><![CDATA["Email : " + $P{email}]]></textFieldExpression>
+            </textField>
+            <!-- Telephone -->
+            <textField>
+                <reportElement x="0" y="85" width="535" height="20"/>
+                <textFieldExpression><![CDATA["Telephone : " + $P{telephone}]]></textFieldExpression>
+            </textField>
+            <!-- Adresse -->
+            <textField>
+                <reportElement x="0" y="110" width="535" height="20"/>
+                <textFieldExpression><![CDATA["Adresse : " + $P{adresse}]]></textFieldExpression>
+            </textField>
+            <!-- Experience Years -->
+
+            <!-- Domaines -->
+            <textField>
+                <reportElement x="0" y="150" width="535" height="20"/>
+                <textFieldExpression><![CDATA["Domaines: " + $P{domaines}]]></textFieldExpression>
+            </textField>
+            <!-- Competences (as a list) -->
+            <staticText>
+                <reportElement x="10" y="165" width="535" height="20"/>
+                <textElement>
+                    <font size="14" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Compétences]]></text>
+            </staticText>
+            <!-- Simulate the list with a line for each competence -->
+            <textField>
+                <reportElement x="10" y="200" width="535" height="20"/>
+                <textFieldExpression><![CDATA[$P{competences}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+
+
+</jasperReport>
