@@ -1,0 +1,132 @@
+/* Container */
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    padding: 20px;
+    text-align: center;
+    box-sizing: border-box;
+    position: relative;
+}
+
+/* Heading */
+.container h2 {
+    color: #333;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+/* Profile options */
+.options {
+    display: flex;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+/* Profile Option */
+.option {
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 204, 0, 0.6);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+    width: 320px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s ease-in-out, background 0.3s ease-in-out;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Hover effect */
+.option:hover {
+    background: rgba(255, 204, 0, 0.2);
+    transform: scale(1.05);
+}
+
+/* Selected option */
+.selected {
+    background: #ffcc00 !important;
+    color: #333 !important;
+    border-color: #ffdb4d;
+    transform: scale(1.08);
+    transition: transform 0.3s ease-in-out;
+}
+
+
+/* Navigation Buttons */
+.buttonContainer {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    padding-right: 20px;
+}
+
+.buttonDiv {
+    width: 8%; /* Ensure buttons occupy half the container */
+    margin: 30px;
+    }
+/* Next Button */
+.nextButton {
+    background: #ffcc00;
+    color: #333;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.nextButton:hover {
+    background: #e6b800;
+}
+
+/* Disabled button */
+.disabledButton {
+    background: #ccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Icon styling */
+.icon {
+    font-size: 40px;
+    color: #ffcc00;
+    margin-bottom: 10px;
+}
+
+.animateOption {
+    animation: pulse 0.5s ease-in-out infinite; /* Pulse effect */
+  }
+  @keyframes pulse {
+    0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.1); /* Enlarge */
+      }
+      100% {
+        transform: scale(1); /* Shrink back */
+      }
+  }
+ /* Icon Styling */
+.icon {
+    font-size: 40px;
+    color: #ffcc00; /* Default color for icons */
+    transition: color 0.3s ease-in-out;
+  }
+  
+  /* Change Icon Color when Selected */
+  .selected .icon {
+    color: #fff; /* White icon when selected */
+  }

@@ -1,11 +1,11 @@
 import axios from "axios";
 
-const API_BASE_URL = 'http://localhost:8081/payment' //st the URL if needed
+const API_BASE_URL = 'http://localhost:8181/payment' //st the URL if needed
 
 const PaymentService = {
   createPayment: async (amount) => {
     try {
-      const storedUser = JSON.parse(localStorage.getItem("user"));
+      const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
       console.log(storedUser);
 
       // Define token before checking it

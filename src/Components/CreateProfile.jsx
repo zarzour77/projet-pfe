@@ -3,6 +3,7 @@ import styles from "./CreateProfile.module.css"; // Using CSS modules
 
 const CreateProfile = () => {
   const storedUser = JSON.parse(localStorage.getItem("user"));
+  console.log(storedUser)
   const navigate = useNavigate(); // React Router navigation
 
   return (

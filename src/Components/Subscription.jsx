@@ -1,12 +1,10 @@
 import { useState } from "react";
 import styles from "./Subscription.module.css";
 import PaymentService from "../Services/PaymentService"; // Import the PaymentService
-
 const Subscription = () => {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false); // State to manage loading
-
   // Define pricing for each plan
   const planPrices = {
     silver: 30000,
@@ -24,7 +22,7 @@ const Subscription = () => {
     if (!selectedPlan) return;
 
     const amount = planPrices[selectedPlan]; // Get the amount for the selected plan
-
+    localStorage.setItem("SubscriptionType",JSON.stringify(selectedPlan))
     // Show the success message immediately when the user clicks
     setMessage(`Paiement initié avec succès. Votre choix: ${selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1)}`);
 
@@ -36,6 +34,7 @@ const Subscription = () => {
       setTimeout(async () => {
         await PaymentService.createPayment(amount);
         setLoading(false); // Stop loading after the payment request
+        
       }, 1000); // 2 seconds delay to simulate loading
     } catch (error) {
       console.error("Erreur lors du paiement:", error);

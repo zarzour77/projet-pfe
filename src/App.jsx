@@ -25,6 +25,8 @@ const App = () => {
         <Route path="/Subscription" element={<Subscription /> }  />
         <Route path="/PaymentSuccess" element={<PaymentSuccess /> }  />
         <Route path="/PaymentFailed" element={<PaymentFailed /> }  />
+        <Route path="/TradeForTalent" element={<TradeForTalent /> }  />
+        <Route path="/ProfileSelection" element={<ProfileSelection /> }  />
         <Route path="/UserInformation" element={<UserInformation /> }  />
         <Route path="/MissionTinder" element={<MissionTinder /> }  />
         <Route path="/SearchMission" element={<SearchMission /> }  />
