@@ -21,13 +21,15 @@ const ProfileSelection = () => {
     if (!selectedProfile) {
       setIsAnimating(true); // Trigger animation on invalid selection
       setTimeout(() => setIsAnimating(false), 1000); // Reset animation
+
       return;
     }
 
     // Update the role using UserService
     try {
-      await UserService.updateRole(userId, selectedProfile); // Update role in backend
-      navigate("/SignupSuccess"); // Redirect to success page after role update
+      const updatedUser = await UserService.updateRole(userId, selectedProfile); // Update role in backend
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      navigate("/UserInformation"); // Redirect to success page after role update
     } catch (error) {
       console.error("Error updating role:", error);
       // Optionally, display an error message to the user here
@@ -39,11 +41,11 @@ const ProfileSelection = () => {
       <h2>Choisissez votre profil</h2>
       <div className={styles.options}>
         <div
-          className={`${styles.option} ${selectedProfile === "Freelancer" ? styles.selected : ""} ${isAnimating && !selectedProfile ? styles.animateOption : ""}`}
-          onClick={() => handleSelect("Freelancer")}
+          className={`${styles.option} ${selectedProfile === "Consultant" ? styles.selected : ""} ${isAnimating && !selectedProfile ? styles.animateOption : ""}`}
+          onClick={() => handleSelect("Consultant")}
         >
           <FaUserTie className={styles.icon} />
-          <h3>Freelancer</h3>
+          <h3>Consultant</h3>
           <p>Travaillez sur des missions adaptées à votre expertise.</p>
         </div>
         <div

@@ -10,7 +10,7 @@ import PaymentSuccess from "./Components/PaymentSuccess";
 import PaymentFailed from "./Components/PaymentFailed";
 import TradeForTalent from "./Components/TradeForTalent";
 import ProfileSelection from "./Components/ProfileSelection";
-import UserInformation from ".Components/UserInformation";
+import UserInformation from "./Components/UserInformation";
 const App = () => {
   return (
     <Router>

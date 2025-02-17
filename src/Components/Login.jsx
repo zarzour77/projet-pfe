@@ -34,7 +34,7 @@ const Login = () => {
       };
       const response = await AuthService.signup(userData); // Assuming signup method exists in AuthService
       alert("Signup successful!"); // Display success alert
-      navigate("/ProfileSelection");
+      navigate("/UserInformation");
       console.log("User data:", response); // Log user data (optional)
       localStorage.setItem("user", JSON.stringify(response));      
 
@@ -58,7 +58,7 @@ const handleLogin = async (e) => {
     if (storedUser.subscriptionType === null || storedUser.subscriptionType === "") {
       navigate("/subscription"); // Redirect to subscription page
     } else {
-      navigate("/TradeForTalent"); // Redirect to Trade for Talent page
+      navigate("/home"); // Redirect to Trade for Talent page
     }
 
     console.log("User data:", storedUser); // Log user data (optional)

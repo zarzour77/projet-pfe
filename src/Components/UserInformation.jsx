@@ -13,15 +13,30 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Toolti
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import 'react-toastify/dist/ReactToastify.css';
-// Vos styles personnalisés éventuels
 import styles from './UserInformation.module.css';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-// Coordonnées par défaut pour Tunis, Tunisie
+// Get the stored user from localStorage (or an empty object if not found)
+const user = JSON.parse(localStorage.getItem("user")) || {};
+const getSafeKey = (comp) => comp.replace(/\./g, '_');
+
+// Set initial values (now adding a default for competenceDetails)
+const initialValues = {
+  nom: user?.nom || '',
+  prenom: user?.prenom || '',
+  email: user?.email || '',
+  password: user?.password || '',
+  photoprofile: user?.photoprofile || '',
+  latitude: user?.latitude || '',
+  longitude: user?.longitude || '',
+  domaines: user?.domaines || [],
+  competences: user?.competences || [],
+  competenceDetails: user?.competenceDetails || {} // <-- added default empty object
+};
+
 const defaultPosition = [36.8065, 10.1815];
 
-// Personnalisation du marqueur pour la carte
 const customIcon = L.icon({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   iconSize: [25, 41],
@@ -31,7 +46,6 @@ const customIcon = L.icon({
   shadowSize: [41, 41],
 });
 
-// Composant de la carte cliquable
 function ClickableMap({ latitude, longitude, onLocationSelect }) {
   const MapClickHandler = () => {
     useMapEvents({
@@ -70,22 +84,24 @@ function ClickableMap({ latitude, longitude, onLocationSelect }) {
   );
 }
 
-// Lazy loading de la carte
 const LazyClickableMap = React.lazy(() =>
   Promise.resolve({ default: ClickableMap })
 );
 
-// Schéma de validation du formulaire
+const resetLocation = (setFieldValue) => {
+  setFieldValue('latitude', defaultPosition[0]);
+  setFieldValue('longitude', defaultPosition[1]);
+};
+
 const SignupSchema = Yup.object().shape({
   nom: Yup.string().required('Champ requis'),
   prenom: Yup.string().required('Champ requis'),
   email: Yup.string().email('Email invalide').required('Champ requis'),
   telephone: Yup.string().required('Champ requis'),
   adresse: Yup.string().required('Champ requis'),
-  // D'autres validations peuvent être ajoutées ici
+  // Additional validations as needed
 });
 
-// Composant de notation par étoiles
 const StarRating = ({ rating, onChange }) => {
   return (
     <div style={{ display: 'inline-block' }}>
@@ -107,16 +123,14 @@ const StarRating = ({ rating, onChange }) => {
 };
 
 const UserInformation = () => {
-  // Si aucun type n'est sélectionné, on affiche les cartes cliquables
   const [userType, setUserType] = useState('');
-  // Pour le consultant, le formulaire est en 2 étapes
   const [currentStep, setCurrentStep] = useState(1);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState(null);
 
-  // Options prédéfinies
+  // Predefined options
   const availableDomainsArray = [
     "Développement logiciel",
     "Développement Web",
@@ -192,26 +206,6 @@ const UserInformation = () => {
   const domainOptions = availableDomainsArray.map(domain => ({ value: domain, label: domain }));
   const competenceOptions = availableCompetencesArray.map(comp => ({ value: comp, label: comp }));
 
-  // Valeurs initiales du formulaire
-  const initialValues = {
-    nom: '',
-    prenom: '',
-    email: '',
-    telephone: '',
-    adresse: '',
-    photoprofile: null,
-    domaines: [],
-    competences: [],
-    competenceDetails: {}, // Clé: nom de compétence, valeur: niveau
-    portfolio: '',
-    experienceYears: '',
-    budgetMin: '',
-    latitude: '',
-    longitude: '',
-    nomentreprise: '',
-  };
-
-  // Gestion de l'image de profil
   const handleImageChange = (e, setFieldValue) => {
     const file = e.target.files[0];
     setFieldValue('photoprofile', file);
@@ -219,20 +213,12 @@ const UserInformation = () => {
     else setPreview(null);
   };
 
-  // Réinitialiser la localisation
-  const resetLocation = (setFieldValue) => {
-    setFieldValue('latitude', defaultPosition[0]);
-    setFieldValue('longitude', defaultPosition[1]);
-  };
-
-  // Lorsque l'utilisateur clique sur "Vérifier", on ouvre la modal de récapitulation
   const handlePreviewSubmit = (values, setSubmitting) => {
     setModalData(values);
     setShowModal(true);
     setSubmitting(false);
   };
 
-  // Soumission finale après confirmation dans la modal
   const handleFinalSubmit = (values) => {
     setLoading(true);
     setTimeout(() => {
@@ -243,7 +229,6 @@ const UserInformation = () => {
     }, 2000);
   };
 
-  // Exemple de graphique des compétences (pour le récapitulatif)
   const chartData = {
     labels: modalData && modalData.competences ? modalData.competences : [],
     datasets: [
@@ -251,15 +236,16 @@ const UserInformation = () => {
         label: 'Niveau de compétence',
         data:
           modalData && modalData.competenceDetails
-            ? modalData.competences.map(comp => modalData.competenceDetails[comp] || 0)
+            ? modalData.competences.map(comp => modalData.competenceDetails[getSafeKey(comp)] || 0)
             : [],
-        backgroundColor: 'rgba(75,192,192,0.6)',
+        backgroundColor: 'rgba(75, 85, 192, 0.6)',
       },
     ],
   };
+  
 
-  // Rendu de l'étape pour le consultant avec système d'étoiles pour le niveau de compétence
-  const renderConsultantStep = (values, setFieldValue, isSubmitting) => {
+  // Consultant form rendering
+  const renderConsultantStep = (values, setFieldValue, isSubmitting, isValid) => {
     return (
       <AnimatePresence exitBeforeEnter>
         {currentStep === 1 ? (
@@ -300,7 +286,11 @@ const UserInformation = () => {
               />
               {preview && (
                 <div className="mt-2">
-                  <img src={preview} alt="Aperçu" style={{ width: '150px', height: '150px', borderRadius: '8px' }} />
+                  <img
+                    src={preview}
+                    alt="Aperçu"
+                    style={{ width: '150px', height: '150px', borderRadius: '8px' }}
+                  />
                 </div>
               )}
             </div>
@@ -315,12 +305,21 @@ const UserInformation = () => {
                   }}
                 />
               </Suspense>
-              <Button variant="secondary" size="sm" onClick={() => resetLocation(setFieldValue)} className="mt-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => resetLocation(setFieldValue)}
+                className="mt-2"
+              >
                 Réinitialiser la localisation
               </Button>
             </div>
             <div className="d-flex justify-content-end mt-3">
-              <Button variant="primary" onClick={() => setCurrentStep(2)}>
+              <Button
+                variant="primary"
+                onClick={() => setCurrentStep(2)}
+                disabled={!isValid}
+              >
                 Suivant
               </Button>
             </div>
@@ -332,6 +331,7 @@ const UserInformation = () => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
           >
+            {/* Step 2: Informations Professionnelles */}
             <h4 className="mb-3">Informations Professionnelles</h4>
             <div className="mb-3">
               <CreatableSelect
@@ -339,7 +339,9 @@ const UserInformation = () => {
                 name="domaines"
                 options={domainOptions}
                 value={values.domaines.map(d => ({ value: d, label: d }))}
-                onChange={(selected) => setFieldValue('domaines', selected ? selected.map(s => s.value) : [])}
+                onChange={(selected) =>
+                  setFieldValue('domaines', selected ? selected.map(s => s.value) : [])
+                }
                 placeholder="Domaines d'expertise"
               />
             </div>
@@ -349,24 +351,29 @@ const UserInformation = () => {
                 name="competences"
                 options={competenceOptions}
                 value={values.competences.map(c => ({ value: c, label: c }))}
-                onChange={(selected) => setFieldValue('competences', selected ? selected.map(s => s.value) : [])}
+                onChange={(selected) =>
+                  setFieldValue('competences', selected ? selected.map(s => s.value) : [])
+                }
                 placeholder="Compétences"
               />
             </div>
             {values.competences && values.competences.length > 0 && (
               <div className="mb-3">
                 <h5 className="mt-3">Niveaux de compétence</h5>
-                {values.competences.map((comp, idx) => (
-                  <div key={idx} className="mb-2">
-                    <label>{comp} :</label>
-                    {/* Composant StarRating pour choisir le niveau */}
-                    <StarRating 
-                      rating={Number(values.competenceDetails[comp]) || 1}
-                      onChange={(value) => setFieldValue(`competenceDetails.${comp}`, value)}
-                    />
-                    <span className="ms-2">{values.competenceDetails[comp] || 1} / 5</span>
-                  </div>
-                ))}
+                {values.competences.map((comp, idx) => {
+                  const safeKey = getSafeKey(comp);
+                  const level = values.competenceDetails[safeKey] ?? 0;
+                  return (
+                    <div key={idx} className="mb-2">
+                      <label>{comp} :</label>
+                      <StarRating
+                        rating={level}
+                        onChange={(value) => setFieldValue(`competenceDetails.${safeKey}`, value)}
+                      />
+                      <span className="ms-2">{level} / 5</span>
+                    </div>
+                  );
+                })}
               </div>
             )}
             <div className="mb-3">
@@ -395,8 +402,9 @@ const UserInformation = () => {
       </AnimatePresence>
     );
   };
+  
 
-  // Formulaire pour l'entreprise (identique en style aux autres formulaires)
+  // Formulaire pour l'entreprise
   const renderEntrepriseForm = (values, setFieldValue, isSubmitting) => (
     <>
       <div className="mb-3">
@@ -412,11 +420,11 @@ const UserInformation = () => {
         <ErrorMessage name="email" component="div" className="text-danger" />
       </div>
       <div className="mb-3">
-        <Field type="text" name="telephone" placeholder="Téléphone" className="form-control" />
+        <Field type="text" name="telephone" placeholder="Téléphone" className="form-control" required />
         <ErrorMessage name="telephone" component="div" className="text-danger" />
       </div>
       <div className="mb-3">
-        <Field type="text" name="adresse" placeholder="Adresse" className="form-control" />
+        <Field type="text" name="adresse" placeholder="Adresse" className="form-control" required />
         <ErrorMessage name="adresse" component="div" className="text-danger" />
       </div>
       <div className="mb-3">
@@ -449,7 +457,8 @@ const UserInformation = () => {
         </Button>
       </div>
       <div className="mb-3">
-        <Field type="text" name="nomentreprise" placeholder="Nom de l'entreprise" className="form-control" />
+        <Field type="text" name="nomentreprise" placeholder="Nom de l'entreprise" className="form-control" required />
+        <ErrorMessage name="nomentreprise" component="div" className="text-danger" />
       </div>
       <Button variant="primary" type="submit" disabled={isSubmitting || loading} className="btn btn-warning btn-lg mt-3 w-100">
         {loading ? (
@@ -465,9 +474,8 @@ const UserInformation = () => {
     <>
       <div className="container my-5">
         <ToastContainer />
-        <h2 className="text-center mb-4">Formulaire d'Inscription</h2>
+        <h2 className="text-center mb-4">Formulaire d&lsquo;Inscription</h2>
         {userType === '' ? (
-          // Deux cartes cliquables pour choisir le type d'utilisateur
           <div className="d-flex justify-content-center gap-3">
             <motion.div
               whileHover={{ scale: 1.05 }}
@@ -497,44 +505,48 @@ const UserInformation = () => {
             </motion.div>
           </div>
         ) : (
-          <Formik
-            initialValues={initialValues}
-            validationSchema={SignupSchema}
-            onSubmit={(values, { setSubmitting }) => {
-              if (userType === 'consultant') {
-                if (currentStep === 1) {
-                  setCurrentStep(2);
-                  setSubmitting(false);
-                } else {
-                  handlePreviewSubmit(values, setSubmitting);
-                }
-              } else {
-                setLoading(true);
-                setTimeout(() => {
-                  console.log({ ...values, userType });
-                  setLoading(false);
-                  toast.success('Inscription réussie !', { icon: '✅' });
-                }, 2000);
-              }
-            }}
-          >
-            {({ values, setFieldValue, isSubmitting }) => (
-              <Form className="mt-4">
-                {userType === 'consultant'
-                  ? renderConsultantStep(values, setFieldValue, isSubmitting)
-                  : renderEntrepriseForm(values, setFieldValue, isSubmitting)}
-              </Form>
-            )}
-          </Formik>
+          // Inside your Formik render function, include isValid:
+<Formik
+  initialValues={initialValues}
+  validationSchema={SignupSchema}
+  validateOnMount={true} // This forces validation on mount
+  onSubmit={(values, { setSubmitting }) => {
+    if (userType === 'consultant') {
+      if (currentStep === 1) {
+        setCurrentStep(2);
+        setSubmitting(false);
+      } else {
+        handlePreviewSubmit(values, setSubmitting);
+      }
+    } else {
+      setLoading(true);
+      setTimeout(() => {
+        console.log({ ...values, userType });
+        setLoading(false);
+        toast.success('Inscription réussie !', { icon: '✅' });
+        setSubmitting(false);
+      }, 2000);
+    }
+  }}
+>
+  {({ values, setFieldValue, isSubmitting, isValid }) => (
+    <Form className="mt-4">
+      {userType === 'consultant'
+        ? renderConsultantStep(values, setFieldValue, isSubmitting, isValid)
+        : renderEntrepriseForm(values, setFieldValue, isSubmitting)}
+    </Form>
+  )}
+</Formik>
+
+
         )}
       </div>
 
-      {/* Modal de récapitulation pour les consultants */}
       <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" centered>
         <Modal.Header closeButton>
           <Modal.Title>Récapitulatif de vos informations</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body className={styles.modalBody}>
           {modalData && (
             <div>
               <p><strong>Nom:</strong> {modalData.nom}</p>
@@ -546,34 +558,22 @@ const UserInformation = () => {
                 <div>
                   <strong>Photo de Profil:</strong>
                   <br />
-                  <img src={preview} alt="Aperçu" style={{ width: '150px', height: '150px', borderRadius: '8px' }} />
+                  <img src={preview} className={styles.modalPhoto} alt="Aperçu" style={{ width: '150px', height: '150px', borderRadius: '8px' }} />
                 </div>
               )}
-              <p><strong>Localisation:</strong> {modalData.latitude}, {modalData.longitude}</p>
               <p><strong>Domaines:</strong> {modalData.domaines.join(', ')}</p>
-              <p><strong>Compétences:</strong> {modalData.competences.join(', ')}</p>
-              {modalData.competences && modalData.competences.length > 0 && (
-                <div>
-                  <h5>Niveaux de compétence :</h5>
-                  {modalData.competences.map((comp, idx) => (
-                    <p key={idx}>
-                      <strong>{comp} :</strong> {modalData.competenceDetails && modalData.competenceDetails[comp] ? modalData.competenceDetails[comp] : 'Non renseigné'}
-                    </p>
-                  ))}
-                </div>
-              )}
               <p><strong>Portfolio:</strong> {modalData.portfolio}</p>
               <p><strong>Expérience (années):</strong> {modalData.experienceYears}</p>
               <p><strong>Budget Min:</strong> {modalData.budgetMin}</p>
               {modalData.competences && modalData.competences.length > 0 && (
-                <div className="mt-3">
-                  <h5>Visualisation du Profil de Compétences</h5>
-                  <Bar data={chartData} options={{ responsive: true, plugins: { legend: { position: 'top' } } }} />
-                </div>
-              )}
-            </div>
-          )}
-        </Modal.Body>
+          <div className="mt-3">
+            <h5>Visualisation du Profil de Compétences</h5>
+            <Bar data={chartData} options={{ responsive: true, plugins: { legend: { position: 'top' } } }} />
+          </div>
+        )}
+      </div>
+    )}
+  </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>
             Modifier

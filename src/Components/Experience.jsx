@@ -169,13 +169,10 @@ const Experience = () => {
             </button>
           )}
         </div>
-
         <div className={styles.buttonDiv}>
-         
             <button className={styles.nextButton} onClick={handleNextStep}>
               Suivant
             </button>
-          
         </div>
       </div>
     </div>
