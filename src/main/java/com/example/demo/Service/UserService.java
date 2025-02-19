@@ -120,5 +120,9 @@ public class UserService {
         }).orElseThrow(() -> new RuntimeException("User not found"));
     }
 
+    public List<User> searchUsers(String query) {
+        return userRepository.findByNomContainingIgnoreCase(query);
+    }
+
 }
 
