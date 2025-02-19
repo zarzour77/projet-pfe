@@ -36,7 +36,8 @@ const Login = () => {
       alert("Signup successful!"); // Display success alert
       navigate("/UserInformation");
       console.log("User data:", response); // Log user data (optional)
-      localStorage.setItem("user", JSON.stringify(response));      
+      localStorage.setItem("user", JSON.stringify(response));    
+      console.log(response)  
 
     } catch (err) {
       alert("Signup failed! Please check your information."); // Display error alert

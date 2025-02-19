@@ -1,20 +1,23 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Home from "./Components/Home";
-import Login from "./Components/Login"
+import Login from "./components/Login"
 import SignupSuccess from "./Components/SignupSuccess";
 import CreateProfile from "./Components/CreateProfile";
 import Header from "./Components/Header";
 import Experience from "./Components/Experience";
-import Subscription from "./Components/Subscription";
+import Subscription from "./components/Subscription";
 import PaymentSuccess from "./Components/PaymentSuccess";
 import PaymentFailed from "./Components/PaymentFailed";
 import TradeForTalent from "./Components/TradeForTalent";
 import ProfileSelection from "./Components/ProfileSelection";
-import UserInformation from "./Components/UserInformation";
+import UserInformation from "./components/UserInformation";
+import Messenger from "./components/Messenger";
+import MissioinTinder from "./components/MissionTinder";
+import SearchMission from "./components/SearchMission";
+
 const App = () => {
   return (
     <Router>
-      <Header/>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login /> }  />
@@ -27,6 +30,9 @@ const App = () => {
         <Route path="/TradeForTalent" element={<TradeForTalent /> }  />
         <Route path="/ProfileSelection" element={<ProfileSelection /> }  />
         <Route path="/UserInformation" element={<UserInformation /> }  />
+        <Route path="/Messenger" element={<Messenger /> }  />
+        <Route path="/MissionTinder" element={<MissioinTinder /> }  />
+        <Route path="/SearchMission" element={<SearchMission /> }  />
       </Routes>
     </Router>
   );

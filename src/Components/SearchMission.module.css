@@ -1,0 +1,234 @@
+/* Container */
+.searchMissionContainer {
+    font-family: Arial, sans-serif;
+    color: #333;
+    background-color: #f9f9f9;
+    min-height: 100vh;
+    padding: 1rem;
+  }
+  
+  /* Global search bar */
+  .globalSearchBar {
+    margin-bottom: 1rem;
+  }
+  
+  .globalSearchBar input,
+  .MuiTextField-root {
+    width: 100%;
+  }
+  
+  /* Top bar (actions & sort) */
+  .topBar {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  
+  .leftActions button,
+  .rightActions button,
+  .rightActions select {
+    margin-right: 0.5rem;
+  }
+  
+  /* Toggle bar (view & filters) */
+  .toggleBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .viewToggle button {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    margin-right: 0.5rem;
+    color: #666;
+    transition: color 0.2s ease;
+  }
+  
+  .viewToggle button:hover,
+  .viewToggle button.active,
+  .viewToggle button.active:hover {
+    color: #148f4d;
+  }
+  
+  .active {
+    color: #148f4d;
+  }
+  
+  .filterToggle,
+  .clearFilters {
+    margin-left: 0.5rem;
+  }
+  
+  /* Dashboard: row layout with stats on the left and chart on the right */
+  .dashboard {
+    display: flex;            /* horizontal layout */
+    align-items: flex-start;  /* top-aligned content */
+    justify-content: space-between;
+    gap: 2rem;                /* space between stats and chart */
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    background-color: #fff;
+  }
+  
+  /* Stats section (left side) */
+  .statsSection {
+    flex: 0 0 180px; /* or any suitable width */
+  }
+  
+  .stat {
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+  
+  /* Chart section (right side) */
+  .chartSection {
+    flex: 1;
+    display: flex;
+    justify-content: center; /* center the chart horizontally */
+    overflow: visible;       /* ensure labels are visible */
+  }
+  
+  .chartSection svg {
+    overflow: visible; /* ensure label text not clipped */
+  }
+  
+  /* Main content: filters + job list */
+  .mainContent {
+    display: flex;
+    gap: 1rem;
+  }
+  
+  /* Filters panel */
+  .filters {
+    flex: 0 0 220px;
+    background-color: #fff;
+    border: 1px solid #eee;
+    padding: 1rem;
+    border-radius: 4px;
+  }
+  
+  .filters h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+  }
+  
+  .filterGroup {
+    margin-bottom: 1rem;
+  }
+  
+  .filterGroup label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+  
+  /* Jobs list */
+  .jobList {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  /* Job card */
+  .jobItem {
+    background-color: #fff;
+    border: 1px solid #eee;
+    padding: 1rem;
+    border-radius: 4px;
+    transition: box-shadow 0.2s ease;
+  }
+  
+  .jobItem:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Grid view */
+  .gridItem {
+    width: calc(50% - 0.5rem);
+  }
+  
+  /* Job info (tags, location, etc.) */
+  .jobInfo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  .paymentVerified {
+    color: #1aa260;
+    font-weight: 600;
+  }
+  
+  .paymentNotVerified {
+    color: #999;
+    font-weight: 600;
+  }
+  
+  .spent,
+  .location,
+  .published {
+    color: #666;
+  }
+  
+  /* Tags */
+  .jobTags {
+    margin-bottom: 0.5rem;
+  }
+  
+  .tag {
+    display: inline-block;
+    background-color: #eee;
+    border-radius: 3px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+    margin-right: 0.5rem;
+  }
+  
+  /* Description */
+  .jobDescription {
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+  
+  /* Action buttons (Apply, Save, etc.) */
+  .actionButtons {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+  
+  /* Skeleton loading placeholders */
+  .skeletonContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .skeletonItem {
+    background-color: #ddd;
+    height: 100px;
+    border-radius: 4px;
+  }
+  
+  /* "No Jobs" illustration */
+  .noJobs {
+    text-align: center;
+    padding: 2rem;
+  }
+  
+  .noJobs img {
+    max-width: 300px;
+    margin-bottom: 1rem;
+  }

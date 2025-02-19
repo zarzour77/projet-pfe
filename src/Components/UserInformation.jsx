@@ -19,6 +19,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 // Get the stored user from localStorage (or an empty object if not found)
 const user = JSON.parse(localStorage.getItem("user")) || {};
+console.log(user)
 const getSafeKey = (comp) => comp.replace(/\./g, '_');
 
 // Set initial values (now adding a default for competenceDetails)
