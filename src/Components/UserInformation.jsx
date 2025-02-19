@@ -160,7 +160,6 @@ const [userRole, setUserRole] = useState('');
       .then((updatedUser) => {
         // Assume the endpoint returns the updated user data including the role.
         setUserRole(updatedUser.role);
-        toast.success(`Rôle mis à jour en ${updatedUser.role}`, { icon: '✅' });
       })
       .catch((error) => {
         console.error(error);
@@ -257,15 +256,39 @@ const [userRole, setUserRole] = useState('');
     setSubmitting(false);
   };
 
-  const handleFinalSubmit = (values) => {
+  const handleFinalSubmit = async (values) => {
     setLoading(true);
-    setTimeout(() => {
-      console.log({ ...values, role: userRole });
-      setLoading(false);
-      setShowModal(false);
-      toast.success('Inscription réussie !', { icon: '✅' });
-    }, 2000);
+    try {
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+      const userId = storedUser?.id;
+      // Prepare only the fields you want to update
+      const updatedData = {
+        nom: values.nom,
+        prenom: values.prenom,
+        email: values.email,
+        telephone: values.telephone,
+        adresse: values.adresse
+      };
+  
+      // Call the updateUser endpoint
+      const updatedUser = await UserService.updateUser(userId, updatedData);
+      console.log("Updated user:", updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+       // If a new profile picture is provided, update it as well
+    if (values.photoprofile) {
+      console.log(values.photoprofile.name)
+      const updatedUserPic = await UserService.updateProfilePicture(userId, values.photoprofile);
+      console.log("Updated profile picture:", updatedUserPic);
+    }
+      toast.success('Mise à jour effectuée !', { icon: '✅' });
+    } catch (error) {
+      console.error("Error updating user:", error);
+      toast.error('Erreur lors de la mise à jour du profil');
+    }
+    setLoading(false);
+    setShowModal(false);
   };
+  
 
   const chartData = {
     labels: modalData && modalData.competences ? modalData.competences : [],

@@ -84,22 +84,25 @@ const UserService = {
   // New function: update the user's profile picture
   updateProfilePicture: async (userId, file) => {
     try {
-      const response = await axios.put(
-        `${API_URL}/${userId}/uploadProfilePic`, // Endpoint for updating profile picture
-        file, // Pass the file (raw binary data)
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await axios.post(
+        `${API_URL}/${userId}/uploadProfilePic`, // Use POST here
+        formData,
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Bearer token for authentication
-            'Content-Type': 'application/octet-stream', // Content type for raw binary data
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
           },
         }
       );
-      return response.data; // Return the response message
+      return response.data;
     } catch (error) {
       console.error("Error updating profile picture:", error);
       throw error;
     }
-  },
+  }
+  
 };
 
 export default UserService;
