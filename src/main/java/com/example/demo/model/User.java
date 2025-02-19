@@ -19,6 +19,7 @@ public class User {
     private String adresse;
     private String password;
     private String role;
+    @Lob
     private String photoprofile;
     private String statut;
     private String subscriptionType;
@@ -79,6 +80,12 @@ public class User {
         this.email = email;
         this.password = encodedPassword;
         this.role = role;
+    }
+    public User(String nom, String prenom, String email, String encodedPassword) {
+        this.nom = nom;
+        this.prenom = prenom;
+        this.email = email;
+        this.password = encodedPassword;
     }
     public User(String nom, String prenom, String telephone, String email, String encodedPassword, String role, String subscriptionType) {
         this.nom = nom;

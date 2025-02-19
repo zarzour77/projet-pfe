@@ -41,17 +41,31 @@ public class UserService {
 
     public User updateUser(Long id, User updatedUser) {
         return userRepository.findById(id).map(user -> {
-            user.setNom(updatedUser.getNom());
-            user.setPrenom(updatedUser.getPrenom());
-            user.setEmail(updatedUser.getEmail());
-            user.setTelephone(updatedUser.getTelephone());
-            user.setAdresse(updatedUser.getAdresse());
-            user.setPassword(updatedUser.getPassword());
-            user.setRole(updatedUser.getRole());
-            user.setCompetences(updatedUser.getCompetences());
-            user.setAvisRecus(updatedUser.getAvisRecus());
-            user.setAvisRediges(updatedUser.getAvisRediges());
-            user.setNotifications(updatedUser.getNotifications());
+            if (updatedUser.getNom() != null) {
+                user.setNom(updatedUser.getNom());
+            }
+            if (updatedUser.getPrenom() != null) {
+                user.setPrenom(updatedUser.getPrenom());
+            }
+            if (updatedUser.getEmail() != null) {
+                user.setEmail(updatedUser.getEmail());
+            }
+            if (updatedUser.getTelephone() != null) {
+                user.setTelephone(updatedUser.getTelephone());
+            }
+            if (updatedUser.getAdresse() != null) {
+                user.setAdresse(updatedUser.getAdresse());
+            }
+            if (updatedUser.getPassword() != null) {
+                user.setPassword(updatedUser.getPassword());
+            }
+            if (updatedUser.getRole() != null) {
+                user.setRole(updatedUser.getRole());
+            }
+            if (updatedUser.getCompetences() != null) {
+                user.setCompetences(updatedUser.getCompetences());
+            }
+
             return userRepository.save(user);
         }).orElseThrow(() -> new RuntimeException("User not found with id " + id));
     }
