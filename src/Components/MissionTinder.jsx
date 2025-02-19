@@ -7,7 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import styles from './MissionTinder.module.css';
-import { getMissions } from '../services/MissionTinderService'; // Import du service API
+import { getMissions } from './MissionTinderService'; // Import du service API
 
 // Configuration de l'icône Leaflet
 const customIcon = L.icon({
