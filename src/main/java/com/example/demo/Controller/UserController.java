@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -72,14 +73,25 @@ public class UserController {
         }
     }
     @PutMapping("/{id}/role")
-    public ResponseEntity<User> updateUserRole(@PathVariable Long id, @RequestBody User updatedUser) {
+    public ResponseEntity<User> updateUserRole(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        String role = request.get("role");
+        if (role == null || role.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
         try {
-            User user = userService.updateUserRole(id, updatedUser.getRole());
-            return ResponseEntity.ok(user);
+            User updatedUser = userService.updateUserRole(id, role);
+            return ResponseEntity.ok(updatedUser);
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(null);
         }
     }
+
+
+
+
+
+
 
 
 

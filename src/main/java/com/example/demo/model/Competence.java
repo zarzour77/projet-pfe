@@ -25,6 +25,11 @@ public class Competence {
         this.nom = nom;
     }
 
+    public Competence(String nom, int competenceNiveaux) {
+        this.nom = nom;
+        this.competenceNiveaux = competenceNiveaux;
+    }
+
     public int getCompetenceNiveaux() {
         return competenceNiveaux;
     }
