@@ -3,6 +3,7 @@ package com.example.demo.Service;
 
 import com.example.demo.model.Entreprise;
 import com.example.demo.repository.EntrepriseRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,13 +31,51 @@ public class EntrepriseService {
         return entrepriseRepository.save(entreprise);
     }
 
+    @Transactional
     public Entreprise updateEntreprise(Long id, Entreprise updatedEntreprise) {
         return entrepriseRepository.findById(id).map(entreprise -> {
-            entreprise.setNom(updatedEntreprise.getNom());
-            entreprise.setEmail(updatedEntreprise.getEmail());
-            entreprise.setTelephone(updatedEntreprise.getTelephone());
-            entreprise.setAdresse(updatedEntreprise.getAdresse());
-            entreprise.setMissions(updatedEntreprise.getMissions());
+            // Update User fields (from superclass)
+            if (updatedEntreprise.getNom() != null) {
+                entreprise.setNom(updatedEntreprise.getNom());
+            }
+            if (updatedEntreprise.getPrenom() != null) {
+                entreprise.setPrenom(updatedEntreprise.getPrenom());
+            }
+            if (updatedEntreprise.getEmail() != null) {
+                entreprise.setEmail(updatedEntreprise.getEmail());
+            }
+            if (updatedEntreprise.getTelephone() != null) {
+                entreprise.setTelephone(updatedEntreprise.getTelephone());
+            }
+            if (updatedEntreprise.getAdresse() != null) {
+                entreprise.setAdresse(updatedEntreprise.getAdresse());
+            }
+            if (updatedEntreprise.getPassword() != null) {
+                entreprise.setPassword(updatedEntreprise.getPassword());
+            }
+            if (updatedEntreprise.getRole() != null) {
+                entreprise.setRole(updatedEntreprise.getRole());
+            }
+            if (updatedEntreprise.getPhotoprofile() != null) {
+                entreprise.setPhotoprofile(updatedEntreprise.getPhotoprofile());
+            }
+            if (updatedEntreprise.getStatut() != null) {
+                entreprise.setStatut(updatedEntreprise.getStatut());
+            }
+            if (updatedEntreprise.getSubscriptionType() != null) {
+                entreprise.setSubscriptionType(updatedEntreprise.getSubscriptionType());
+            }
+            if (updatedEntreprise.getRating() != null) {
+                entreprise.setRating(updatedEntreprise.getRating());
+            }
+            if (updatedEntreprise.getNomEntreprise() != null) {
+                entreprise.setNomEntreprise(updatedEntreprise.getNomEntreprise());
+            }
+            // Update Entreprise-specific field
+            if (updatedEntreprise.getMissions() != null) {
+                entreprise.setMissions(updatedEntreprise.getMissions());
+            }
+
             return entrepriseRepository.save(entreprise);
         }).orElseThrow(() -> new RuntimeException("Entreprise not found with id " + id));
     }

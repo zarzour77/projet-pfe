@@ -11,29 +11,41 @@ import java.util.List;
 
 @Entity
 public class Consultant extends User {
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, }, fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "consultant_competences",
+            joinColumns = @JoinColumn(name = "consultant_id"),
+            inverseJoinColumns = @JoinColumn(name = "competence_id")
+    )
     private List<Competence> competences;
+
 
     @OneToMany(mappedBy = "consultant", fetch = FetchType.EAGER)
     @JsonIgnore // Empêche la sérialisation de ce champ
     private List<Proposition> propositions;
 
+    @Column(nullable = true)
     private String portfolio;
-    private int experienceYears;
-    private int workload;
+    @Column(nullable = true)
+    private Integer experienceYears;
+    @Column(nullable = true)
+    private Integer workload;
     // pour la localisation
-    private double latitude;
-    private double longitude;
+    @Column(nullable = true)
+    private Double latitude;
+    @Column(nullable = true)
+    private Double longitude;
 
     @ElementCollection(fetch = FetchType.EAGER) // Passage en mode EAGER
     // Pour stocker une liste de chaînes en base de données
     private List<String> domaines;
-    private int budgetMin; // Remplacer budget_min par budgetMin en Java
+    @Column(nullable = true)
+    private Integer budgetMin; // Remplacer budget_min par budgetMin en Java
 
 
     public Consultant() {}
 
-    public Consultant(int budgetMin, List<Competence> competences, List<String> domaines, int experienceYears, double latitude, double longitude, String portfolio, List<Proposition> propositions, int workload) {
+    public Consultant(Integer budgetMin, List<Competence> competences, List<String> domaines, Integer experienceYears, Double latitude, Double longitude, String portfolio,  Integer workload) {
         this.budgetMin = budgetMin;
         this.competences = competences;
         this.domaines = domaines;
@@ -41,11 +53,10 @@ public class Consultant extends User {
         this.latitude = latitude;
         this.longitude = longitude;
         this.portfolio = portfolio;
-        this.propositions = propositions;
-        this.workload = workload;
+        this.workload=workload;
     }
 
-    public Consultant(String adresse, List<Avis> avisRecus, List<Avis> avisRediges, List<Competence> competences, String email, Long id, String nom, List<Notification> notifications, String password, String prenom, String telephone, String role, String photoprofile, String statut, int budgetMin, List<Competence> competences1, List<String> domaines, int experienceYears, double latitude, double longitude, String portfolio, List<Proposition> propositions, int workload) {
+    public Consultant(String adresse, List<Avis> avisRecus, List<Avis> avisRediges, List<Competence> competences, String email, Long id, String nom, List<Notification> notifications, String password, String prenom, String telephone, String role, String photoprofile, String statut, Integer budgetMin, List<Competence> competences1, List<String> domaines, Integer experienceYears, Double latitude, Double longitude, String portfolio, List<Proposition> propositions, Integer workload) {
         super(adresse, avisRecus, avisRediges, competences, email, id, nom, notifications, password, prenom, telephone, role, photoprofile, statut);
         this.budgetMin = budgetMin;
         this.competences = competences1;
@@ -54,11 +65,11 @@ public class Consultant extends User {
         this.latitude = latitude;
         this.longitude = longitude;
         this.portfolio = portfolio;
-        this.propositions = propositions;
-        this.workload = workload;
+        this.workload=workload;
+
     }
 
-    public Consultant(List<Avis> avisRecus, String adresse, List<Avis> avisRediges, String email, Long id, String nom, List<Notification> notifications, String password, String telephone, String photoprofile, int budgetMin, List<Competence> competences, List<String> domaines, int experienceYears, double latitude, double longitude, String portfolio, List<Proposition> propositions, int workload) {
+    public Consultant(List<Avis> avisRecus, String adresse, List<Avis> avisRediges, String email, Long id, String nom, List<Notification> notifications, String password, String telephone, String photoprofile, Integer budgetMin, List<Competence> competences, List<String> domaines, Integer experienceYears, Double latitude, Double longitude, String portfolio,  Integer workload) {
         super(avisRecus, adresse, avisRediges, email, id, nom, notifications, password, telephone, photoprofile);
         this.budgetMin = budgetMin;
         this.competences = competences;
@@ -67,11 +78,11 @@ public class Consultant extends User {
         this.latitude = latitude;
         this.longitude = longitude;
         this.portfolio = portfolio;
-        this.propositions = propositions;
-        this.workload = workload;
+        this.workload=workload;
+
     }
 
-    public Consultant(String nom, int budgetMin, List<Competence> competences, List<String> domaines, int experienceYears, double latitude, double longitude, String portfolio, List<Proposition> propositions, int workload) {
+    public Consultant(String nom, Integer budgetMin, List<Competence> competences, List<String> domaines, Integer experienceYears, Double latitude, Double longitude, String portfolio, Integer workload) {
         super(nom);
         this.budgetMin = budgetMin;
         this.competences = competences;
@@ -80,11 +91,10 @@ public class Consultant extends User {
         this.latitude = latitude;
         this.longitude = longitude;
         this.portfolio = portfolio;
-        this.propositions = propositions;
-        this.workload = workload;
+        this.workload=workload;
     }
 
-    public Consultant(String nom, String prenom, String telephone, String email, String encodedPassword, String role, int budgetMin, List<Competence> competences, List<String> domaines, int experienceYears, double latitude, double longitude, String portfolio, List<Proposition> propositions, int workload) {
+    public Consultant(String nom, String prenom, String telephone, String email, String encodedPassword, String role, Integer budgetMin, List<Competence> competences, List<String> domaines, Integer experienceYears, Double latitude, Double longitude, String portfolio, Integer workload) {
         super(nom, prenom, telephone, email, encodedPassword, role);
         this.budgetMin = budgetMin;
         this.competences = competences;
@@ -93,49 +103,48 @@ public class Consultant extends User {
         this.latitude = latitude;
         this.longitude = longitude;
         this.portfolio = portfolio;
-        this.propositions = propositions;
-        this.workload = workload;
+        this.workload=workload;
+
     }
 
-    public double getLatitude() {
+
+    public Double getLatitude() {
         return latitude;
     }
 
-    public void setLatitude(double latitude) {
+    public void setLatitude(Double latitude) {
         this.latitude = latitude;
     }
 
-    public double getLongitude() {
+    public Double getLongitude() {
         return longitude;
     }
 
-    public void setLongitude(double longitude) {
+    public void setLongitude(Double longitude) {
         this.longitude = longitude;
     }
 
-    public int getBudgetMin() {
+    public Integer getBudgetMin() {
         return budgetMin;
     }
 
-    public void setBudgetMin(int budgetMin) {
+    public void setBudgetMin(Integer budgetMin) {
         this.budgetMin = budgetMin;
     }
 
-    @Override
     public List<Competence> getCompetences() {
         return competences;
     }
 
-    @Override
     public void setCompetences(List<Competence> competences) {
         this.competences = competences;
     }
 
-    public int getWorkload() {
+    public Integer getWorkload() {
         return workload;
     }
 
-    public void setWorkload(int workload) {
+    public void setWorkload(Integer workload) {
         this.workload = workload;
     }
 
@@ -147,11 +156,11 @@ public class Consultant extends User {
         this.domaines = domaines;
     }
 
-    public int getExperienceYears() {
+    public Integer getExperienceYears() {
         return experienceYears;
     }
 
-    public void setExperienceYears(int experienceYears) {
+    public void setExperienceYears(Integer experienceYears) {
         this.experienceYears = experienceYears;
     }
 
@@ -171,6 +180,7 @@ public class Consultant extends User {
     public void setPropositions(List<Proposition> propositions) {
         this.propositions = propositions;
     }
+
 
     @Override
     public String toString() {
@@ -221,7 +231,7 @@ public class Consultant extends User {
         }
         return false;
     }
-    public double getAcceptanceRate() {
+    public Double getAcceptanceRate() {
         if (propositions == null || propositions.isEmpty()) {
             return 1.0; // Par défaut, si le consultant n'a pas encore reçu de missions, son taux est considéré comme parfait.
         }

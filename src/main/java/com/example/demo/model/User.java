@@ -27,9 +27,7 @@ public class User {
     @JsonIgnore
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Notification> notifications;
-    @JsonIgnore
-    @ManyToMany
-    private List<Competence> competences;
+
 
     @JsonIgnore // Prevent serialization of lazy-loaded collection
     @OneToMany(mappedBy = "cible", fetch = FetchType.LAZY)
@@ -47,7 +45,6 @@ public class User {
         this.adresse = adresse;
         this.avisRecus = avisRecus;
         this.avisRediges = avisRediges;
-        this.competences = competences;
         this.email = email;
         this.id = id;
         this.nom = nom;
@@ -144,13 +141,7 @@ public class User {
         this.avisRediges = avisRediges;
     }
 
-    public List<Competence> getCompetences() {
-        return competences;
-    }
 
-    public void setCompetences(List<Competence> competences) {
-        this.competences = competences;
-    }
 
     public String getEmail() {
         return email;
