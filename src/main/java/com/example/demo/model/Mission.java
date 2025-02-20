@@ -1,6 +1,7 @@
 package com.example.demo.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.util.Date;
@@ -18,12 +19,11 @@ public class Mission {
     private Date deadline;
     private String statut;
     private String domaine;
-    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "entreprise_id")
+    @JsonIgnoreProperties({"missions"})
     private Entreprise entreprise;
-    @JsonIgnore
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     private List<Competence> competencesRequises;
     @JsonIgnore
     @OneToMany(mappedBy = "mission")
@@ -38,6 +38,8 @@ public class Mission {
     private double matchScore; // Score de compatibilité mission-consultant
     private Date startdate;
     private Date enddate;
+    private String logo;
+
 
     public double getMatchScore() {
         return matchScore;
@@ -49,7 +51,7 @@ public class Mission {
 
     public Mission() {}
 
-    public Mission(Double budget, List<Competence> competencesRequises, Date deadline, String description, Entreprise entreprise, Long id, List<Proposition> propositions, String statut, String titre,String domaine) {
+    public Mission(List<Avis> avis, Double budget, List<Competence> competencesRequises, Date deadline, String description, String domaine, Date enddate, Entreprise entreprise, Long id, double latitude, String logo, double longitude, double matchScore, List<Proposition> propositions, int requiredExperience, Date startdate, String statut, String titre) {
         this.avis = avis;
         this.budget = budget;
         this.competencesRequises = competencesRequises;
@@ -60,6 +62,7 @@ public class Mission {
         this.entreprise = entreprise;
         this.id = id;
         this.latitude = latitude;
+        this.logo = logo;
         this.longitude = longitude;
         this.matchScore = matchScore;
         this.propositions = propositions;
@@ -67,10 +70,15 @@ public class Mission {
         this.startdate = startdate;
         this.statut = statut;
         this.titre = titre;
-        this.domaine = domaine;
     }
 
+    public String getLogo() {
+        return logo;
+    }
 
+    public void setLogo(String logo) {
+        this.logo = logo;
+    }
 
     public double getLatitude() {
         return latitude;

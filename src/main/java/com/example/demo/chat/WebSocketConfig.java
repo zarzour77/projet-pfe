@@ -20,11 +20,17 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private static final Logger logger = LoggerFactory.getLogger(WebSocketConfig.class);
 
-    // Intercepteur pour extraire le JWT
+    // Handshake interceptor to extract the JWT token
     private static class JwtHandshakeInterceptor implements HandshakeInterceptor {
         @Override
         public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
                                        WebSocketHandler wsHandler, Map<String, Object> attributes) {
+            String path = request.getURI().getPath();
+            // Allow SockJS "info" requests without token
+            if (path.endsWith("/info")) {
+                return true;
+            }
+
             String rawQuery = request.getURI().getRawQuery();
             logger.info("🔍 Tentative de connexion WebSocket - Query: {}", rawQuery);
 
@@ -70,7 +76,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         logger.info("🔧 Enregistrement du STOMP Endpoint à '/ws'...");
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*")
-                .addInterceptors(new JwtHandshakeInterceptor());
+                .addInterceptors(new JwtHandshakeInterceptor())
+                .withSockJS(); // Enable SockJS support
         logger.info("✅ STOMP Endpoint enregistré avec succès !");
     }
 }
