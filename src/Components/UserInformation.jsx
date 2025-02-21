@@ -16,6 +16,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import styles from './UserInformation.module.css';
 import UserService from '../Services/UserService';
 import ConsultantService from '../Services/ConsultantService';
+import EntrepriseService from '../Services/EntrepriseService';
+
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 const getSafeKey = (comp) => comp.replace(/\./g, '_');
 
@@ -484,6 +486,46 @@ const [userRole, setUserRole] = useState('');
       </AnimatePresence>
     );
   };
+  const handleFinalSubmitEntreprise = async (values) => {
+    setLoading(true);
+    try {
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+      const userId = storedUser?.id;
+      
+      // Optionally update the profile picture if provided
+      if (values.photoprofile) {
+        const updatedUserPic = await UserService.updateProfilePicture(userId, values.photoprofile);
+        console.log("Updated profile picture:", updatedUserPic);
+      }
+      
+      // Prepare the entreprise data
+      const entrepriseData = {
+        nom: values.nom,
+        prenom: values.prenom,
+        email: values.email,
+        telephone: values.telephone,
+        adresse: values.adresse,
+        nomEntreprise: values.nomentreprise, // Field specific to entreprise
+        role: userRole,
+        longitude:values.longitude,
+        latitude:values.latitude    
+      };
+      
+      console.log("Entreprise data to update:", entrepriseData);
+      // Call the updateEntreprise service function
+      const updatedEntreprise = await EntrepriseService.updateEntreprise(userId, entrepriseData);
+      console.log("Entreprise updated:", updatedEntreprise);
+      
+      // Optionally store the updated entreprise locally
+      localStorage.setItem("entreprise", JSON.stringify(updatedEntreprise));
+      toast.success("Entreprise mise à jour avec succès!", { icon: "✅" });
+      
+    } catch (error) {
+      console.error("Error updating entreprise:", error);
+      toast.error("Erreur lors de la mise à jour de l'entreprise");
+    }
+    setLoading(false);
+  };
   
 
   // Formulaire pour l'entreprise
@@ -542,13 +584,20 @@ const [userRole, setUserRole] = useState('');
         <Field type="text" name="nomentreprise" placeholder="Nom de l'entreprise" className="form-control" required />
         <ErrorMessage name="nomentreprise" component="div" className="text-danger" />
       </div>
-      <Button variant="primary" type="submit" disabled={isSubmitting || loading} className="btn btn-warning btn-lg mt-3 w-100">
-        {loading ? (
-          <ProgressBar animated now={100} label="Envoi en cours..." />
-        ) : (
-          'Envoyer'
-        )}
-      </Button>
+      <Button
+  variant="primary"
+  type="button"
+  disabled={isSubmitting || loading}
+  className="btn btn-warning btn-lg mt-3 w-100"
+  onClick={() => handleFinalSubmitEntreprise(values)}
+>
+  {loading ? (
+    <ProgressBar animated now={100} label="Envoi en cours..." />
+  ) : (
+    'Envoyer'
+  )}
+</Button>
+
     </>
   );
 
