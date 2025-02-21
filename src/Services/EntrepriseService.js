@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const API_URL = 'http://localhost:8181/api/entreprises'; // Adjust the API URL as needed
+
 const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
 const token = storedUser?.token;
 const EntrepriseService = {

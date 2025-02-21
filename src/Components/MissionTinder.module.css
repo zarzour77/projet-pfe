@@ -1,0 +1,164 @@
+/* Conteneur général centré et typographie moderne */
+.mission-stories-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 150px;
+    font-family: 'Roboto', sans-serif;
+    color: #333;
+    position: relative;
+  }
+  
+  /* Wrapper du slider : overflow visible pour laisser apparaître les cartes latérales */
+  .mission-stories-wrapper {
+    width: 100%;
+    max-width: 600px;
+    position: relative;
+    overflow: visible;
+  }
+  
+  /* Slider horizontal avec transition */
+  .mission-stories-slider {
+    display: flex;
+  }
+  
+  /* Chaque carte a une largeur fixe */
+  .mission-card {
+    flex: 0 0 500px;
+    margin: 0 10px;
+    opacity: 0.8;
+    transition: opacity 0.3s;
+  }
+  
+  /* Carte active */
+  .active {
+    opacity: 1;
+  }
+  
+  /* Cartes inactives */
+  .inactive {
+    opacity: 0.8;
+  }
+  
+  /* Boutons d'action sous le slider */
+  .mission-tinder-buttons {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+  }
+  
+  .action-button {
+    font-size: 24px;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    transition: transform 0.2s;
+  }
+  
+  .action-button:hover {
+    transform: scale(1.1);
+  }
+  
+  /* Styles pour le flip card */
+  .flip-card {
+    background-color: transparent;
+    width: 500px;
+    height: 320px;
+    perspective: 1000px;
+    cursor: pointer;
+    position: relative;
+  }
+  
+  .flip-card-inner {
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+  }
+  
+  .flip-card-front,
+  .flip-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 12px;
+    padding: 20px;
+    box-sizing: border-box;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Face avant avec dégradé attractif */
+  .flip-card-front {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #312d2c, #2f2d2c);
+  }
+  
+  /* Face arrière : fond clair */
+  .flip-card-back {
+    background: #ffffff;
+    transform: rotateY(180deg);
+    overflow-y: auto;
+  }
+  
+  /* Style pour le logo */
+  .mission-logo {
+    width: 100px;
+    height: auto;
+    margin-bottom: 10px;
+  }
+  
+  /* Style pour le titre de la mission */
+  .mission-title {
+    font-size: 1.4em;
+    font-weight: bold;
+    text-align: center;
+    color: #fff;
+  }
+  
+  /* Overlays pour simuler des masques Instagram sur les côtés */
+
+
+  
+  /* Indicateurs de progression */
+  .slider-indicators {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .indicator-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ccc;
+    cursor: pointer;
+  }
+  .activeDot {
+    background: #312d2c;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .mission-stories-wrapper {
+      max-width: 100%;
+    }
+    .mission-card {
+      flex: 0 0 90%;
+      margin: 0 5%;
+    }
+    .flip-card {
+      width: 90%;
+      height: auto;
+    }
+  }
+  
+  /* Micro-interactions sur le survol de la carte */
+  .flip-card:hover .flip-card-front {
+    transform: scale(1.05);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+  }
+  

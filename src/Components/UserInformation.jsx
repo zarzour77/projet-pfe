@@ -18,6 +18,7 @@ import UserService from '../Services/UserService';
 import ConsultantService from '../Services/ConsultantService';
 import EntrepriseService from '../Services/EntrepriseService';
 
+
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 const getSafeKey = (comp) => comp.replace(/\./g, '_');
 

@@ -1,17 +1,203 @@
-/* src/components/Header.module.css */
-.greatVibesRegular {
-  font-family: 'Great Vibes', serif;
-  font-weight: 400;
-  font-style: normal;
-  font-size: 36px; /* Adjust size to suit your design */
-  color: #000; /* Set the color of the text */
-  position: absolute;
-  top: 10px; /* Distance from the top of the page */
-  left: 10px; /* Distance from the left of the page */
-  z-index: 1000; /* Ensure it stays on top of other elements */
-  text-decoration: none; /* Remove underline from Link */
+/* ================================
+   HEADER PRINCIPAL
+================================ */
+.mainHeader {
+  /* On le rend sticky en haut */
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
+  /* Dégradé vibrant */
+  background: linear-gradient(to right, #1aa260, #148f4d);
+  color: #fff;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 1rem 2rem;
+  transition: all 0.3s ease;
 }
 
-.greatVibesRegular:hover {
-  color: white; /* Optional: Add hover color for visual feedback */
+/* Effet "shrink" quand on défile */
+.shrink {
+  padding: 0.5rem 2rem; /* réduit la hauteur */
+}
+
+/* Logo + Titre + Tagline */
+.logoSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.brandTitle {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.tagline {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+/* Container global pour le toggle + search */
+.searchContainer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* ========== Toggle "Find Talent" / "Find Job" ========== */
+.toggleButtons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.toggleBtn {
+  background-color: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.toggleBtn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.toggleBtn.active {
+  background-color: #fff;
+  color: #148f4d;
+}
+
+/* ========== Barre de recherche ========== */
+.searchWrapper {
+  position: relative;
+}
+
+.searchInput {
+  border: none;
+  border-radius: 20px;
+  padding: 0.5rem 2.5rem 0.5rem 1rem;
+  outline: none;
+  font-size: 0.95rem;
+}
+
+/* Icône loupe à droite du champ */
+.searchIcon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+/* ========== Auth Buttons ========== */
+.authButtons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.loginBtn,
+.signupBtn {
+  border: none;
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+}
+
+.loginBtn {
+  background-color: transparent;
+  color: #fff;
+}
+
+.loginBtn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.signupBtn {
+  background-color: #fff;
+  color: #148f4d;
+}
+
+.signupBtn:hover {
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+/* ================================
+   SUBHEADER (Catégories)
+================================ */
+.subHeader {
+  position: sticky;
+  top: 60px; /* Ajustez selon la hauteur du header */
+  background-color: #fff;
+  border-bottom: 1px solid #e6e6e6;
+  z-index: 999;
+  transition: all 0.3s ease;
+}
+
+/* Si vous voulez un shrink ou un autre effet sur le subHeader quand isScrolled est true */
+.stickySubHeader {
+  /* Exemple : box-shadow ou changement de style */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navList {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 2rem;
+}
+
+.navItem {
+  position: relative;
+  cursor: pointer;
+  color: #333;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.navItem:hover {
+  color: #148f4d;
+}
+
+/* Petite icône devant le texte de la catégorie */
+.navIcon {
+  margin-right: 0.25rem;
+}
+
+/* ================================
+   MEGA-DROPDOWN
+================================ */
+.megaMenu {
+  position: absolute;
+  top: 2rem;
+  left: 0;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 1rem;
+}
+
+.megaMenu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.megaMenu li {
+  margin: 0.5rem 0;
+  cursor: pointer;
+}
+
+.megaMenu li:hover {
+  text-decoration: underline;
 }
