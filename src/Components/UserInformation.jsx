@@ -15,6 +15,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaf
 import 'react-toastify/dist/ReactToastify.css';
 import styles from './UserInformation.module.css';
 import UserService from '../Services/UserService';
+import ConsultantService from '../Services/ConsultantService';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 const getSafeKey = (comp) => comp.replace(/\./g, '_');
 
@@ -261,26 +262,40 @@ const [userRole, setUserRole] = useState('');
     try {
       const storedUser = JSON.parse(localStorage.getItem("user"));
       const userId = storedUser?.id;
-      // Prepare only the fields you want to update
-      const updatedData = {
-        nom: values.nom,
-        prenom: values.prenom,
-        email: values.email,
-        telephone: values.telephone,
-        adresse: values.adresse
-      };
-  
-      // Call the updateUser endpoint
-      const updatedUser = await UserService.updateUser(userId, updatedData);
-      console.log("Updated user:", updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      console.log(values.domaines)
        // If a new profile picture is provided, update it as well
     if (values.photoprofile) {
-      console.log(values.photoprofile.name)
+     console.log(values.photoprofile.name)
       const updatedUserPic = await UserService.updateProfilePicture(userId, values.photoprofile);
       console.log("Updated profile picture:", updatedUserPic);
     }
-      toast.success('Mise à jour effectuée !', { icon: '✅' });
+    // Transform competences to the required format using the star ratings (competenceNiveaux)
+    const transformedCompetences = values.competences.map(comp => ({
+      nom: comp,
+      competenceNiveaux: values.competenceDetails[getSafeKey(comp)] || 0,
+    }));
+    const consultantData = {
+      nom: values.nom,
+      prenom: values.prenom,
+      email: values.email,
+      telephone: values.telephone,
+      password:values.password,
+      role:userRole,
+      competences: transformedCompetences,
+      domaines: values.domaines,
+      portfolio: values.portfolio,
+      experienceYears: values.experienceYears,
+      budgetMin: values.budgetMin,
+      latitude: values.latitude,
+      longitude: values.longitude,
+      workload: values.workload || 0,
+    };
+    console.log(consultantData)
+    const newConsultant = await ConsultantService.updateConsultant(userId,consultantData);
+    console.log("Consultant updated:", newConsultant);
+    localStorage.setItem("consultant", JSON.stringify(newConsultant));
+
+
     } catch (error) {
       console.error("Error updating user:", error);
       toast.error('Erreur lors de la mise à jour du profil');
