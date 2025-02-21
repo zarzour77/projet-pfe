@@ -8,8 +8,11 @@ import com.example.demo.Service.ConversationService;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Base64;
 import java.util.List;
 
 @RestController
@@ -72,4 +75,40 @@ public class MessageController {
         }
         return user.getId();
     }
+
+
+    @PostMapping(value = "/file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Message sendFile(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("sender") String sender,
+            @RequestParam("receiver") String receiver
+    ) throws Exception {
+        // Create or retrieve the conversation
+        Conversation conversation = conversationService.createConversation(sender, receiver);
+        Long senderId = getUserId(sender);
+        Long receiverId = getUserId(receiver);
+
+        // Read file bytes and encode them in Base64
+        byte[] fileBytes = file.getBytes();
+        String base64File = Base64.getEncoder().encodeToString(fileBytes);
+
+        // Use the file's actual MIME type, converting to lowercase for consistency.
+        String mimeType = file.getContentType();
+        mimeType = (mimeType != null) ? mimeType.toLowerCase() : "application/octet-stream";
+
+        // Build the data URL correctly.
+        String dataUrl = "data:" + mimeType + ";base64," + base64File;
+
+        // Create a ChatMessage and include the data URL.
+        ChatMessage chatMessage = new ChatMessage();
+        chatMessage.setType(ChatMessage.MessageType.CHAT);
+        chatMessage.setSender(sender);
+        chatMessage.setReceiver(receiver);
+        chatMessage.setContent("[FILE] " + file.getOriginalFilename() + " | " + dataUrl);
+
+        // Save and return the message.
+        return messageService.saveMessage(chatMessage, conversation.getId(), senderId, receiverId);
+    }
+
+
 }
