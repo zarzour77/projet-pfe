@@ -24,18 +24,26 @@ export default function Messenger() {
   const [inputMessage, setInputMessage] = useState("");
   const [autoOpened, setAutoOpened] = useState(false);
 
-  // Transformation d'une conversation pour l'affichage
   const transformConversation = (conv) => {
     const partner = conv.participants.find(user => user.email !== currentUser);
     const transformed = {
       ...conv,
-      name: partner?.name || "Unknown",
-      avatar: partner?.photoprofile || partner?.avatar || "/default-avatar.png",
+      // Affiche "Prénom Nom" si possible, sinon "Unknown"
+      name: partner?.prenom && partner?.nom ? `${partner.prenom} ${partner.nom}` : (partner?.nom || "Unknown"),
+      // On vérifie que le préfixe n'est pas ajouté deux fois
+      avatar: partner?.photoprofile 
+                ? (partner.photoprofile.startsWith("data:image") 
+                    ? partner.photoprofile 
+                    : `data:image/png;base64,${partner.photoprofile}`)
+                : (partner?.avatar || "/default-avatar.png"),
       status: partner?.status || "offline",
+      // Ajout de l'email du partenaire
+      partnerEmail: partner?.email
     };
     console.log("[Messenger] Transformed conversation id:", conv.id, "->", transformed);
     return transformed;
   };
+  
 
   // Chargement de la liste des conversations
   const loadConversations = async () => {
@@ -170,7 +178,7 @@ export default function Messenger() {
     const newChatMessage = {
       type: "CHAT",
       sender: currentUser,
-      receiver: selectedConv.name,
+      receiver: selectedConv.partnerEmail,
       content: inputMessage,
     };
     console.log("[Messenger] Sending message:", newChatMessage);
