@@ -1,6 +1,5 @@
 package com.example.demo.Service;
 
-
 import com.example.demo.model.Entreprise;
 import com.example.demo.repository.EntrepriseRepository;
 import jakarta.transaction.Transactional;
@@ -34,7 +33,6 @@ public class EntrepriseService {
     @Transactional
     public Entreprise updateEntreprise(Long id, Entreprise updatedEntreprise) {
         return entrepriseRepository.findById(id).map(entreprise -> {
-            // Update User fields (from superclass)
             if (updatedEntreprise.getNom() != null) {
                 entreprise.setNom(updatedEntreprise.getNom());
             }
@@ -71,7 +69,6 @@ public class EntrepriseService {
             if (updatedEntreprise.getNomEntreprise() != null) {
                 entreprise.setNomEntreprise(updatedEntreprise.getNomEntreprise());
             }
-            // Update Entreprise-specific field
             if (updatedEntreprise.getMissions() != null) {
                 entreprise.setMissions(updatedEntreprise.getMissions());
             }
@@ -81,7 +78,6 @@ public class EntrepriseService {
             if (updatedEntreprise.getLongitude() != null) {
                 entreprise.setLongitude(updatedEntreprise.getLongitude());
             }
-
             return entrepriseRepository.save(entreprise);
         }).orElseThrow(() -> new RuntimeException("Entreprise not found with id " + id));
     }
@@ -90,4 +86,3 @@ public class EntrepriseService {
         entrepriseRepository.deleteById(id);
     }
 }
-
