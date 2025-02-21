@@ -71,6 +71,13 @@ public class EntrepriseService {
             if (updatedEntreprise.getNomEntreprise() != null) {
                 entreprise.setNomEntreprise(updatedEntreprise.getNomEntreprise());
             }
+            if (updatedEntreprise.getLongitude() != null) {
+                entreprise.setLongitude(updatedEntreprise.getLongitude());
+            }
+            if (updatedEntreprise.getLatitude() != null) {
+                entreprise.setLatitude(updatedEntreprise.getLatitude());
+            }
+
             // Update Entreprise-specific field
             if (updatedEntreprise.getMissions() != null) {
                 entreprise.setMissions(updatedEntreprise.getMissions());
