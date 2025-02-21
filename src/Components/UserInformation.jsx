@@ -14,29 +14,17 @@ import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import 'react-toastify/dist/ReactToastify.css';
 import styles from './UserInformation.module.css';
+import UserService from '../Services/UserService';
+import ConsultantService from '../services/ConsultantService';
+import EntrepriseService from '../services/EntrepriseService';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
-
-// Get the stored user from localStorage (or an empty object if not found)
-const user = JSON.parse(localStorage.getItem("user")) || {};
-console.log(user)
 const getSafeKey = (comp) => comp.replace(/\./g, '_');
 
-// Set initial values (now adding a default for competenceDetails)
-const initialValues = {
-  nom: user?.nom || '',
-  prenom: user?.prenom || '',
-  email: user?.email || '',
-  password: user?.password || '',
-  photoprofile: user?.photoprofile || '',
-  latitude: user?.latitude || '',
-  longitude: user?.longitude || '',
-  domaines: user?.domaines || [],
-  competences: user?.competences || [],
-  competenceDetails: user?.competenceDetails || {} // <-- added default empty object
-};
+
 
 const defaultPosition = [36.8065, 10.1815];
+
 
 const customIcon = L.icon({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
@@ -94,15 +82,31 @@ const resetLocation = (setFieldValue) => {
   setFieldValue('longitude', defaultPosition[1]);
 };
 
-const SignupSchema = Yup.object().shape({
+const Step1Schema = Yup.object().shape({
   nom: Yup.string().required('Champ requis'),
   prenom: Yup.string().required('Champ requis'),
   email: Yup.string().email('Email invalide').required('Champ requis'),
   telephone: Yup.string().required('Champ requis'),
   adresse: Yup.string().required('Champ requis'),
-  // Additional validations as needed
+  latitude: Yup.number()
+    .transform((value, originalValue) => originalValue === '' ? undefined : value)
+    .required('La latitude est requise'),
+  longitude: Yup.number()
+    .transform((value, originalValue) => originalValue === '' ? undefined : value)
+    .required('La longitude est requise'),
 });
 
+const Step2Schema = Yup.object().shape({
+  domaines: Yup.array().min(1, 'Veuillez sélectionner au moins un domaine'),
+  competences: Yup.array().min(1, 'Veuillez sélectionner au moins une compétence'),
+  portfolio: Yup.string().required('Champ requis'),
+  experienceYears: Yup.number()
+    .required('Champ requis')
+    .typeError('Doit être un nombre'),
+  budgetMin: Yup.number()
+    .required('Champ requis')
+    .typeError('Doit être un nombre'),
+});
 const StarRating = ({ rating, onChange }) => {
   return (
     <div style={{ display: 'inline-block' }}>
@@ -124,13 +128,48 @@ const StarRating = ({ rating, onChange }) => {
 };
 
 const UserInformation = () => {
-  const [userType, setUserType] = useState('');
+  const user = JSON.parse(localStorage.getItem("user")) || {};
+// Set initial values (now adding a default for competenceDetails)
+const initialValues = {
+  nom: user?.nom || '',
+  prenom: user?.prenom || '',
+  email: user?.email || '',
+  password: user?.password || '',
+  photoprofile: user?.photoprofile || '',
+  latitude: user?.latitude || '',
+  longitude: user?.longitude || '',
+  domaines: user?.domaines || [],
+  competences: user?.competences || [],
+  competenceDetails: user?.competenceDetails || {} // <-- added default empty object
+};
+const [userRole, setUserRole] = useState('');
   const [currentStep, setCurrentStep] = useState(1);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState(null);
 
+  const formikRef = React.useRef(null);
+  React.useEffect(() => {
+    if (formikRef.current) {
+      formikRef.current.validateForm();
+    }
+  }, [currentStep]);
+
+  const handleRoleSelection = (role) => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    const userId = user?.id;
+    UserService.updateUserRole(userId, role)
+      .then((updatedUser) => {
+        // Assume the endpoint returns the updated user data including the role.
+        setUserRole(updatedUser.role);
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error('Erreur lors de la mise à jour du rôle');
+      });
+  };
+  
   // Predefined options
   const availableDomainsArray = [
     "Développement logiciel",
@@ -220,15 +259,53 @@ const UserInformation = () => {
     setSubmitting(false);
   };
 
-  const handleFinalSubmit = (values) => {
+  const handleFinalSubmit = async (values) => {
     setLoading(true);
-    setTimeout(() => {
-      console.log({ ...values, userType });
-      setLoading(false);
-      setShowModal(false);
-      toast.success('Inscription réussie !', { icon: '✅' });
-    }, 2000);
+    try {
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+      const userId = storedUser?.id;
+      console.log(values.domaines)
+       // If a new profile picture is provided, update it as well
+    if (values.photoprofile) {
+     console.log(values.photoprofile.name)
+      const updatedUserPic = await UserService.updateProfilePicture(userId, values.photoprofile);
+      console.log("Updated profile picture:", updatedUserPic);
+    }
+    // Transform competences to the required format using the star ratings (competenceNiveaux)
+    const transformedCompetences = values.competences.map(comp => ({
+      nom: comp,
+      competenceNiveaux: values.competenceDetails[getSafeKey(comp)] || 0,
+    }));
+    const consultantData = {
+      nom: values.nom,
+      prenom: values.prenom,
+      email: values.email,
+      telephone: values.telephone,
+      password:values.password,
+      role:userRole,
+      competences: transformedCompetences,
+      domaines: values.domaines,
+      portfolio: values.portfolio,
+      experienceYears: values.experienceYears,
+      budgetMin: values.budgetMin,
+      latitude: values.latitude,
+      longitude: values.longitude,
+      workload: values.workload || 0,
+    };
+    console.log(consultantData)
+    const newConsultant = await ConsultantService.updateConsultant(userId,consultantData);
+    console.log("Consultant updated:", newConsultant);
+    localStorage.setItem("consultant", JSON.stringify(newConsultant));
+
+
+    } catch (error) {
+      console.error("Error updating user:", error);
+      toast.error('Erreur lors de la mise à jour du profil');
+    }
+    setLoading(false);
+    setShowModal(false);
   };
+  
 
   const chartData = {
     labels: modalData && modalData.competences ? modalData.competences : [],
@@ -390,18 +467,64 @@ const UserInformation = () => {
               <Button variant="secondary" onClick={() => setCurrentStep(1)}>
                 Précédent
               </Button>
-              <Button variant="primary" type="submit" disabled={isSubmitting || loading}>
-                {loading ? (
-                  <ProgressBar animated now={100} label="Envoi en cours..." />
-                ) : (
-                  'Vérifier et Envoyer'
-                )}
-              </Button>
+              <Button
+  variant="primary"
+  type="submit"
+  disabled={!isValid || isSubmitting || loading}
+>
+  {loading ? (
+    <ProgressBar animated now={100} label="Envoi en cours..." />
+  ) : (
+    'Vérifier et Envoyer'
+  )}
+</Button>
+
+
             </div>
           </motion.div>
         )}
       </AnimatePresence>
     );
+  };
+  const handleFinalSubmitEntreprise = async (values) => {
+    setLoading(true);
+    try {
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+      const userId = storedUser?.id;
+      
+      // Optionally update the profile picture if provided
+      if (values.photoprofile) {
+        const updatedUserPic = await UserService.updateProfilePicture(userId, values.photoprofile);
+        console.log("Updated profile picture:", updatedUserPic);
+      }
+      
+      // Prepare the entreprise data
+      const entrepriseData = {
+        nom: values.nom,
+        prenom: values.prenom,
+        email: values.email,
+        telephone: values.telephone,
+        adresse: values.adresse,
+        nomEntreprise: values.nomentreprise, // Field specific to entreprise
+        role: userRole,
+        longitude:values.longitude,
+        latitude:values.latitude    
+      };
+      
+      console.log("Entreprise data to update:", entrepriseData);
+      // Call the updateEntreprise service function
+      const updatedEntreprise = await EntrepriseService.updateEntreprise(userId, entrepriseData);
+      console.log("Entreprise updated:", updatedEntreprise);
+      
+      // Optionally store the updated entreprise locally
+      localStorage.setItem("entreprise", JSON.stringify(updatedEntreprise));
+      toast.success("Entreprise mise à jour avec succès!", { icon: "✅" });
+      
+    } catch (error) {
+      console.error("Error updating entreprise:", error);
+      toast.error("Erreur lors de la mise à jour de l'entreprise");
+    }
+    setLoading(false);
   };
   
 
@@ -461,13 +584,20 @@ const UserInformation = () => {
         <Field type="text" name="nomentreprise" placeholder="Nom de l'entreprise" className="form-control" required />
         <ErrorMessage name="nomentreprise" component="div" className="text-danger" />
       </div>
-      <Button variant="primary" type="submit" disabled={isSubmitting || loading} className="btn btn-warning btn-lg mt-3 w-100">
-        {loading ? (
-          <ProgressBar animated now={100} label="Envoi en cours..." />
-        ) : (
-          'Envoyer'
-        )}
-      </Button>
+      <Button
+  variant="primary"
+  type="button"
+  disabled={isSubmitting || loading}
+  className="btn btn-warning btn-lg mt-3 w-100"
+  onClick={() => handleFinalSubmitEntreprise(values)}
+>
+  {loading ? (
+    <ProgressBar animated now={100} label="Envoi en cours..." />
+  ) : (
+    'Envoyer'
+  )}
+</Button>
+
     </>
   );
 
@@ -476,69 +606,70 @@ const UserInformation = () => {
       <div className="container my-5">
         <ToastContainer />
         <h2 className="text-center mb-4">Formulaire d&lsquo;Inscription</h2>
-        {userType === '' ? (
-          <div className="d-flex justify-content-center gap-3">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="card p-3 text-center"
-              style={{ width: '18rem', cursor: 'pointer' }}
-              onClick={() => setUserType('consultant')}
-            >
-              <div className="card-body">
-                <i className="bi bi-person-lines-fill display-4 mb-3"></i>
-                <h3 className="card-title">Consultant</h3>
-                <p className="card-text">Inscrivez-vous en tant que Consultant</p>
-              </div>
-            </motion.div>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="card p-3 text-center"
-              style={{ width: '18rem', cursor: 'pointer' }}
-              onClick={() => setUserType('entreprise')}
-            >
-              <div className="card-body">
-                <i className="bi bi-building display-4 mb-3"></i>
-                <h3 className="card-title">Entreprise</h3>
-                <p className="card-text">Inscrivez-vous en tant qu'Entreprise</p>
-              </div>
-            </motion.div>
-          </div>
-        ) : (
+        {userRole === '' ? (
+  <div className="d-flex justify-content-center gap-3">
+    <motion.div
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      className="card p-3 text-center"
+      style={{ width: '18rem', cursor: 'pointer' }}
+      onClick={() => handleRoleSelection('Consultant')}
+    >
+      <div className="card-body">
+        <i className="bi bi-person-lines-fill display-4 mb-3"></i>
+        <h3 className="card-title">Consultant</h3>
+        <p className="card-text">Inscrivez-vous en tant que Consultant</p>
+      </div>
+    </motion.div>
+    <motion.div
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      className="card p-3 text-center"
+      style={{ width: '18rem', cursor: 'pointer' }}
+      onClick={() => handleRoleSelection('Entreprise')}
+    >
+      <div className="card-body">
+        <i className="bi bi-building display-4 mb-3"></i>
+        <h3 className="card-title">Entreprise</h3>
+        <p className="card-text">Inscrivez-vous en tant qu'Entreprise</p>
+      </div>
+    </motion.div>
+  </div>
+) : (
           // Inside your Formik render function, include isValid:
-<Formik
-  initialValues={initialValues}
-  validationSchema={SignupSchema}
-  validateOnMount={true} // This forces validation on mount
-  onSubmit={(values, { setSubmitting }) => {
-    if (userType === 'consultant') {
-      if (currentStep === 1) {
-        setCurrentStep(2);
-        setSubmitting(false);
-      } else {
-        handlePreviewSubmit(values, setSubmitting);
-      }
-    } else {
-      setLoading(true);
-      setTimeout(() => {
-        console.log({ ...values, userType });
-        setLoading(false);
-        toast.success('Inscription réussie !', { icon: '✅' });
-        setSubmitting(false);
-      }, 2000);
-    }
-  }}
->
-  {({ values, setFieldValue, isSubmitting, isValid }) => (
-    <Form className="mt-4">
-      {userType === 'consultant'
-        ? renderConsultantStep(values, setFieldValue, isSubmitting, isValid)
-        : renderEntrepriseForm(values, setFieldValue, isSubmitting)}
-    </Form>
-  )}
-</Formik>
-
+          <Formik
+            innerRef={formikRef}
+            initialValues={initialValues}
+            validationSchema={currentStep === 1 ? Step1Schema : Step2Schema}
+            validateOnMount={true}
+            onSubmit={(values, { setSubmitting }) => {
+              if (userRole === 'Consultant') {
+                if (currentStep === 1) {
+                  setCurrentStep(2);
+                  setSubmitting(false);
+                } else {
+                  handlePreviewSubmit(values, setSubmitting);
+                }
+              } else {
+                // Pour Entreprise
+                setLoading(true);
+                setTimeout(() => {
+                  console.log({ ...values, role: userRole });
+                  setLoading(false);
+                  toast.success('Inscription réussie !', { icon: '✅' });
+                  setSubmitting(false);
+                }, 2000);
+              }
+            }}
+          >
+            {({ values, setFieldValue, isSubmitting, isValid }) => (
+              <Form className="mt-4">
+                {userRole === 'Consultant'
+                  ? renderConsultantStep(values, setFieldValue, isSubmitting, isValid)
+                  : renderEntrepriseForm(values, setFieldValue, isSubmitting)}
+              </Form>
+            )}
+          </Formik>
 
         )}
       </div>

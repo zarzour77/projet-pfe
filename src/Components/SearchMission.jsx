@@ -16,8 +16,12 @@ import MenuItem from '@mui/material/MenuItem';
 import styles from './SearchMission.module.css';
 // Importation du service pour appeler l'API
 import { getMissions } from '../services/SearchMission';
+import { useNavigate } from 'react-router-dom'; // <-- Import du hook
+
 
 function SearchMission() {
+  const navigate = useNavigate(); // <-- Initialisation du hook
+
   // États pour les filtres et le mode d'affichage
   const [category, setCategory] = useState('');
   const [experience, setExperience] = useState('');
@@ -85,8 +89,11 @@ function SearchMission() {
     toast.success("Mission sauvegardée !");
   };
 
-  const handleChat = (missionTitle) => {
-    toast.info(`Discussion initiée pour "${missionTitle}" !`);
+  const handleChat = (mission) => {
+    toast.info(`Discussion initiée pour "${mission.title}" !`);
+    // Vous pouvez passer des informations sur la mission ou l'utilisateur dans l'état de navigation
+    console.log(mission);
+    navigate('/Messenger', { state: { mission } });
   };
 
   return (
@@ -295,7 +302,7 @@ function SearchMission() {
                   <Button variant="outlined" size="small" onClick={() => toast.info("Link copied!")}>
                     Share
                   </Button>
-                  <Button variant="outlined" size="small" onClick={() => handleChat(mission.title)}>
+                  <Button variant="outlined" size="small" onClick={() => handleChat(mission)}>
                     Chat
                   </Button>
                 </div>
