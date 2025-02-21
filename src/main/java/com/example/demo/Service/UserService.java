@@ -138,4 +138,8 @@ public class UserService {
         }
         return updatedUser;
     }
+
+    public List<User> searchUsers(String query) {
+        return userRepository.findByNomContainingIgnoreCase(query);
+    }
 }

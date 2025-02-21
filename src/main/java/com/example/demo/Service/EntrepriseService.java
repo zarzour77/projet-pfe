@@ -75,6 +75,12 @@ public class EntrepriseService {
             if (updatedEntreprise.getMissions() != null) {
                 entreprise.setMissions(updatedEntreprise.getMissions());
             }
+            if (updatedEntreprise.getLatitude() != null) {
+                entreprise.setLatitude(updatedEntreprise.getLatitude());
+            }
+            if (updatedEntreprise.getLongitude() != null) {
+                entreprise.setLongitude(updatedEntreprise.getLongitude());
+            }
 
             return entrepriseRepository.save(entreprise);
         }).orElseThrow(() -> new RuntimeException("Entreprise not found with id " + id));
