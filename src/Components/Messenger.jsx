@@ -1,60 +1,101 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 import styles from "./messenger.module.css";
-import { Search, Video, Phone, MoreVertical, Send } from "lucide-react";
+
+/** Icônes Lucide (ou tout autre set d'icônes) **/
+import { 
+  Search, 
+  Video, 
+  Phone, 
+  MoreVertical, 
+  Send, 
+  Paperclip, 
+  Smile 
+} from "lucide-react";
+
+/** Services WebSocket et API **/
 import { connect, disconnect } from "../services/webSocket";
-import UserSearch from "./UserSearch";
 import { 
   getConversations, 
   getConversationHistory, 
   createConversation, 
-  sendMessage as apiSendMessage 
+  sendMessage as apiSendMessage,
+  uploadFileMessage
 } from "../services/MessengerService";
+import EmojiPicker from "emoji-picker-react";
 
 export default function Messenger() {
   const location = useLocation();
   const userWithToken = JSON.parse(localStorage.getItem("userWithToken")) || {};
   const currentUser = userWithToken.email || "me@domain.com";
-  const currentUserId = userWithToken.id; // Assurez-vous que l'id est stocké dans le localStorage
+  const currentUserId = userWithToken.id || null; 
 
-  console.log("[Messenger] Current user:", currentUser);
-
+  /** État local **/
   const [conversations, setConversations] = useState([]);
   const [selectedConv, setSelectedConv] = useState(null);
   const [inputMessage, setInputMessage] = useState("");
   const [autoOpened, setAutoOpened] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortCriteria, setSortCriteria] = useState("lastActivity");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
+  /** Références **/
+  const autoOpenedRef = useRef(false);
+  const fileInputRef = useRef(null);
+  const messagesEndRef = useRef(null); // Pour scroller en bas
+
+  /** Variants d'animations pour les messages **/
+  const messageVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
+
+  // Helper function to render message content (text or file)
+  const renderMessageContent = (msg) => {
+    if (msg.content.startsWith("[FILE]")) {
+      const parts = msg.content.split(" | ");
+      // Extract the file name and the data URL
+      const fileName = parts[0].replace("[FILE] ", "");
+      const dataUrl = parts[1];
+      // If the data URL is for an image, display it as an image; otherwise, provide a download link.
+      if (dataUrl.startsWith("data:image")) {
+        return <img src={dataUrl} alt={fileName} style={{ maxWidth: "200px" }} />;
+      } else {
+        return <a href={dataUrl} download={fileName}>{fileName}</a>;
+      }
+    } else {
+      return <span>{msg.content}</span>;
+    }
+  };
+
+  // Transformation d'une conversation pour l'affichage
   const transformConversation = (conv) => {
     const partner = conv.participants.find(user => user.email !== currentUser);
-    const transformed = {
+    return {
       ...conv,
-      // Affiche "Prénom Nom" si possible, sinon "Unknown"
-      name: partner?.prenom && partner?.nom ? `${partner.prenom} ${partner.nom}` : (partner?.nom || "Unknown"),
-      // On vérifie que le préfixe n'est pas ajouté deux fois
+      name: partner?.prenom && partner?.nom
+        ? `${partner.prenom} ${partner.nom}`
+        : (partner?.nom || "Unknown"),
       avatar: partner?.photoprofile 
-                ? (partner.photoprofile.startsWith("data:image") 
-                    ? partner.photoprofile 
-                    : `data:image/png;base64,${partner.photoprofile}`)
-                : (partner?.avatar || "/default-avatar.png"),
+        ? (partner.photoprofile.startsWith("data:image")
+            ? partner.photoprofile
+            : `data:image/png;base64,${partner.photoprofile}`)
+        : (partner?.avatar || "/default-avatar.png"),
       status: partner?.status || "offline",
-      // Ajout de l'email du partenaire
       partnerEmail: partner?.email
     };
-    console.log("[Messenger] Transformed conversation id:", conv.id, "->", transformed);
-    return transformed;
   };
-  
 
-  // Chargement de la liste des conversations
+  // Charge toutes les conversations
   const loadConversations = async () => {
     try {
       const data = await getConversations(currentUser);
-      console.log("[Messenger] Loaded conversations from API:", data);
       const transformed = data.map(transformConversation);
-      console.log("[Messenger] Transformed conversation IDs:", transformed.map(c => c.id));
       setConversations(transformed);
+
+      // Sélection automatique de la première conversation si aucune n’est ouverte
       if (transformed.length > 0 && !autoOpened) {
-        console.log("[Messenger] Auto-selecting conversation id:", transformed[0].id);
         setSelectedConv(transformed[0]);
         loadConversationHistory(transformed[0].id);
       }
@@ -63,54 +104,54 @@ export default function Messenger() {
     }
   };
 
-  // Chargement de l'historique des messages pour une conversation
-  // Ici, on transforme les messages pour qu'ils aient les propriétés attendues par l'UI.
+  // Charge l’historique d’une conversation
   const loadConversationHistory = async (conversationId) => {
     try {
       const messagesFromAPI = await getConversationHistory(conversationId);
-      console.log("[Messenger] Loaded messages for conversation id", conversationId, messagesFromAPI);
-      
       const transformedMessages = messagesFromAPI.map(msg => ({
-        id: msg.idMessage,  // utiliser idMessage comme clé
-        // On peut comparer l'id de l'expéditeur avec currentUserId pour déterminer l'affichage
-        sender: msg.idExpediteur === currentUserId ? currentUser : selectedConv?.name || "Unknown",
+        id: msg.idMessage,
+        sender: msg.idExpediteur === currentUserId 
+          ? currentUser 
+          : "Autre utilisateur",
         content: msg.contenu,
         time: new Date(msg.dateEnvoi).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
       }));
-      
-      setConversations(prevConversations => {
-        const updatedConversations = prevConversations.map(conv =>
-          conv.id === conversationId ? { ...conv, messages: transformedMessages } : conv
+
+      setConversations(prev => {
+        const updated = prev.map(conv =>
+          conv.id === conversationId 
+            ? { ...conv, messages: transformedMessages }
+            : conv
         );
-        setSelectedConv(updatedConversations.find(c => c.id === conversationId));
-        return updatedConversations;
+        setSelectedConv(updated.find(c => c.id === conversationId));
+        return updated;
       });
     } catch (error) {
       console.error("[Messenger] Error loading conversation history:", error);
     }
   };
 
-  // Réception d'un message via WebSocket
+  // WebSocket : message reçu
   const onMessageReceived = (chatMessage) => {
-    console.log("[Messenger] Message received from backend:", chatMessage);
     if (selectedConv && chatMessage.sender === selectedConv.name) {
-      const updated = conversations.map((conv) => {
+      const updated = conversations.map(conv => {
         if (conv.id === selectedConv.id) {
           return {
             ...conv,
             messages: [...(conv.messages || []), chatMessage],
             lastMessage: chatMessage.content,
-            lastActivity: Date.now(),
+            lastActivity: Date.now()
           };
         }
         return conv;
       });
       updated.sort((a, b) => b.lastActivity - a.lastActivity);
       setConversations(updated);
-      setSelectedConv(updated.find((c) => c.id === selectedConv.id));
+      setSelectedConv(updated.find(c => c.id === selectedConv.id));
     }
   };
 
+  // useEffect principal
   useEffect(() => {
     connect(onMessageReceived, () => {
       console.log("[Messenger] WebSocket connection established!");
@@ -121,8 +162,14 @@ export default function Messenger() {
     };
   }, []);
 
-  const autoOpenedRef = useRef(false);
-  // Ouverture automatique de la conversation depuis une mission
+  // Scroller en bas lorsqu’on ajoute un nouveau message
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [selectedConv?.messages]);
+
+  // Ouverture auto depuis location.state
   useEffect(() => {
     if (location.state && location.state.mission && !autoOpenedRef.current) {
       const mission = location.state.mission;
@@ -132,24 +179,21 @@ export default function Messenger() {
           avatar: mission.entreprise.photoprofile || "/default-avatar.png",
           name: mission.entreprise.nomentreprise || mission.entreprise.nom
         };
-        console.log("[Messenger] User from mission:", userFromMission);
         handleUserSelected(userFromMission);
         autoOpenedRef.current = true;
       }
     }
   }, [location.state]);
 
-  // Création ou récupération d'une conversation lors de la sélection d'un utilisateur
+  // Sélection d’un utilisateur
   const handleUserSelected = async (user) => {
-    console.log("[Messenger] handleUserSelected triggered for:", user);
     try {
       let conversation = await createConversation(currentUser, user.email);
-      console.log("[Messenger] createConversation API returned:", conversation);
       conversation = transformConversation(conversation);
+
       setConversations(prev => {
         const exists = prev.some(conv => conv.id === conversation.id);
         if (!exists) {
-          console.log("[Messenger] Adding new conversation id:", conversation.id);
           return [...prev, conversation];
         }
         return prev;
@@ -161,10 +205,10 @@ export default function Messenger() {
     }
   };
 
+  // Sélection d’une conversation
   const handleSelectConversation = (conv) => {
-    console.log("[Messenger] handleSelectConversation for conversation id:", conv.id);
     if (conv.unread > 0) {
-      const updated = conversations.map((c) =>
+      const updated = conversations.map(c =>
         c.id === conv.id ? { ...c, unread: 0 } : c
       );
       setConversations(updated);
@@ -173,54 +217,165 @@ export default function Messenger() {
     loadConversationHistory(conv.id);
   };
 
+  // Envoi d’un message texte
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || !selectedConv) return;
     const newChatMessage = {
       type: "CHAT",
       sender: currentUser,
       receiver: selectedConv.partnerEmail,
-      content: inputMessage,
+      content: inputMessage
     };
-    console.log("[Messenger] Sending message:", newChatMessage);
     try {
       await apiSendMessage(newChatMessage);
     } catch (error) {
       console.error("[Messenger] Error sending message:", error);
     }
-    // Création d'un message local pour l'affichage immédiat
+
+    // Mise à jour locale (optimiste)
     const newMessage = {
       id: Date.now(),
       sender: currentUser,
       content: inputMessage,
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     };
-    const updated = conversations.map((conv) => {
+    const updated = conversations.map(conv => {
       if (conv.id === selectedConv.id) {
         return {
           ...conv,
           messages: [...(conv.messages || []), newMessage],
           lastMessage: newMessage.content,
-          lastActivity: Date.now(),
+          lastActivity: Date.now()
         };
       }
       return conv;
     });
     updated.sort((a, b) => b.lastActivity - a.lastActivity);
     setConversations(updated);
-    setSelectedConv(updated.find((c) => c.id === selectedConv.id));
+    setSelectedConv(updated.find(c => c.id === selectedConv.id));
     setInputMessage("");
+  };
+
+  // Gestion des fichiers
+  const handleFileIconClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = async (event) => {
+    const files = event.target.files;
+    if (!files || files.length === 0 || !selectedConv) return;
+    const file = files[0];
+
+    // On crée un FormData pour envoyer le fichier en multipart/form-data
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("sender", currentUser);
+    formData.append("receiver", selectedConv.partnerEmail);
+
+    try {
+      // Appel du service d'upload de fichier
+      const savedMessage = await uploadFileMessage(formData);
+      console.log("Fichier envoyé avec succès, message sauvegardé:", savedMessage);
+
+      // Mise à jour locale : on l'ajoute dans la conversation courante
+      const newMessage = {
+        id: savedMessage.idMessage,
+        sender: currentUser,
+        // On récupère la partie après " | " pour obtenir le data URL créé sur le backend.
+        content: `[FILE] ${file.name} | ${savedMessage.contenu.split(" | ")[1] || ""}`,
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      };
+      const updated = conversations.map(conv => {
+        if (conv.id === selectedConv.id) {
+          return {
+            ...conv,
+            messages: [...(conv.messages || []), newMessage],
+            lastMessage: newMessage.content,
+            lastActivity: Date.now()
+          };
+        }
+        return conv;
+      });
+      updated.sort((a, b) => b.lastActivity - a.lastActivity);
+      setConversations(updated);
+      setSelectedConv(updated.find(c => c.id === selectedConv.id));
+    } catch (error) {
+      console.error("Erreur lors de l’envoi du fichier:", error);
+    }
+  };
+
+  // Envoi d’emoji seul
+  const handleEmojiClick = () => {
+    setInputMessage("😊");
+  };
+
+  // Filtrer et trier les conversations
+  const filteredConversations = conversations.filter(conv =>
+    conv.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const sortConversations = (criteria) => {
+    const sorted = [...conversations].sort((a, b) => {
+      if (criteria === "name") {
+        return a.name.localeCompare(b.name);
+      } else if (criteria === "unread") {
+        return (b.unread || 0) - (a.unread || 0);
+      } else {
+        return (b.lastActivity || 0) - (a.lastActivity || 0);
+      }
+    });
+    setConversations(sorted);
+  };
+
+  useEffect(() => {
+    sortConversations(sortCriteria);
+  }, [sortCriteria]);
+
+  const onEmojiClick = (emojiData, event) => {
+    // Vous pouvez soit ajouter l'emoji à la fin du texte actuel, soit le remplacer
+    setInputMessage((prev) => prev + emojiData.emoji);
+    setShowEmojiPicker(false);
+  };
+
+  // Modifiez la fonction de clic sur l'icône Emoji pour afficher/masquer le picker
+  const handleEmojiIconClick = () => {
+    setShowEmojiPicker((prev) => !prev);
   };
 
   return (
     <div className={styles.container}>
+      {/* --- COLONNE GAUCHE --- */}
       <div className={styles.leftColumn}>
-        <UserSearch onUserSelected={handleUserSelected} />
+        <div className={styles.searchBar}>
+          <Search className={styles.searchIcon} />
+          <input
+            type="text"
+            placeholder="Rechercher..."
+            className={styles.searchInput}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <select
+            className={styles.sortSelect}
+            value={sortCriteria}
+            onChange={(e) => setSortCriteria(e.target.value)}
+          >
+            <option value="lastActivity">Dernière activité</option>
+            <option value="name">Nom</option>
+            <option value="unread">Non lus</option>
+          </select>
+        </div>
+
         <div className={styles.conversationList}>
-          {conversations.map((conv) => (
+          {filteredConversations.map(conv => (
             <div
               key={conv.id}
               onClick={() => handleSelectConversation(conv)}
-              className={`${styles.conversationItem} ${selectedConv && selectedConv.id === conv.id ? styles.activeConversation : ""}`}
+              className={`${styles.conversationItem} ${
+                selectedConv && selectedConv.id === conv.id ? styles.activeConversation : ""
+              }`}
             >
               <img src={conv.avatar} alt={conv.name} className={styles.avatar} />
               <div className={styles.conversationInfo}>
@@ -235,6 +390,7 @@ export default function Messenger() {
         </div>
       </div>
 
+      {/* --- COLONNE CENTRALE --- */}
       {selectedConv ? (
         <div className={styles.centerColumn}>
           <div className={styles.chatHeader}>
@@ -251,19 +407,45 @@ export default function Messenger() {
               <MoreVertical className={styles.icon} />
             </div>
           </div>
+
           <div className={styles.messagesArea}>
             {selectedConv.messages &&
-              selectedConv.messages.map((msg) => (
-                <div
-                  key={msg.id}  // Utilise la propriété transformée 'id'
+              selectedConv.messages.map(msg => (
+                <motion.div
+                  key={msg.id}
+                  variants={messageVariants}
+                  initial="hidden"
+                  animate="visible"
+                  transition={{ duration: 0.3 }}
                   className={msg.sender === currentUser ? styles.messageMe : styles.messageOther}
                 >
-                  <div className={styles.messageText}>{msg.content}</div>
+                  <div className={styles.messageText}>
+                    {renderMessageContent(msg)}
+                  </div>
                   <div className={styles.messageTime}>{msg.time}</div>
-                </div>
-              ))}
+                </motion.div>
+              ))
+            }
+            {/* Réf invisible pour scroller en bas */}
+            <div ref={messagesEndRef} />
           </div>
+
+          {/* --- BARRE D’ENVOI --- */}
           <div className={styles.inputBar}>
+            {/* Icône Fichier (à gauche) */}
+            <div className={styles.iconLeft} onClick={handleFileIconClick}>
+              <Paperclip size={20} />
+              {/* Input masqué pour sélectionner les fichiers */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: "none" }}
+                onChange={handleFileChange}
+                multiple
+              />
+            </div>
+
+            {/* Champ de saisie */}
             <input
               type="text"
               placeholder="Écrivez un message..."
@@ -272,10 +454,24 @@ export default function Messenger() {
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
             />
+
+            {/* Icône Emoji (à droite) */}
+
+              <div className={styles.iconRight} onClick={handleEmojiIconClick}>
+              <Smile size={20} />
+            </div>
+
+            {/* Bouton Envoyer */}
             <button className={styles.sendButton} onClick={handleSendMessage}>
               <Send size={20} />
             </button>
           </div>
+                    {/* Render the Emoji Picker */}
+                    {showEmojiPicker && (
+            <div className={styles.emojiPickerContainer}>
+              <EmojiPicker onEmojiClick={onEmojiClick} />
+            </div>
+          )}
         </div>
       ) : (
         <div className={styles.centerColumnEmpty}>
