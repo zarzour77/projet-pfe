@@ -67,7 +67,6 @@ public class ConsultantService {
             if (updatedConsultant.getRating() != null) {
                 consultant.setRating(updatedConsultant.getRating());
             }
-
             // Update Consultant-specific fields
             if (updatedConsultant.getCompetences() != null) {
                 consultant.setCompetences(updatedConsultant.getCompetences());
@@ -96,7 +95,9 @@ public class ConsultantService {
             if (updatedConsultant.getBudgetMin() != null) {
                 consultant.setBudgetMin(updatedConsultant.getBudgetMin());
             }
-
+            if (updatedConsultant.getExperiences() != null) {
+                consultant.setExperiences(updatedConsultant.getExperiences());
+            }
             return consultantRepository.save(consultant);
         }).orElseThrow(() -> new RuntimeException("Consultant not found with id " + id));
     }

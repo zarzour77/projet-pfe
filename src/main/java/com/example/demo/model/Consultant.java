@@ -41,6 +41,15 @@ public class Consultant extends User {
     private List<String> domaines;
     @Column(nullable = true)
     private Integer budgetMin; // Remplacer budget_min par budgetMin en Java
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "consultant_experiences",
+            joinColumns = @JoinColumn(name = "consultant_id"),
+            inverseJoinColumns = @JoinColumn(name = "experience_id")
+    )
+    private List<Experience> experiences;
+
+
 
 
     public Consultant() {}
@@ -180,7 +189,13 @@ public class Consultant extends User {
     public void setPropositions(List<Proposition> propositions) {
         this.propositions = propositions;
     }
+    public List<Experience> getExperiences() {
+        return experiences;
+    }
 
+    public void setExperiences(List<Experience> experiences) {
+        this.experiences = experiences;
+    }
 
     @Override
     public String toString() {
