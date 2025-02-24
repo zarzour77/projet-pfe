@@ -13,6 +13,9 @@ public class Message {
     private Long idConversation; // Conversation ID
     private Long idExpediteur; // Sender ID
     private Long idDestinataire; // Receiver ID
+
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String contenu; // Message content
     private LocalDateTime dateEnvoi; // Sent date and time
 
