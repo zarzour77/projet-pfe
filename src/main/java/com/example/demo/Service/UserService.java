@@ -85,10 +85,12 @@ public class UserService {
         return Base64.getEncoder().encodeToString(fileBytes);
     }
 
-    // Method to upload and update the user's profile picture
+    // Méthode pour uploader et mettre à jour la photo de profil d'un utilisateur
     public User updateProfilePicture(Long id, MultipartFile file) throws IOException {
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         String base64Image = encodeImageToBase64(file);
+        // On stocke la chaîne raw sans le préfixe
         user.setPhotoprofile(base64Image);
         return userRepository.save(user);
     }
@@ -115,16 +117,13 @@ public class UserService {
 
     @Transactional
     public User updateUserRole(Long id, String role) {
-        // Update the User entity first
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         user.setRole(role);
         User updatedUser = userRepository.save(user);
 
-        // Depending on the new role, insert a record in the child table using a native query
         if ("Consultant".equalsIgnoreCase(role)) {
             if (!consultantRepository.existsById(updatedUser.getId())) {
-                // Native insert to force a new row in the consultant table
                 entityManager.createNativeQuery("INSERT INTO consultant (id) VALUES (?)")
                         .setParameter(1, updatedUser.getId())
                         .executeUpdate();
@@ -137,5 +136,9 @@ public class UserService {
             }
         }
         return updatedUser;
+    }
+
+    public List<User> searchUsers(String query) {
+        return userRepository.findByNomContainingIgnoreCase(query);
     }
 }

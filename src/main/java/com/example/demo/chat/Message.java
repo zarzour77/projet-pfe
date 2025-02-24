@@ -1,4 +1,4 @@
-package com.example.demo.model;
+package com.example.demo.chat;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
