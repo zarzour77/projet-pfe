@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import styles from './Header.module.css'; // Assurez-vous d'avoir ce fichier CSS
 
 function Header() {

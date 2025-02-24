@@ -1,7 +1,7 @@
 // messengerService.js
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8081/api';
+const API_URL = 'http://localhost:8181/api';
 
 // Fonction utilitaire pour récupérer les headers d'authentification
 const getAuthHeaders = () => {

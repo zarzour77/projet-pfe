@@ -7,7 +7,6 @@
     font-family: 'Montserrat', sans-serif;
 }
 .customBackground {
-    background: linear-gradient(135deg, #ffffe0, #f4f9e4); /* Light yellow to soft green */
     min-height: 100vh; /* Ensure it covers the full height of the viewport */
     display: flex;
     justify-content: center; /* Center content horizontally */
@@ -17,10 +16,9 @@
 
 
 .container{
-
     background-color: #fff;
     border-radius: 30px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35);
+    box-shadow: 1px 14px 15px rgba(0, 0, 0, 0.35);
     position: relative;
     overflow: hidden;
     width: 768px;
@@ -53,8 +51,8 @@
 
 /* Default styling for all buttons */
 .loginButton {
-    background-color: black;
-    color: #ffcc00;
+    background-color: #074799;
+    color: #E1FFBB;
     font-size: 12px;
     padding: 10px 45px;
     border: 1px solid transparent;
@@ -65,23 +63,35 @@
     margin-top: 10px;
     cursor: pointer;
 }
-
+.loginButton:hover{
+    background-color: white;
+    color: #074799;
+    border: 2px solid #074799;
+}
 /* Button inside the left panel */
 .toggle-left button.hidden,.toggle-right button.hidden {
-    background-color: #ffcc00 ;
-    color: black;
+    background-color: #E1FFBB ;
+    color: #009990;
     font-size: 12px;
     padding: 10px 45px;
     border: 1px solid transparent;
     border-radius: 8px;
-    font-weight: 600;
+    font-weight: bold;
     letter-spacing: 0.5px;
     text-transform: uppercase;
     margin-top: 10px;
     cursor: pointer;
-
 }
-
+.toggle-left button.hidden:hover{
+    background-color: transparent;
+    color: #E1FFBB;
+    border: 2px solid #E1FFBB;
+}
+.toggle-right button.hidden:hover{
+    background-color: transparent;
+    color: #E1FFBB;
+    border: 2px solid #E1FFBB;
+}
 .container form{
     background-color: #fff;
     display: flex;
@@ -94,7 +104,7 @@
 }
 
 .container input{
-    background-color: #eee;
+    background-color: #E1FFBB;
     border: none;
     margin: 8px 0;
     padding: 10px 15px;
@@ -204,7 +214,7 @@
 
 .toggle{
     height: 100%;
-    background: black;
+    background: linear-gradient(260deg, #074799,#009990);
     color: #fff;
     position: relative;
     left: -100%;
@@ -259,3 +269,12 @@
 .form-container h1 {
     font-size: 24px; /* Adjust this value as needed */
 }
+.formHero {
+    position: absolute;
+    top: 135px;       /* Adjust vertical position */
+    left: 296px;      /* Adjust horizontal position */
+    z-index: 2;       /* Make sure it appears above the background */
+  }
+  .user{
+width: 100px;
+  }

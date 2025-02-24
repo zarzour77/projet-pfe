@@ -17,6 +17,7 @@ import styles from './UserInformation.module.css';
 import UserService from '../Services/UserService';
 import ConsultantService from '../Services/ConsultantService';
 import EntrepriseService from '../Services/EntrepriseService';
+import { useNavigate } from "react-router-dom";
 
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -159,6 +160,7 @@ const [userRole, setUserRole] = useState('');
 
   const handleRoleSelection = (role) => {
     const user = JSON.parse(localStorage.getItem("user"));
+    console.log(role)
     const userId = user?.id;
     UserService.updateUserRole(userId, role)
       .then((updatedUser) => {
@@ -259,6 +261,7 @@ const [userRole, setUserRole] = useState('');
     setShowModal(true);
     setSubmitting(false);
   };
+  const navigate = useNavigate();
 
   const handleFinalSubmit = async (values) => {
     setLoading(true);
@@ -280,6 +283,7 @@ const [userRole, setUserRole] = useState('');
     const consultantData = {
       nom: values.nom,
       prenom: values.prenom,
+      adresse:values.adresse,
       email: values.email,
       telephone: values.telephone,
       password:values.password,
@@ -297,7 +301,9 @@ const [userRole, setUserRole] = useState('');
     const newConsultant = await ConsultantService.updateConsultant(userId,consultantData);
     console.log("Consultant updated:", newConsultant);
     localStorage.setItem("consultant", JSON.stringify(newConsultant));
-
+    if (newConsultant) {
+      navigate("/SignupSuccess"); // Navigate to SignupSuccess page upon success
+    }
 
     } catch (error) {
       console.error("Error updating user:", error);
@@ -689,7 +695,6 @@ const [userRole, setUserRole] = useState('');
               <p><strong>Adresse:</strong> {modalData.adresse}</p>
               {preview && (
                 <div>
-                  <strong>Photo de Profil:</strong>
                   <br />
                   <img src={preview} className={styles.modalPhoto} alt="Aperçu" style={{ width: '150px', height: '150px', borderRadius: '8px' }} />
                 </div>

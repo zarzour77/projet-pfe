@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaList, FaTh } from 'react-icons/fa';
 import { toast, ToastContainer } from 'react-toastify';
@@ -17,6 +17,7 @@ import styles from './SearchMission.module.css';
 // Importation du service pour appeler l'API
 import { getMissions } from '../services/SearchMission';
 import { useNavigate } from 'react-router-dom'; // <-- Import du hook
+import Header from './Header';
 
 
 function SearchMission() {
@@ -98,6 +99,7 @@ function SearchMission() {
 
   return (
     <div className={styles.searchMissionContainer}>
+      <Header/>
       <ToastContainer />
 
       {/* Barre de recherche globale */}

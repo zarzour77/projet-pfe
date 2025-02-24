@@ -1,7 +1,126 @@
-.customBackground{
-    min-height: 100vh; /* Ensure it covers the full height of the viewport */
-    display: flex;
-    justify-content: center; /* Center content horizontally */
-    align-items: center; /* Center content vertically */
-    padding: 20px; /* Optional padding to ensure spacing */
+.header {
+  background: linear-gradient(135deg, #074799, #009990);
+  color: #fff;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  padding: 15px 0 30px;
+  margin-bottom: 230px;
 }
+
+
+.navBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #fff;
+}
+
+.loginButton {
+  background: none;
+  color: #5e72e4;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: bold;
+  transition: color 0.3s linear;
+}
+.loginButton:hover{
+  color: #fff;
+}
+.loginButton:hover::before{
+  transform: scaleX(1);
+}
+.loginButton::before{
+  content:"";
+  z-index: -1;
+  background: #fff;
+  transform: scaleX(0);
+  width:100%;
+  height: 100%;
+  transition: transform 0.5s;
+  transform-origin: 0 0;
+  transition-timing-function: cubic-bezier(0.5,1.5,0.4,0.7);
+}
+
+.headerContent {
+  margin-top: 20px;
+}
+
+.headerContent h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.headerContent p {
+  font-size: 1.25rem;
+  margin-bottom: 2rem;
+}
+.iconLeft {
+  margin-left: -20px;
+}
+
+  .header p {
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+  }
+  
+  .header .btn {
+    background: #fff;
+    color: #5e72e4;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.375rem;
+    font-size: 1.125rem;
+    text-decoration: none;
+  }
+ /* Container for the slider */
+.slider {
+    position: relative;
+    overflow: hidden;
+    height: 300px; /* Fixed height for the container */
+    width: 100%;
+    border-radius: 5px ;
+    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3); /* Add soft shadow */
+
+  }
+  
+  /* Each slide is positioned on top of each other */
+  .slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0; /* Start hidden */
+    animation: fade 18s infinite;
+  }
+  
+  /* Stagger the animation start for each slide (6 slides total) */
+  .slide:nth-child(1) { animation-delay: 0s; }
+  .slide:nth-child(2) { animation-delay: 3s; }
+  .slide:nth-child(3) { animation-delay: 6s; }
+  .slide:nth-child(4) { animation-delay: 9s; }
+  .slide:nth-child(5) { animation-delay: 12s; }
+  .slide:nth-child(6) { animation-delay: 15s; }
+  
+  /* Images fill the slide container */
+  .slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  /* Keyframes for a shorter fading effect */
+  @keyframes fade {
+    0%   { opacity: 0; }
+    8%   { opacity: 1; }   /* Fade in quickly */
+    20%  { opacity: 1; }   /* Remain visible briefly */
+    28%  { opacity: 0; }   /* Fade out quickly */
+    100% { opacity: 0; }
+  }
+  

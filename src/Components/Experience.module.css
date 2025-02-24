@@ -219,3 +219,187 @@
     transform: scale(1); /* Shrink back */
   }
 }
+/* Experience Form Styling */
+.experienceForm {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 2rem;
+  max-width: 450px;
+  margin: 2rem auto;                  /* Center the form with vertical margin */
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.experienceForm h2.formTitle {
+  font-size: 24px;
+  margin-bottom: 1rem;
+  color: #074799;
+  text-align: center;
+}
+
+.experienceForm .formGroup {
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.experienceForm .formGroup label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.experienceForm .formInput,
+.experienceForm .formTextarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #333;
+  background-color: #fff;
+  transition: border 0.3s ease;
+}
+
+.experienceForm .formInput:focus,
+.experienceForm .formTextarea:focus {
+  outline: none;
+  border-color: #074799;
+}
+
+.experienceForm .formTextarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.experienceForm .nextButton {
+  background-color: #074799;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: 100%;
+}
+
+.experienceForm .nextButton:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.experienceForm .nextButton:hover:not(:disabled) {
+  background-color: #0a5fcc;
+}
+.addExperienceButton {
+  background-color: #074799;
+  color: #E1FFBB;
+  font-size: 14px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  margin-right: 10px;
+}
+
+.addExperienceButton:hover {
+  background-color: #0a5fcc;
+  transform: scale(1.02);
+}
+
+.finishButton {
+  background-color: #2dce89;
+  color: #fff;
+  font-size: 14px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  margin-left: 10px;
+}
+
+.finishButton:hover {
+  background-color: #27ae60;
+  transform: scale(1.02);
+}
+/* Form Columns */
+.formColumns {
+  display: flex;
+  gap: 2rem;
+  width: 100%;
+}
+
+.formLeft {
+  flex: 1;
+  max-width: 500px;
+}
+
+/* Experience List */
+.experienceList {
+  position:absolute;
+  top: 17px;
+right: 150px;
+  flex: 1;
+  background: #f8f9fa;
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 500px;
+  height: fit-content;
+  border: 1px solid #ddd;
+}
+
+.experienceItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid grey;
+}
+
+.experienceContent {
+  flex: 1;
+  margin-right: 1rem;
+}
+
+.entreprise {
+  font-weight: 600;
+  display: block;
+  color: #333;
+}
+
+.role {
+  font-size: 0.9em;
+  color: #666;
+}
+
+.duree {
+  font-size: 0.8em;
+  color: #888;
+}
+
+.deleteButton {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.deleteButton:hover {
+  background: #bb2d3b;
+}
+
+.formActions{
+  margin-top: -20px;
+}

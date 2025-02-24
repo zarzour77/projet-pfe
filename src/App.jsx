@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Home from "./Components/Home";
-import Login from "./components/Login"
+import Login from "./Components/Login"
 import SignupSuccess from "./Components/SignupSuccess";
 import CreateProfile from "./Components/CreateProfile";
 import Experience from "./Components/Experience";
@@ -13,7 +13,7 @@ import UserInformation from "./Components/UserInformation";
 import Messenger from "./components/Messenger";
 import MissioinTinder from "./components/MissionTinder";
 import SearchMission from "./components/SearchMission";
-
+import Header from "./Components/Header";
 
 const App = () => {
   return (
@@ -33,6 +33,7 @@ const App = () => {
         <Route path="/Messenger" element={<Messenger /> }  />
         <Route path="/MissionTinder" element={<MissioinTinder /> }  />
         <Route path="/SearchMission" element={<SearchMission /> }  />
+        <Route path="/header" element={<Header /> }  />
 
       </Routes>
     </Router>
