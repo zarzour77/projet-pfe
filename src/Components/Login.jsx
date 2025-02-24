@@ -3,7 +3,7 @@ import AuthService from "../Services/AuthService";
 import styles from "./Login.module.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { useNavigate } from "react-router-dom";
-
+import user1 from '../assets/hidingUser.png'
 const Login = () => {
   const [isActive, setIsActive] = useState(false);
 
@@ -51,11 +51,10 @@ const handleSignup = async (e) => {
       console.log(signinEmail, signinPassword);
       const response = await AuthService.login(signinEmail, signinPassword);
       localStorage.setItem("userWithToken", JSON.stringify(response));      
-      const storedUser = JSON.parse(localStorage.getItem("user"));
-      if (storedUser.subscriptionType === null || storedUser.subscriptionType === "") {
+      if (response.roles.includes("ROLE_USER"))  {
         navigate("/UserInformation");
       } else {
-        navigate("/home");
+        navigate("/MissionTinder");
       }
     } catch {
       alert("Login failed! Please check your credentials.");
@@ -65,6 +64,8 @@ const handleSignup = async (e) => {
   return (
     <div className={`${styles.customBackground}`}>
       <div className={`${styles.container} ${isActive ? styles.active : ""}`} id="container">
+      
+
         {/* Sign Up Form */}
         <div className={`${styles['form-container']} ${styles['sign-up']}`}>
           <form onSubmit={handleSignup}>
@@ -116,7 +117,11 @@ const handleSignup = async (e) => {
           </div>
         </div>
       </div>
+      <div className={styles.formHero}>
+  <img className={styles.user} src={user1} alt="Decorative Icon" />
+</div>
     </div>
+    
   );
 };
 

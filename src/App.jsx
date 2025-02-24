@@ -1,21 +1,21 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Home from "./Components/Home";
-import Login from "./components/Login"
+import Login from "./Components/Login"
 import SignupSuccess from "./Components/SignupSuccess";
 import CreateProfile from "./Components/CreateProfile";
-import Header from "./Components/Header";
 import Experience from "./Components/Experience";
 import Subscription from "./components/Subscription";
 import PaymentSuccess from "./Components/PaymentSuccess";
 import PaymentFailed from "./Components/PaymentFailed";
 import TradeForTalent from "./Components/TradeForTalent";
 import ProfileSelection from "./Components/ProfileSelection";
-import UserInformation from "./components/UserInformation";
+import UserInformation from "./Components/UserInformation";
 import Messenger from "./components/Messenger";
 import MissioinTinder from "./components/MissionTinder";
 import SearchMission from "./components/SearchMission";
 import StatsConsultant from "./components/statsconsultant";
 import PublierMission from "./components/PublierMission";
+
 
 
 const App = () => {
@@ -38,6 +38,7 @@ const App = () => {
         <Route path="/SearchMission" element={<SearchMission /> }  />
         <Route path="/StatsConsultant" element={<StatsConsultant /> }  />
         <Route path="/PublierMission" element={<PublierMission /> }  />
+
 
       </Routes>
     </Router>

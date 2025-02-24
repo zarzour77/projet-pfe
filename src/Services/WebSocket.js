@@ -7,7 +7,7 @@ export const connect = (onMessageReceived, onConnected) => {
   const userWithToken = JSON.parse(localStorage.getItem("userWithToken"));
   const token = userWithToken?.token; // Ensure the token exists
   // Append token to the WebSocket URL as a query parameter
-  const socket = new SockJS(`http://localhost:8081/ws?token=${token}`);
+  const socket = new SockJS(`http://localhost:8181/ws?token=${token}`);
   
   stompClient = new Client({
     webSocketFactory: () => socket,
