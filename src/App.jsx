@@ -14,6 +14,8 @@ import UserInformation from "./components/UserInformation";
 import Messenger from "./components/Messenger";
 import MissioinTinder from "./components/MissionTinder";
 import SearchMission from "./components/SearchMission";
+import StatsConsultant from "./components/statsconsultant";
+import PublierMission from "./components/PublierMission";
 
 
 const App = () => {
@@ -34,6 +36,8 @@ const App = () => {
         <Route path="/Messenger" element={<Messenger /> }  />
         <Route path="/MissionTinder" element={<MissioinTinder /> }  />
         <Route path="/SearchMission" element={<SearchMission /> }  />
+        <Route path="/StatsConsultant" element={<StatsConsultant /> }  />
+        <Route path="/PublierMission" element={<PublierMission /> }  />
 
       </Routes>
     </Router>

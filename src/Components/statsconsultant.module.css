@@ -1,0 +1,141 @@
+/* Conteneur global : deux cartes l’une à côté de l’autre */
+.container {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: 1fr 1fr;
+    padding: 20px;
+    background-color: #f9f9f9;
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Carte : bordure, fond blanc, etc. */
+  .card {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 20px;
+  }
+  
+  /* Ligne d’en-tête : titre + select */
+  .headerRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  /* Titre de section (Proposals / Profile metrics) */
+  .sectionTitle {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #333;
+  }
+  
+  /* Select pour la période */
+  .rangeSelect {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: pointer;
+  }
+  
+  /* Grosse valeur (ex: 0 proposals sent) */
+  .bigNumber {
+    margin: 10px 0;
+    font-size: 1.1rem;
+    color: #333;
+  }
+  
+  /* Liste de stats textuelles (0 proposals sent, 0 were viewed, etc.) */
+  .statsList {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+    color: #555;
+    font-size: 0.9rem;
+  }
+  
+  /* Conteneur du graphique (on fixe une hauteur pour Chart.js) */
+  .chartContainer {
+    height: 180px;
+    margin-bottom: 20px;
+  }
+  
+  /* Ligne de pied de carte : légende + lien */
+  .footerRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  /* Légende (Organic, Boosted) */
+  .legend {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+  }
+  
+  .legendItem {
+    font-size: 0.9rem;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .organicDot,
+  .boostedDot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  
+  .organicDot {
+    background-color: #14a800; /* Vert */
+  }
+  
+  .boostedDot {
+    background-color: #0077b5; /* Bleu */
+  }
+  
+  /* Lien "My proposals" */
+  .link {
+    color: #0366d6;
+    text-decoration: none;
+    font-size: 0.9rem;
+  }
+  
+  .link:hover {
+    text-decoration: underline;
+  }
+  
+  /* Onglets pour "Profile metrics" */
+  .tabs {
+    display: flex;
+    gap: 10px;
+    margin: 10px 0;
+  }
+  
+  .tabButton {
+    background-color: transparent;
+    border: none;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #555;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s;
+  }
+  
+  .tabButton:hover {
+    color: #0366d6;
+  }
+  
+  .activeTab {
+    border-color: #0366d6;
+    font-weight: bold;
+    color: #0366d6;
+  }
+  
