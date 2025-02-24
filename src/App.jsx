@@ -13,7 +13,6 @@ import UserInformation from "./Components/UserInformation";
 import Messenger from "./components/Messenger";
 import MissioinTinder from "./components/MissionTinder";
 import SearchMission from "./components/SearchMission";
-import Header from "./Components/Header";
 
 const App = () => {
   return (
@@ -33,7 +32,6 @@ const App = () => {
         <Route path="/Messenger" element={<Messenger /> }  />
         <Route path="/MissionTinder" element={<MissioinTinder /> }  />
         <Route path="/SearchMission" element={<SearchMission /> }  />
-        <Route path="/header" element={<Header /> }  />
 
       </Routes>
     </Router>
