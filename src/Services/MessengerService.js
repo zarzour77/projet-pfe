@@ -1,7 +1,7 @@
 // messengerService.js
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8181/api';
+const API_URL = 'http://localhost:8081/api';
 
 // Récupère le token depuis le localStorage et construit les headers JSON
 const getAuthHeaders = () => {

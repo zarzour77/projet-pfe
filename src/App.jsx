@@ -1,28 +1,26 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Home from "./Components/Home";
-import Login from "./Components/Login"
-import SignupSuccess from "./Components/SignupSuccess";
-import CreateProfile from "./Components/CreateProfile";
-import Experience from "./Components/Experience";
+import Login from "./components/Login"
+import SignupSuccess from "./components/SignupSuccess";
+import CreateProfile from "./components/CreateProfile";
+import Experience from "./components/Experience";
 import Subscription from "./components/Subscription";
-import PaymentSuccess from "./Components/PaymentSuccess";
-import PaymentFailed from "./Components/PaymentFailed";
-import TradeForTalent from "./Components/TradeForTalent";
-import ProfileSelection from "./Components/ProfileSelection";
-import UserInformation from "./Components/UserInformation";
+import PaymentSuccess from "./components/PaymentSuccess";
+import PaymentFailed from "./components/PaymentFailed";
+import TradeForTalent from "./components/TradeForTalent";
+import ProfileSelection from "./components/ProfileSelection";
+import UserInformation from "./components/UserInformation";
 import Messenger from "./components/Messenger";
 import MissioinTinder from "./components/MissionTinder";
 import SearchMission from "./components/SearchMission";
 import StatsConsultant from "./components/statsconsultant";
 import PublierMission from "./components/PublierMission";
-
+import Home from "./components/Home";
 
 
 const App = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login /> }  />
         <Route path="/SignupSuccess" element={<SignupSuccess /> }  />
         <Route path="/CreateProfile" element={<CreateProfile /> }  />
@@ -38,6 +36,7 @@ const App = () => {
         <Route path="/SearchMission" element={<SearchMission /> }  />
         <Route path="/StatsConsultant" element={<StatsConsultant /> }  />
         <Route path="/PublierMission" element={<PublierMission /> }  />
+        <Route path="/Home" element={<Home /> }  />
 
 
       </Routes>

@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 // Remplacez l'URL par l'URL de votre API
-const API_URL = 'http://localhost:8181/api/missions/stories';
+const API_URL = 'http://localhost:8081/api/missions/stories';
 
 export const getMissions = async () => {
   // Récupération du token stocké dans localStorage

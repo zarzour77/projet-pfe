@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8181/api/consultants';
+const API_URL = 'http://localhost:8081/api/consultants';
 
 const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
 const token = storedUser?.token;
