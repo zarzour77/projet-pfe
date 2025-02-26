@@ -4,6 +4,7 @@ import axios from "axios";
 const API_URL = "http://localhost:8081/api/competences";
 
 // Récupération du token depuis le localStorage
+
 const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
 const token = storedUser?.token;
 

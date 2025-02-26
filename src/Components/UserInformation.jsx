@@ -1,3 +1,4 @@
+
 // src/components/UserInformation.js
 import React, { useState, Suspense, useEffect } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
@@ -262,7 +263,9 @@ const UserInformation = () => {
       };
       
       const newConsultant = await ConsultantService.updateConsultant(userId, consultantData);
-      localStorage.setItem("consultant", JSON.stringify(newConsultant));
+
+      localStorage.setItem("Consultant", JSON.stringify(newConsultant));
+      console.log(newConsultant)
       if (newConsultant) {
         navigate("/SignupSuccess");
       }

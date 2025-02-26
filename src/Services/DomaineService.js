@@ -1,6 +1,7 @@
 // src/services/DomaineService.js
 import axios from "axios";
 
+
 const API_URL = "http://localhost:8081/api/domaines";
 
 // Récupération de l'utilisateur avec le token depuis le localStorage
@@ -70,3 +71,4 @@ const DomaineService = {
 };
 
 export default DomaineService;
+

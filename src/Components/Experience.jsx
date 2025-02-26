@@ -102,13 +102,18 @@ const Experience = () => {
         description: exp.description,
       }));
   
-      const storedUser = JSON.parse(localStorage.getItem("user"));
-      const userId = storedUser?.id;
+      const storedConsultant = JSON.parse(localStorage.getItem("Consultant"));
+      const userId = storedConsultant?.id;
+      console.log(storedConsultant)
   
       // Send the data to the backend using the updateConsultant function
-      await ConsultantService.updateConsultant(userId, { experiences: formattedExperiences });
-  
+      const response=await ConsultantService.updateConsultant(userId, { experiences:  formattedExperiences });
+      if (response){
+        console.log("Experiences updated successfully!");
+        localStorage.setItem("Consultant",JSON.stringify(response))
       navigate("/subscription");
+
+      }
     } catch (error) {
       alert("Failed to add experiences.");
       console.error(error);

@@ -53,6 +53,11 @@ const handleSignup = async (e) => {
       localStorage.setItem("userWithToken", JSON.stringify(response));      
       if (response.roles.includes("ROLE_USER"))  {
         navigate("/UserInformation");
+      if(response.roles.includes("Consultant")){
+        localStorage.setItem()
+        navigate("/UserInformation");
+
+      }
       } else {
         navigate("/MissionTinder");
       }

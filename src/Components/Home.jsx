@@ -208,7 +208,7 @@ const Home = () => {
       className="card-body py-5"
       style={{ position: 'relative', zIndex: 2, transform: 'translateY(-50px)' }}
     >
-      <div className="icon icon-shape icon-shape-primary rounded-circle mb-4">
+      <div className="icon icon-shape rounded-circle mb-4">
         <i style={{color:'#001A6E'}} className="fas fa-search"></i> {/* Changed to relevant FA icon */}
       </div>
       <h6 className="text text-uppercase">Découvrir les Missions</h6>
@@ -246,7 +246,7 @@ const Home = () => {
       className="card-body py-5"
       style={{ position: 'relative', zIndex: 2, transform: 'translateY(-50px)' }}
     >
-      <div className="icon icon-shape icon-shape-success rounded-circle mb-4">
+      <div className="icon icon-shape  rounded-circle mb-4">
         <i style={{color:'#009990'}} className="fas fa-lightbulb"></i>
       </div>
       <h6 className="text-success text-uppercase">Créer une Mission</h6>
@@ -284,7 +284,7 @@ const Home = () => {
       className="card-body py-5"
       style={{ position: 'relative', zIndex: 2, transform: 'translateY(-50px)' }}
     >
-      <div className="icon icon-shape icon-shape-warning rounded-circle mb-4">
+      <div className="icon icon-shape rounded-circle mb-4">
         <i style={{color:'#074799'}} className="fas fa-share-alt"></i> {/* Changed to FA icon */}
       </div>
       <h6 className=" text-uppercase">Partager vos Réussites</h6>

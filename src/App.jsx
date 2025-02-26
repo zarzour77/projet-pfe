@@ -38,7 +38,6 @@ const App = () => {
         <Route path="/PublierMission" element={<PublierMission /> }  />
         <Route path="/Home" element={<Home /> }  />
 
-
       </Routes>
     </Router>
   );
