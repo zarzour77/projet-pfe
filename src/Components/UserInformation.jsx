@@ -1,5 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
-import React, { useState, Suspense } from 'react';
+// src/components/UserInformation.js
+import React, { useState, Suspense, useEffect } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import CreatableSelect from 'react-select/creatable';
@@ -13,21 +14,19 @@ import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
-import 'react-toastify/dist/ReactToastify.css';
 import styles from './UserInformation.module.css';
 import UserService from '../Services/UserService';
 import ConsultantService from '../Services/ConsultantService';
 import EntrepriseService from '../Services/EntrepriseService';
+import DomaineService from '../Services/DomaineService';
+import CompetenceService from '../Services/CompetenceService';
 import { useNavigate } from "react-router-dom";
 
-
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+
 const getSafeKey = (comp) => comp.replace(/\./g, '_');
 
-
-
 const defaultPosition = [36.8065, 10.1815];
-
 
 const customIcon = L.icon({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
@@ -110,6 +109,7 @@ const Step2Schema = Yup.object().shape({
     .required('Champ requis')
     .typeError('Doit être un nombre'),
 });
+
 const StarRating = ({ rating, onChange }) => {
   return (
     <div style={{ display: 'inline-block' }}>
@@ -132,25 +132,56 @@ const StarRating = ({ rating, onChange }) => {
 
 const UserInformation = () => {
   const user = JSON.parse(localStorage.getItem("user")) || {};
-// Set initial values (now adding a default for competenceDetails)
-const initialValues = {
-  nom: user?.nom || '',
-  prenom: user?.prenom || '',
-  email: user?.email || '',
-  password: user?.password || '',
-  photoprofile: user?.photoprofile || '',
-  latitude: user?.latitude || '',
-  longitude: user?.longitude || '',
-  domaines: user?.domaines || [],
-  competences: user?.competences || [],
-  competenceDetails: user?.competenceDetails || {} // <-- added default empty object
-};
-const [userRole, setUserRole] = useState('');
+  // Valeurs initiales
+  const initialValues = {
+    nom: user?.nom || '',
+    prenom: user?.prenom || '',
+    email: user?.email || '',
+    password: user?.password || '',
+    photoprofile: user?.photoprofile || '',
+    latitude: user?.latitude || '',
+    longitude: user?.longitude || '',
+    domaines: user?.domaines || [],
+    competences: user?.competences || [],
+    competenceDetails: user?.competenceDetails || {}
+  };
+
+  const [userRole, setUserRole] = useState('');
   const [currentStep, setCurrentStep] = useState(1);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState(null);
+
+  // États pour récupérer domaines et compétences depuis la base
+  const [fetchedDomaines, setFetchedDomaines] = useState([]);
+  const [fetchedCompetences, setFetchedCompetences] = useState([]);
+  const [loadingData, setLoadingData] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const domaines = await DomaineService.getAllDomaines();
+        const competences = await CompetenceService.getAllCompetences();
+        setFetchedDomaines(domaines);
+        setFetchedCompetences(competences);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des données :", error);
+        toast.error("Erreur lors de la récupération des domaines et compétences.");
+      }
+      setLoadingData(false);
+    }
+    fetchData();
+  }, []);
+
+  // Transformation des données en options pour react-select
+  const domainOptions = fetchedDomaines.map(d => ({ value: d.nom, label: d.nom }));
+  // Filtrer les doublons par nom (en ignorant la casse)
+  const competenceOptions = Array.from(
+    new Map(
+      fetchedCompetences.map(c => [c.nom.toLowerCase(), { value: c.nom, label: c.nom }])
+    ).values()
+  );
 
   const formikRef = React.useRef(null);
   React.useEffect(() => {
@@ -159,13 +190,13 @@ const [userRole, setUserRole] = useState('');
     }
   }, [currentStep]);
 
+  const navigate = useNavigate();
+
   const handleRoleSelection = (role) => {
     const user = JSON.parse(localStorage.getItem("user"));
-    console.log(role)
     const userId = user?.id;
     UserService.updateUserRole(userId, role)
       .then((updatedUser) => {
-        // Assume the endpoint returns the updated user data including the role.
         setUserRole(updatedUser.role);
       })
       .catch((error) => {
@@ -173,82 +204,6 @@ const [userRole, setUserRole] = useState('');
         toast.error('Erreur lors de la mise à jour du rôle');
       });
   };
-  
-  // Predefined options
-  const availableDomainsArray = [
-    "Développement logiciel",
-    "Développement Web",
-    "Développement mobile",
-    "Data Science",
-    "Intelligence artificielle",
-    "Cybersécurité",
-    "Cloud Computing",
-    "DevOps",
-    "Administration de systèmes",
-    "Administration de réseaux",
-    "Consultance IT",
-    "Business Intelligence",
-    "Administration de bases de données",
-    "Gestion de projets IT",
-    "QA & Testing",
-    "Design UX/UI",
-    "Systèmes embarqués",
-    "Internet des objets (IoT)",
-    "Blockchain",
-    "Réalité virtuelle / Réalité augmentée",
-    "Développement de jeux vidéo",
-    "Support informatique",
-  ];
-  const availableCompetencesArray = [
-    "JavaScript",
-    "React",
-    "Angular",
-    "Vue.js",
-    "Node.js",
-    "Express.js",
-    "TypeScript",
-    "HTML5",
-    "CSS3 / Sass / Less",
-    "Python",
-    "Django",
-    "Flask",
-    "Java",
-    "Spring Boot",
-    "C#",
-    ".NET",
-    "Ruby on Rails",
-    "PHP",
-    "Laravel",
-    "SQL",
-    "NoSQL",
-    "MongoDB",
-    "PostgreSQL",
-    "MySQL",
-    "Git",
-    "Docker",
-    "Kubernetes",
-    "AWS",
-    "Azure",
-    "Google Cloud Platform",
-    "GraphQL",
-    "RESTful APIs",
-    "Agile / Scrum",
-    "Jira",
-    "UI/UX Design",
-    "Figma",
-    "Adobe XD",
-    "Penetration Testing",
-    "Machine Learning",
-    "TensorFlow",
-    "PyTorch",
-    "Data Analysis",
-    "Data Visualization",
-    "R",
-    "Big Data (Hadoop, Spark)",
-  ];
-
-  const domainOptions = availableDomainsArray.map(domain => ({ value: domain, label: domain }));
-  const competenceOptions = availableCompetencesArray.map(comp => ({ value: comp, label: comp }));
 
   const handleImageChange = (e, setFieldValue) => {
     const file = e.target.files[0];
@@ -262,50 +217,57 @@ const [userRole, setUserRole] = useState('');
     setShowModal(true);
     setSubmitting(false);
   };
-  const navigate = useNavigate();
 
   const handleFinalSubmit = async (values) => {
     setLoading(true);
     try {
       const storedUser = JSON.parse(localStorage.getItem("user"));
       const userId = storedUser?.id;
-      console.log(values.domaines)
-       // If a new profile picture is provided, update it as well
-    if (values.photoprofile) {
-     console.log(values.photoprofile.name)
-      const updatedUserPic = await UserService.updateProfilePicture(userId, values.photoprofile);
-      console.log("Updated profile picture:", updatedUserPic);
-    }
-    // Transform competences to the required format using the star ratings (competenceNiveaux)
-    const transformedCompetences = values.competences.map(comp => ({
-      nom: comp,
-      competenceNiveaux: values.competenceDetails[getSafeKey(comp)] || 0,
-    }));
-    const consultantData = {
-      nom: values.nom,
-      prenom: values.prenom,
-      adresse:values.adresse,
-      email: values.email,
-      telephone: values.telephone,
-      password:values.password,
-      role:userRole,
-      competences: transformedCompetences,
-      domaines: values.domaines,
-      portfolio: values.portfolio,
-      experienceYears: values.experienceYears,
-      budgetMin: values.budgetMin,
-      latitude: values.latitude,
-      longitude: values.longitude,
-      workload: values.workload || 0,
-    };
-    console.log(consultantData)
-    const newConsultant = await ConsultantService.updateConsultant(userId,consultantData);
-    console.log("Consultant updated:", newConsultant);
-    localStorage.setItem("Consultant", JSON.stringify(newConsultant));
-    if (newConsultant) {
-      navigate("/SignupSuccess"); // Navigate to SignupSuccess page upon success
-    }
-
+      if (values.photoprofile) {
+        const updatedUserPic = await UserService.updateProfilePicture(userId, values.photoprofile);
+        console.log("Updated profile picture:", updatedUserPic);
+      }
+      
+      const transformedCompetences = values.competences.map(comp => ({
+        nom: comp,
+        competenceNiveaux: values.competenceDetails[getSafeKey(comp)] || 0,
+      }));
+      
+      const transformedDomaines = values.domaines.map(dom => {
+        const existing = fetchedDomaines.find(
+          d => d.nom.toLowerCase() === dom.toLowerCase()
+        );
+        if (existing) {
+          return { id: existing.id, nom: existing.nom };
+        } else {
+          return { nom: dom };
+        }
+      });
+      
+      const consultantData = {
+        nom: values.nom,
+        prenom: values.prenom,
+        adresse: values.adresse,
+        email: values.email,
+        telephone: values.telephone,
+        password: values.password,
+        role: userRole,
+        competences: transformedCompetences,
+        domaines: transformedDomaines,
+        portfolio: values.portfolio,
+        experienceYears: values.experienceYears,
+        budgetMin: values.budgetMin,
+        latitude: values.latitude,
+        longitude: values.longitude,
+        workload: values.workload || 0,
+      };
+      
+      const newConsultant = await ConsultantService.updateConsultant(userId, consultantData);
+      localStorage.setItem("Consultant", JSON.stringify(newConsultant));
+      console.log(newConsultant)
+      if (newConsultant) {
+        navigate("/SignupSuccess");
+      }
     } catch (error) {
       console.error("Error updating user:", error);
       toast.error('Erreur lors de la mise à jour du profil');
@@ -313,7 +275,6 @@ const [userRole, setUserRole] = useState('');
     setLoading(false);
     setShowModal(false);
   };
-  
 
   const chartData = {
     labels: modalData && modalData.competences ? modalData.competences : [],
@@ -328,9 +289,7 @@ const [userRole, setUserRole] = useState('');
       },
     ],
   };
-  
 
-  // Consultant form rendering
   const renderConsultantStep = (values, setFieldValue, isSubmitting, isValid) => {
     return (
       <AnimatePresence exitBeforeEnter>
@@ -417,32 +376,37 @@ const [userRole, setUserRole] = useState('');
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
           >
-            {/* Step 2: Informations Professionnelles */}
             <h4 className="mb-3">Informations Professionnelles</h4>
-            <div className="mb-3">
-              <CreatableSelect
-                isMulti
-                name="domaines"
-                options={domainOptions}
-                value={values.domaines.map(d => ({ value: d, label: d }))}
-                onChange={(selected) =>
-                  setFieldValue('domaines', selected ? selected.map(s => s.value) : [])
-                }
-                placeholder="Domaines d'expertise"
-              />
-            </div>
-            <div className="mb-3">
-              <CreatableSelect
-                isMulti
-                name="competences"
-                options={competenceOptions}
-                value={values.competences.map(c => ({ value: c, label: c }))}
-                onChange={(selected) =>
-                  setFieldValue('competences', selected ? selected.map(s => s.value) : [])
-                }
-                placeholder="Compétences"
-              />
-            </div>
+            {loadingData ? (
+              <div>Chargement des domaines et compétences...</div>
+            ) : (
+              <>
+                <div className="mb-3">
+                  <CreatableSelect
+                    isMulti
+                    name="domaines"
+                    options={domainOptions}
+                    value={values.domaines.map(d => ({ value: d, label: d }))}
+                    onChange={(selected) =>
+                      setFieldValue('domaines', selected ? selected.map(s => s.value) : [])
+                    }
+                    placeholder="Domaines d'expertise"
+                  />
+                </div>
+                <div className="mb-3">
+                  <CreatableSelect
+                    isMulti
+                    name="competences"
+                    options={competenceOptions}
+                    value={values.competences.map(c => ({ value: c, label: c }))}
+                    onChange={(selected) =>
+                      setFieldValue('competences', selected ? selected.map(s => s.value) : [])
+                    }
+                    placeholder="Compétences"
+                  />
+                </div>
+              </>
+            )}
             {values.competences && values.competences.length > 0 && (
               <div className="mb-3">
                 <h5 className="mt-3">Niveaux de compétence</h5>
@@ -476,67 +440,52 @@ const [userRole, setUserRole] = useState('');
                 Précédent
               </Button>
               <Button
-  variant="primary"
-  type="submit"
-  disabled={!isValid || isSubmitting || loading}
->
-  {loading ? (
-    <ProgressBar animated now={100} label="Envoi en cours..." />
-  ) : (
-    'Vérifier et Envoyer'
-  )}
-</Button>
-
-
+                variant="primary"
+                type="submit"
+                disabled={!isValid || isSubmitting || loading}
+              >
+                {loading ? (
+                  <ProgressBar animated now={100} label="Envoi en cours..." />
+                ) : (
+                  'Vérifier et Envoyer'
+                )}
+              </Button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
     );
   };
+
   const handleFinalSubmitEntreprise = async (values) => {
     setLoading(true);
     try {
       const storedUser = JSON.parse(localStorage.getItem("user"));
       const userId = storedUser?.id;
-      
-      // Optionally update the profile picture if provided
       if (values.photoprofile) {
-        const updatedUserPic = await UserService.updateProfilePicture(userId, values.photoprofile);
-        console.log("Updated profile picture:", updatedUserPic);
+        await UserService.updateProfilePicture(userId, values.photoprofile);
       }
-      
-      // Prepare the entreprise data
       const entrepriseData = {
         nom: values.nom,
         prenom: values.prenom,
         email: values.email,
         telephone: values.telephone,
         adresse: values.adresse,
-        nomEntreprise: values.nomentreprise, // Field specific to entreprise
+        nomEntreprise: values.nomentreprise,
         role: userRole,
-        longitude:values.longitude,
-        latitude:values.latitude    
+        longitude: values.longitude,
+        latitude: values.latitude    
       };
-      
-      console.log("Entreprise data to update:", entrepriseData);
-      // Call the updateEntreprise service function
       const updatedEntreprise = await EntrepriseService.updateEntreprise(userId, entrepriseData);
-      console.log("Entreprise updated:", updatedEntreprise);
-      
-      // Optionally store the updated entreprise locally
       localStorage.setItem("entreprise", JSON.stringify(updatedEntreprise));
       toast.success("Entreprise mise à jour avec succès!", { icon: "✅" });
-      
     } catch (error) {
       console.error("Error updating entreprise:", error);
       toast.error("Erreur lors de la mise à jour de l'entreprise");
     }
     setLoading(false);
   };
-  
 
-  // Formulaire pour l'entreprise
   const renderEntrepriseForm = (values, setFieldValue, isSubmitting) => (
     <>
       <div className="mb-3">
@@ -593,19 +542,18 @@ const [userRole, setUserRole] = useState('');
         <ErrorMessage name="nomentreprise" component="div" className="text-danger" />
       </div>
       <Button
-  variant="primary"
-  type="button"
-  disabled={isSubmitting || loading}
-  className="btn btn-warning btn-lg mt-3 w-100"
-  onClick={() => handleFinalSubmitEntreprise(values)}
->
-  {loading ? (
-    <ProgressBar animated now={100} label="Envoi en cours..." />
-  ) : (
-    'Envoyer'
-  )}
-</Button>
-
+        variant="primary"
+        type="button"
+        disabled={isSubmitting || loading}
+        className="btn btn-warning btn-lg mt-3 w-100"
+        onClick={() => handleFinalSubmitEntreprise(values)}
+      >
+        {loading ? (
+          <ProgressBar animated now={100} label="Envoi en cours..." />
+        ) : (
+          'Envoyer'
+        )}
+      </Button>
     </>
   );
 
@@ -615,36 +563,35 @@ const [userRole, setUserRole] = useState('');
         <ToastContainer />
         <h2 className="text-center mb-4">Formulaire d&lsquo;Inscription</h2>
         {userRole === '' ? (
-  <div className="d-flex justify-content-center gap-3">
-    <motion.div
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      className="card p-3 text-center"
-      style={{ width: '18rem', cursor: 'pointer' }}
-      onClick={() => handleRoleSelection('Consultant')}
-    >
-      <div className="card-body">
-        <i className="bi bi-person-lines-fill display-4 mb-3"></i>
-        <h3 className="card-title">Consultant</h3>
-        <p className="card-text">Inscrivez-vous en tant que Consultant</p>
-      </div>
-    </motion.div>
-    <motion.div
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      className="card p-3 text-center"
-      style={{ width: '18rem', cursor: 'pointer' }}
-      onClick={() => handleRoleSelection('Entreprise')}
-    >
-      <div className="card-body">
-        <i className="bi bi-building display-4 mb-3"></i>
-        <h3 className="card-title">Entreprise</h3>
-        <p className="card-text">Inscrivez-vous en tant qu'Entreprise</p>
-      </div>
-    </motion.div>
-  </div>
-) : (
-          // Inside your Formik render function, include isValid:
+          <div className="d-flex justify-content-center gap-3">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="card p-3 text-center"
+              style={{ width: '18rem', cursor: 'pointer' }}
+              onClick={() => handleRoleSelection('Consultant')}
+            >
+              <div className="card-body">
+                <i className="bi bi-person-lines-fill display-4 mb-3"></i>
+                <h3 className="card-title">Consultant</h3>
+                <p className="card-text">Inscrivez-vous en tant que Consultant</p>
+              </div>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="card p-3 text-center"
+              style={{ width: '18rem', cursor: 'pointer' }}
+              onClick={() => handleRoleSelection('Entreprise')}
+            >
+              <div className="card-body">
+                <i className="bi bi-building display-4 mb-3"></i>
+                <h3 className="card-title">Entreprise</h3>
+                <p className="card-text">Inscrivez-vous en tant qu'Entreprise</p>
+              </div>
+            </motion.div>
+          </div>
+        ) : (
           <Formik
             innerRef={formikRef}
             initialValues={initialValues}
@@ -659,7 +606,6 @@ const [userRole, setUserRole] = useState('');
                   handlePreviewSubmit(values, setSubmitting);
                 }
               } else {
-                // Pour Entreprise
                 setLoading(true);
                 setTimeout(() => {
                   console.log({ ...values, role: userRole });
@@ -678,7 +624,6 @@ const [userRole, setUserRole] = useState('');
               </Form>
             )}
           </Formik>
-
         )}
       </div>
 
@@ -696,6 +641,7 @@ const [userRole, setUserRole] = useState('');
               <p><strong>Adresse:</strong> {modalData.adresse}</p>
               {preview && (
                 <div>
+                  <br />
                   <img src={preview} className={styles.modalPhoto} alt="Aperçu" style={{ width: '150px', height: '150px', borderRadius: '8px' }} />
                 </div>
               )}
@@ -704,14 +650,14 @@ const [userRole, setUserRole] = useState('');
               <p><strong>Expérience (années):</strong> {modalData.experienceYears}</p>
               <p><strong>Budget Min:</strong> {modalData.budgetMin}</p>
               {modalData.competences && modalData.competences.length > 0 && (
-          <div className="mt-3">
-            <h5>Visualisation du Profil de Compétences</h5>
-            <Bar data={chartData} options={{ responsive: true, plugins: { legend: { position: 'top' } } }} />
-          </div>
-        )}
-      </div>
-    )}
-  </Modal.Body>
+                <div className="mt-3">
+                  <h5>Visualisation du Profil de Compétences</h5>
+                  <Bar data={chartData} options={{ responsive: true, plugins: { legend: { position: 'top' } } }} />
+                </div>
+              )}
+            </div>
+          )}
+        </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>
             Modifier

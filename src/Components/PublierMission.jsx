@@ -1,35 +1,26 @@
+/* eslint-disable react/no-unescaped-entities */
+// src/components/PublierMission.jsx
 import  { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
 import { motion, AnimatePresence } from "framer-motion";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
-import styles from "./PublierMission.module.css";
+import styles from "./publiermission.module.css";
+import publiermissionService from "../Services/publiermissionService";
+import CompetenceService from "../Services/CompetenceService";
+import DomaineService from "../Services/DomaineService";
 
-// Define steps and options
+// Définition des étapes du formulaire
 const steps = [
   "Titre & Description",
   "Domaines & Compétences",
-  "Portée, Dates & Localisation",
+  "Portée & Localisation",
   "Budget",
   "Confirmation",
 ];
 
-const skillOptions = [
-  { value: "JavaScript", label: "JavaScript" },
-  { value: "React", label: "React" },
-  { value: "Node.js", label: "Node.js" },
-  { value: "CSS", label: "CSS" },
-];
-
-const domainOptions = [
-  { value: "Développement logiciel", label: "Développement logiciel" },
-  { value: "Développement Web", label: "Développement Web" },
-  { value: "Développement mobile", label: "Développement mobile" },
-];
-
-// Map default position and custom icon
+// Position par défaut et icône personnalisée pour la carte
 const defaultPosition = [36.8065, 10.1815];
 const customIcon = L.icon({
   iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
@@ -40,9 +31,8 @@ const customIcon = L.icon({
   shadowSize: [41, 41],
 });
 
-// Working ClickableMap component using a nested MapClickHandler
+// Composant pour la carte cliquable
 function ClickableMap({ latitude, longitude, onLocationSelect }) {
-  // Nested component that registers map click events within the MapContainer context
   const MapClickHandler = () => {
     useMapEvents({
       click(e) {
@@ -80,7 +70,7 @@ function ClickableMap({ latitude, longitude, onLocationSelect }) {
   );
 }
 
-// Helper to reset the location fields
+// Fonction utilitaire pour réinitialiser la localisation
 const resetLocation = (setValue) => {
   setValue("latitude", null);
   setValue("longitude", null);
@@ -103,15 +93,43 @@ const PublierMission = () => {
       scope: "",
       duration: "",
       experience: "",
-      startDate: "",
-      endDate: "",
       latitude: null,
       longitude: null,
       budget: "",
     },
   });
 
-  // Watch location fields to update the map marker immediately
+  // États pour stocker les options récupérées depuis la base
+  const [competenceOptions, setCompetenceOptions] = useState([]);
+  const [domaineOptions, setDomaineOptions] = useState([]);
+
+  // Récupérer et filtrer les compétences et domaines (une seule occurrence par nom, en minuscules)
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const competences = await CompetenceService.getAllCompetences();
+        const domaines = await DomaineService.getAllDomaines();
+
+        const uniqueCompetences = Array.from(
+          new Map(
+            competences.map(c => [c.nom.toLowerCase(), { value: c.id, label: c.nom }])
+          ).values()
+        );
+        setCompetenceOptions(uniqueCompetences);
+
+        const uniqueDomaines = Array.from(
+          new Map(
+            domaines.map(d => [d.nom.toLowerCase(), { value: d.id, label: d.nom }])
+          ).values()
+        );
+        setDomaineOptions(uniqueDomaines);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des données :", error);
+      }
+    };
+    fetchData();
+  }, []);
+
   const latitude = watch("latitude");
   const longitude = watch("longitude");
 
@@ -126,7 +144,6 @@ const PublierMission = () => {
     }
   }, [currentStep]);
 
-  // Sub-questions for step 2
   const subQuestions = [
     {
       name: "scope",
@@ -158,29 +175,113 @@ const PublierMission = () => {
     },
   ];
 
-  // Handle sub-question option select
   const handleOptionSelect = (name, value) => {
     setValue(name, value);
-    setSubStep((prev) => prev + 1);
+    setSubStep(prev => prev + 1);
   };
 
   const nextStep = () => {
-    setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
+    setCurrentStep(prev => Math.min(prev + 1, steps.length - 1));
   };
 
   const prevStep = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 0));
+    setCurrentStep(prev => Math.max(prev - 1, 0));
   };
 
-  const onSubmit = (data) => {
+  // Lorsqu'on clique sur "Create" pour une compétence, la nouvelle valeur est créée et ajoutée directement à la sélection
+  const handleCreateCompetence = async (inputValue) => {
+    const exists = competenceOptions.some(
+      option => option.label.toLowerCase() === inputValue.toLowerCase()
+    );
+    if (exists) {
+      const currentSkills = getValues("skills") || [];
+      const alreadySelected = currentSkills.some(
+        skill => skill.label.toLowerCase() === inputValue.toLowerCase()
+      );
+      if (!alreadySelected) {
+        const existingOption = competenceOptions.find(
+          option => option.label.toLowerCase() === inputValue.toLowerCase()
+        );
+        setValue("skills", [...currentSkills, existingOption]);
+      }
+      return;
+    }
+    try {
+      const newCompetence = await CompetenceService.createCompetence({ nom: inputValue });
+      const newOption = { value: newCompetence.id, label: newCompetence.nom };
+      // Ajout de la nouvelle option dans la liste
+      setCompetenceOptions(prev => [...prev, newOption]);
+      // Mise à jour immédiate de la sélection pour afficher la bulle
+      const currentSkills = getValues("skills") || [];
+      setValue("skills", [...currentSkills, newOption]);
+    } catch (error) {
+      console.error("Erreur lors de la création de la compétence :", error);
+    }
+  };
+
+  // Pareil pour les domaines
+  const handleCreateDomain = async (inputValue) => {
+    const exists = domaineOptions.some(
+      option => option.label.toLowerCase() === inputValue.toLowerCase()
+    );
+    if (exists) {
+      const currentDomaines = getValues("domaines") || [];
+      const alreadySelected = currentDomaines.some(
+        domaine => domaine.label.toLowerCase() === inputValue.toLowerCase()
+      );
+      if (!alreadySelected) {
+        const existingOption = domaineOptions.find(
+          option => option.label.toLowerCase() === inputValue.toLowerCase()
+        );
+        setValue("domaines", [...currentDomaines, existingOption]);
+      }
+      return;
+    }
+    try {
+      const newDomaine = await DomaineService.createDomaine({ nom: inputValue });
+      const newOption = { value: newDomaine.id, label: newDomaine.nom };
+      setDomaineOptions(prev => [...prev, newOption]);
+      const currentDomaines = getValues("domaines") || [];
+      setValue("domaines", [...currentDomaines, newOption]);
+    } catch (error) {
+      console.error("Erreur lors de la création du domaine :", error);
+    }
+  };
+
+  // Transformation des données avant soumission
+  const onSubmit = async (data) => {
     if (currentStep < steps.length - 1) {
       nextStep();
     } else {
       setIsLoading(true);
-      setTimeout(() => {
-        setIsLoading(false);
+      const transformedData = {
+        titre: data.title,
+        description: data.description,
+        budget: data.budget,
+        domaines: data.domaines.map(dom => ({
+          id: dom.value, // id présent si existant
+          nom: dom.label || dom.value,
+        })),
+        competencesRequises: data.skills.map(skill => ({
+          id: skill.value,
+          nom: skill.label || skill.value,
+        })),
+        portetravail: data.scope,
+        dureeEstime: data.duration,
+        niveauExperienceRequis: data.experience,
+        latitude: data.latitude,
+        longitude: data.longitude,
+      };
+
+      try {
+        const missionPublished = await publiermissionService.publishMission(transformedData);
+        console.log("Mission publiée :", missionPublished);
         setSubmitted(true);
-      }, 2000);
+      } catch (error) {
+        console.error("Erreur de publication :", error);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -218,37 +319,33 @@ const PublierMission = () => {
               <label htmlFor="domaines">Domaines requis *</label>
               <CreatableSelect
                 id="domaines"
-                options={domainOptions}
+                options={domaineOptions}
                 isMulti
                 placeholder="Choisissez des domaines"
                 className={styles.reactSelect}
-                {...register("domaines", {
-                  validate: (value) =>
-                    value && value.length > 0 ? true : "Veuillez sélectionner au moins un domaine",
-                })}
+                value={watch("domaines")}
                 onChange={(selected) => {
                   const event = { target: { name: "domaines", value: selected } };
                   register("domaines").onChange(event);
                 }}
+                onCreateOption={handleCreateDomain}
               />
               {errors.domaines && <span className={styles.errorMsg}>{errors.domaines.message}</span>}
             </div>
             <div className={styles.formGroup}>
               <label htmlFor="skills">Compétences requises *</label>
-              <Select
+              <CreatableSelect
                 id="skills"
-                options={skillOptions}
+                options={competenceOptions}
                 isMulti
                 placeholder="Choisissez des compétences"
                 className={styles.reactSelect}
-                {...register("skills", {
-                  validate: (value) =>
-                    value && value.length > 0 ? true : "Veuillez sélectionner au moins une compétence",
-                })}
+                value={watch("skills")}
                 onChange={(selected) => {
                   const event = { target: { name: "skills", value: selected } };
                   register("skills").onChange(event);
                 }}
+                onCreateOption={handleCreateCompetence}
               />
               {errors.skills && <span className={styles.errorMsg}>{errors.skills.message}</span>}
             </div>
@@ -291,26 +388,6 @@ const PublierMission = () => {
             })}
             {subStep === subQuestions.length && (
               <div className={styles.additionalFields}>
-                <div className={styles.formGroup}>
-                  <label htmlFor="startDate">Date de début *</label>
-                  <input
-                    type="date"
-                    id="startDate"
-                    {...register("startDate", { required: "La date de début est requise" })}
-                    className={styles.inputField}
-                  />
-                  {errors.startDate && <span className={styles.errorMsg}>{errors.startDate.message}</span>}
-                </div>
-                <div className={styles.formGroup}>
-                  <label htmlFor="endDate">Date de fin *</label>
-                  <input
-                    type="date"
-                    id="endDate"
-                    {...register("endDate", { required: "La date de fin est requise" })}
-                    className={styles.inputField}
-                  />
-                  {errors.endDate && <span className={styles.errorMsg}>{errors.endDate.message}</span>}
-                </div>
                 <div className={styles.formGroup}>
                   <label>Localisation de la mission *</label>
                   <ClickableMap
@@ -382,12 +459,6 @@ const PublierMission = () => {
               <strong>Niveau d'expérience :</strong> {data.experience}
             </div>
             <div className={styles.summaryItem}>
-              <strong>Date de début :</strong> {data.startDate}
-            </div>
-            <div className={styles.summaryItem}>
-              <strong>Date de fin :</strong> {data.endDate}
-            </div>
-            <div className={styles.summaryItem}>
               <strong>Localisation :</strong> {data.latitude}, {data.longitude}
             </div>
             <div className={styles.summaryItem}>
@@ -405,7 +476,6 @@ const PublierMission = () => {
     <div className={styles.container}>
       {!submitted ? (
         <form onSubmit={handleSubmit(onSubmit)}>
-          {/* Stepper */}
           <div className={styles.stepper}>
             {steps.map((stepLabel, index) => (
               <div

@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import styles from "./CreateProfile.module.css"; // Using CSS modules
 
 const CreateProfile = () => {
-  const storedUser = JSON.parse(localStorage.getItem("user"));
+  const storedUser = JSON.parse(localStorage.getItem("Consultant"));
   console.log(storedUser)
   const navigate = useNavigate(); // React Router navigation
 
