@@ -1,39 +1,61 @@
 package com.example.demo.PdfGenerator;
 
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+
+import com.example.demo.model.Consultant;
+import com.example.demo.model.Competence;
+import com.example.demo.repository.ConsultantRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 public class CvController {
 
-    private final CvGenerationService cvGenerationService;
+    @Autowired
+    private CvGenerationService cvGenerationService;
 
+    @Autowired
+    private ConsultantRepository consultantRepository;
     public CvController(CvGenerationService cvGenerationService) {
         this.cvGenerationService = cvGenerationService;
     }
 
-    @PostMapping("/generate-cv")
-    public ResponseEntity<byte[]> generateCv(@RequestBody Map<String, Object> consultantData) {
+    @GetMapping("/{consultantId}")
+    public ResponseEntity<byte[]> generateConsultantCv(@PathVariable Long consultantId) {
+        Optional<Consultant> optionalConsultant = consultantRepository.findById(consultantId);
+        if (!optionalConsultant.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        Consultant consultant = optionalConsultant.get();
+
+        // Prepare parameters for CV generation
+        Map<String, Object> userDetails = new HashMap<>();
+        userDetails.put("nom", consultant.getNom());
+        userDetails.put("prenom", consultant.getPrenom());
+        userDetails.put("email", consultant.getEmail());
+        userDetails.put("telephone", consultant.getTelephone());
+        userDetails.put("adresse", consultant.getAdresse());
+        userDetails.put("experienceYears", consultant.getExperienceYears());
+        userDetails.put("domaines", consultant.getDomaines());
+
+
+        userDetails.put("competences",  consultant.getCompetences());
+        userDetails.put("experiences", consultant.getExperiences());
+
         try {
-            // Validate input data
-            if (consultantData == null || consultantData.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-            }
-
-            byte[] pdfBytes = cvGenerationService.generateCv(consultantData);
-
+            byte[] pdfBytes = cvGenerationService.generateCv(userDetails);
             HttpHeaders headers = new HttpHeaders();
-            headers.add("Content-Disposition", "inline; filename=cv.pdf");
-            headers.add("Content-Type", "application/pdf");
-
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDisposition(ContentDisposition.builder("inline")
+                    .filename("cv.pdf")
+                    .build());
             return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
         } catch (Exception e) {
-            e.printStackTrace();  // Log the error for debugging purposes
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

@@ -1,7 +1,8 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 public class Experience {
@@ -10,11 +11,8 @@ public class Experience {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Temporal(TemporalType.DATE)
-    private Date dateDebut;
-
-    @Temporal(TemporalType.DATE)
-    private Date dateFin;
+    private LocalDate dateDebut;
+    private LocalDate dateFin;
 
     @Transient
     private Integer duree;
@@ -27,7 +25,7 @@ public class Experience {
 
     public Experience() {}
 
-    public Experience(Date dateDebut, Date dateFin, String entreprise, String role, String description) {
+    public Experience(LocalDate dateDebut, LocalDate dateFin, String entreprise, String role, String description) {
         this.dateDebut = dateDebut;
         this.dateFin = dateFin;
         this.entreprise = entreprise;
@@ -41,23 +39,22 @@ public class Experience {
     public void setId(Long id) {
         this.id = id;
     }
-    public Date getDateDebut() {
+    public LocalDate getDateDebut() {
         return dateDebut;
     }
-    public void setDateDebut(Date dateDebut) {
+    public void setDateDebut(LocalDate dateDebut) {
         this.dateDebut = dateDebut;
     }
-    public Date getDateFin() {
+    public LocalDate getDateFin() {
         return dateFin;
     }
-    public void setDateFin(Date dateFin) {
+    public void setDateFin(LocalDate dateFin) {
         this.dateFin = dateFin;
     }
 
     public Integer getDuree() {
         if (dateDebut != null && dateFin != null) {
-            long diffInMillies = dateFin.getTime() - dateDebut.getTime();
-            return (int) (diffInMillies / (1000L * 60 * 60 * 24 * 30)); // Convert milliseconds to months
+            return (int) ChronoUnit.MONTHS.between(dateDebut, dateFin); // Calculate months difference
         }
         return 0;
     }

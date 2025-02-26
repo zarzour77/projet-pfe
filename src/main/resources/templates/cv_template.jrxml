@@ -1,92 +1,106 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jasperReport
-        xmlns="http://jasperreports.sourceforge.net/jasperreports"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+xmlns="http://jasperreports.sourceforge.net/jasperreports"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
                         http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
-        name="SimpleCVReport"
-        pageWidth="595"
-        pageHeight="842"
-        columnWidth="535"
-        leftMargin="30"
-        rightMargin="30"
-        topMargin="20"
-        bottomMargin="20">
+name="SimpleCVReport"
+pageWidth="595"
+pageHeight="842"
+columnWidth="535"
+leftMargin="30"
+rightMargin="30"
+topMargin="20"
+bottomMargin="20">
 
-    <!-- ========== PARAMETERS ========== -->
-    <parameter name="nom" class="java.lang.String"/>
-    <parameter name="prenom" class="java.lang.String"/>
-    <parameter name="email" class="java.lang.String"/>
-    <parameter name="telephone" class="java.lang.String"/>
-    <parameter name="experienceYears" class="java.lang.Integer"/>
-    <parameter name="profilePicture" class="java.io.InputStream"/>
-    <parameter name="domaines" class="java.lang.String"/>
-    <parameter name="competences" class="java.lang.String"/>
-    <parameter name="adresse" class="java.lang.String"/>
+<!-- ========== PARAMETERS ========== -->
+<parameter name="nom" class="java.lang.String"/>
+<parameter name="prenom" class="java.lang.String"/>
+<parameter name="email" class="java.lang.String"/>
+<parameter name="telephone" class="java.lang.String"/>
+<parameter name="experienceYears" class="java.lang.Integer"/>
+<parameter name="domaines" class="java.lang.String"/>
+<parameter name="adresse" class="java.lang.String"/>
+<parameter name="experienceDataSource" class="net.sf.jasperreports.engine.JRDataSource"/>
+<parameter name="experienceSubreport" class="net.sf.jasperreports.engine.JasperReport"/>
+<!-- New parameters for Competences subreport -->
+<parameter name="competenceDataSource" class="net.sf.jasperreports.engine.JRDataSource"/>
+<parameter name="competenceSubreport" class="net.sf.jasperreports.engine.JasperReport"/>
 
-    <!-- ========== TITLE SECTION ========== -->
-    <title>
-        <band height="80"> <!-- Increased height to accommodate subtitle -->
-            <!-- Title (Full Name) -->
-            <textField>
-                <reportElement x="0" y="0" width="535" height="20"/>
-                <textElement textAlignment="Center">
-                    <font size="15" isBold="true"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$P{prenom} + " " + $P{nom}]]></textFieldExpression>
-            </textField>
+<!-- ========== TITLE SECTION ========== -->
+<title>
+    <band height="100">
+        <!-- Consultant Name (big and bold, centered) -->
+        <textField>
+            <reportElement x="0" y="0" width="535" height="30"/>
+            <textElement textAlignment="Center">
+                <font size="18" isBold="true"/>
+            </textElement>
+            <textFieldExpression><![CDATA[$P{prenom} + " " + $P{nom}]]></textFieldExpression>
+        </textField>
+        <!-- Subtitle (Domaines) -->
+        <textField>
+            <reportElement x="0" y="40" width="535" height="20"/>
+            <textElement textAlignment="Center">
+                <font size="12" isItalic="true"/>
+            </textElement>
+            <textFieldExpression><![CDATA[$P{domaines}]]></textFieldExpression>
+        </textField>
+    </band>
+</title>
 
-            <!-- Subtitle (Domaines) -->
-            <textField>
-                <reportElement x="0" y="30" width="535" height="20"/>
-                <textElement textAlignment="Center">
-                    <font size="12" isBold="false" isItalic="true"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$P{domaines}]]></textFieldExpression>
-            </textField>
+<!-- ========== DETAIL SECTION ========== -->
+<detail>
+    <!-- Set splitType="Stretch" so the band grows with its content -->
+    <band height="400" splitType="Stretch">
+        <!-- ===== CONTACT SECTION ===== -->
+        <staticText>
+            <reportElement x="0" y="10" width="535" height="20"/>
+            <textElement>
+                <font size="14" isBold="true"/>
+            </textElement>
+            <text><![CDATA[Informations personnelles]]></text>
+        </staticText>
+        <textField>
+            <reportElement x="10" y="35" width="535" height="20"/>
+            <textFieldExpression><![CDATA["Téléphone : " + $P{telephone}]]></textFieldExpression>
+        </textField>
+        <textField>
+            <reportElement x="10" y="60" width="535" height="20"/>
+            <textFieldExpression><![CDATA["Email : " + $P{email}]]></textFieldExpression>
+        </textField>
+        <textField>
+            <reportElement x="10" y="85" width="535" height="20"/>
+            <textFieldExpression><![CDATA["Adresse : " + $P{adresse}]]></textFieldExpression>
+        </textField>
 
-        </band>
-    </title>
+        <!-- ===== EXPÉRIENCES PROFESSIONNELLES SECTION ===== -->
+        <staticText>
+            <reportElement x="0" y="120" width="535" height="20" positionType="Float"/>
+            <textElement>
+                <font size="14" isBold="true"/>
+            </textElement>
+            <text><![CDATA[Expériences Professionnelles]]></text>
+        </staticText>
+        <subreport>
+            <reportElement x="10" y="145" width="535" height="150" positionType="Float"/>
+            <dataSourceExpression><![CDATA[$P{experienceDataSource}]]></dataSourceExpression>
+            <subreportExpression><![CDATA[$P{experienceSubreport}]]></subreportExpression>
+        </subreport>
 
-    <!-- ========== DETAIL SECTION ========== -->
-    <detail>
-        <band height="240">
-            <staticText>
-                <reportElement x="5" y="25" width="200" height="20"/>
-                <textElement>
-                    <font size="14" isBold="true"/>
-                </textElement>
-                <text><![CDATA[Informations personnelles]]></text>
-            </staticText>
-            <!-- Email -->
-            <textField>
-                <reportElement x="0" y="60" width="535" height="20"/>
-                <textFieldExpression><![CDATA["Email : " + $P{email}]]></textFieldExpression>
-            </textField>
-            <!-- Telephone -->
-            <textField>
-                <reportElement x="0" y="85" width="535" height="20"/>
-                <textFieldExpression><![CDATA["Telephone : " + $P{telephone}]]></textFieldExpression>
-            </textField>
-            <!-- Adresse -->
-            <textField>
-                <reportElement x="0" y="110" width="535" height="20"/>
-                <textFieldExpression><![CDATA["Adresse : " + $P{adresse}]]></textFieldExpression>
-            </textField>
-
-            <!-- Competences Section -->
-            <staticText>
-                <reportElement x="5" y="155" width="535" height="20"/>
-                <textElement>
-                    <font size="14" isBold="true"/>
-                </textElement>
-                <text><![CDATA[Compétences]]></text>
-            </staticText>
-            <textField>
-                <reportElement x="10" y="190" width="535" height="20"/>
-                <textFieldExpression><![CDATA[$P{competences}]]></textFieldExpression>
-            </textField>
-        </band>
-    </detail>
-
+        <!-- ===== COMPÉTENCES SECTION ===== -->
+        <staticText>
+            <reportElement x="0" y="300" width="535" height="20" positionType="Float"/>
+            <textElement>
+                <font size="14" isBold="true"/>
+            </textElement>
+            <text><![CDATA[Compétences]]></text>
+        </staticText>
+        <subreport>
+            <reportElement x="10" y="325" width="535" height="40" positionType="Float"/>
+            <dataSourceExpression><![CDATA[$P{competenceDataSource}]]></dataSourceExpression>
+            <subreportExpression><![CDATA[$P{competenceSubreport}]]></subreportExpression>
+        </subreport>
+    </band>
+</detail>
 </jasperReport>
