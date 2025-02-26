@@ -4,15 +4,17 @@ import Login from "./Components/Login"
 import SignupSuccess from "./Components/SignupSuccess";
 import CreateProfile from "./Components/CreateProfile";
 import Experience from "./Components/Experience";
-import Subscription from "./components/Subscription";
+import Subscription from "./Components/Subscription";
 import PaymentSuccess from "./Components/PaymentSuccess";
 import PaymentFailed from "./Components/PaymentFailed";
 import TradeForTalent from "./Components/TradeForTalent";
 import ProfileSelection from "./Components/ProfileSelection";
 import UserInformation from "./Components/UserInformation";
-import Messenger from "./components/Messenger";
-import MissioinTinder from "./components/MissionTinder";
-import SearchMission from "./components/SearchMission";
+import Messenger from "./Components/Messenger";
+import MissioinTinder from "./Components/MissionTinder";
+import SearchMission from "./Components/SearchMission";
+import StatsConsultant from "./Components/statsconsultant";
+import PublierMission from "./Components/PublierMission";
 
 const App = () => {
   return (
@@ -32,6 +34,8 @@ const App = () => {
         <Route path="/Messenger" element={<Messenger /> }  />
         <Route path="/MissionTinder" element={<MissioinTinder /> }  />
         <Route path="/SearchMission" element={<SearchMission /> }  />
+        <Route path="/StatsConsultant" element={<StatsConsultant /> }  />
+        <Route path="/PublierMission" element={<PublierMission /> }  />
 
       </Routes>
     </Router>
