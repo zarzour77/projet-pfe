@@ -301,7 +301,7 @@ const [userRole, setUserRole] = useState('');
     console.log(consultantData)
     const newConsultant = await ConsultantService.updateConsultant(userId,consultantData);
     console.log("Consultant updated:", newConsultant);
-    localStorage.setItem("consultant", JSON.stringify(newConsultant));
+    localStorage.setItem("Consultant", JSON.stringify(newConsultant));
     if (newConsultant) {
       navigate("/SignupSuccess"); // Navigate to SignupSuccess page upon success
     }
@@ -696,7 +696,6 @@ const [userRole, setUserRole] = useState('');
               <p><strong>Adresse:</strong> {modalData.adresse}</p>
               {preview && (
                 <div>
-                  <br />
                   <img src={preview} className={styles.modalPhoto} alt="Aperçu" style={{ width: '150px', height: '150px', borderRadius: '8px' }} />
                 </div>
               )}

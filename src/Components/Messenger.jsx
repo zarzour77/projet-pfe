@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+import  { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import styles from "./messenger.module.css";
+import styles from "./Messenger.module.css";
 
 /** Icônes Lucide (ou tout autre set d'icônes) **/
 import { 
@@ -15,14 +15,14 @@ import {
 } from "lucide-react";
 
 /** Services WebSocket et API **/
-import { connect, disconnect } from "../services/webSocket";
+import { connect, disconnect } from "../Services/WebSocket";
 import { 
   getConversations, 
   getConversationHistory, 
   createConversation, 
   sendMessage as apiSendMessage,
   uploadFileMessage
-} from "../services/MessengerService";
+} from "../Services/MessengerService";
 import EmojiPicker from "emoji-picker-react";
 
 export default function Messenger() {

@@ -32,7 +32,9 @@ createConsultant: async (consultantData) => {
             Authorization: `Bearer ${token}`,
           },
         }
+        
       );
+      console.log(consultantData)
       return response.data;
     } catch (error) {
       console.error("Error updating consultant:", error);
