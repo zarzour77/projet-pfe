@@ -1,3 +1,4 @@
+// Mission.java
 package com.example.demo.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -16,30 +17,71 @@ public class Mission {
     private String titre;
     private String description;
     private Double budget;
-    private Date deadline;
     private String statut;
-    private String domaine;
+
+    // Relation avec Domaine (déjà configurée avec cascade)
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "mission_domaines",
+            joinColumns = @JoinColumn(name = "mission_id"),
+            inverseJoinColumns = @JoinColumn(name = "domaine_id")
+    )
+    private List<Domaine> domaines;
+
     @ManyToOne
     @JoinColumn(name = "entreprise_id")
     @JsonIgnoreProperties({"missions"})
     private Entreprise entreprise;
+
     @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "mission_competences",
+            joinColumns = @JoinColumn(name = "mission_id"),
+            inverseJoinColumns = @JoinColumn(name = "competence_id")
+    )
     private List<Competence> competencesRequises;
+
     @JsonIgnore
     @OneToMany(mappedBy = "mission")
     private List<Proposition> propositions;
-    @JsonIgnore
-    @OneToMany(mappedBy = "mission", fetch = FetchType.EAGER)
-    private List<Avis> avis;
-    //pour la localisation
+
+    // Pour la localisation
     private double latitude;
     private double longitude;
     private int requiredExperience;
-    private double matchScore; // Score de compatibilité mission-consultant
+    private double matchScore;
     private Date startdate;
     private Date enddate;
     private String logo;
+    private String portetravail;
+    private String dureeEstime;
+    private String niveauExperienceRequis;
 
+    public Mission() {}
+
+    public Mission(Double budget, List<Competence> competencesRequises, String description, List<Domaine> domaines, String dureeEstime, Date enddate, Entreprise entreprise, Long id, double latitude, String logo, double longitude, double matchScore, String niveauExperienceRequis, String portetravail, List<Proposition> propositions, int requiredExperience, Date startdate, String statut, String titre) {
+        this.budget = budget;
+        this.competencesRequises = competencesRequises;
+        this.description = description;
+        this.domaines = domaines;
+        this.dureeEstime = dureeEstime;
+        this.enddate = enddate;
+        this.entreprise = entreprise;
+        this.id = id;
+        this.latitude = latitude;
+        this.logo = logo;
+        this.longitude = longitude;
+        this.matchScore = matchScore;
+        this.niveauExperienceRequis = niveauExperienceRequis;
+        this.portetravail = portetravail;
+        this.propositions = propositions;
+        this.requiredExperience = requiredExperience;
+        this.startdate = startdate;
+        this.statut = statut;
+        this.titre = titre;
+    }
+
+    // Getters et setters
 
     public double getMatchScore() {
         return matchScore;
@@ -49,27 +91,28 @@ public class Mission {
         this.matchScore = matchScore;
     }
 
-    public Mission() {}
+    public String getDureeEstime() {
+        return dureeEstime;
+    }
 
-    public Mission(List<Avis> avis, Double budget, List<Competence> competencesRequises, Date deadline, String description, String domaine, Date enddate, Entreprise entreprise, Long id, double latitude, String logo, double longitude, double matchScore, List<Proposition> propositions, int requiredExperience, Date startdate, String statut, String titre) {
-        this.avis = avis;
-        this.budget = budget;
-        this.competencesRequises = competencesRequises;
-        this.deadline = deadline;
-        this.description = description;
-        this.domaine = domaine;
-        this.enddate = enddate;
-        this.entreprise = entreprise;
-        this.id = id;
-        this.latitude = latitude;
-        this.logo = logo;
-        this.longitude = longitude;
-        this.matchScore = matchScore;
-        this.propositions = propositions;
-        this.requiredExperience = requiredExperience;
-        this.startdate = startdate;
-        this.statut = statut;
-        this.titre = titre;
+    public void setDureeEstime(String dureeEstime) {
+        this.dureeEstime = dureeEstime;
+    }
+
+    public String getNiveauExperienceRequis() {
+        return niveauExperienceRequis;
+    }
+
+    public void setNiveauExperienceRequis(String niveauExperienceRequis) {
+        this.niveauExperienceRequis = niveauExperienceRequis;
+    }
+
+    public String getPortetravail() {
+        return portetravail;
+    }
+
+    public void setPortetravail(String portetravail) {
+        this.portetravail = portetravail;
     }
 
     public String getLogo() {
@@ -112,7 +155,6 @@ public class Mission {
         this.startdate = startdate;
     }
 
-
     public int getRequiredExperience() {
         return requiredExperience;
     }
@@ -121,12 +163,12 @@ public class Mission {
         this.requiredExperience = requiredExperience;
     }
 
-    public String getDomaine() {
-        return domaine;
+    public List<Domaine> getDomaines() {
+        return domaines;
     }
 
-    public void setDomaine(String domaine) {
-        this.domaine = domaine;
+    public void setDomaines(List<Domaine> domaines) {
+        this.domaines = domaines;
     }
 
     public Double getBudget() {
@@ -143,14 +185,6 @@ public class Mission {
 
     public void setCompetencesRequises(List<Competence> competencesRequises) {
         this.competencesRequises = competencesRequises;
-    }
-
-    public Date getDeadline() {
-        return deadline;
-    }
-
-    public void setDeadline(Date deadline) {
-        this.deadline = deadline;
     }
 
     public String getDescription() {
@@ -199,13 +233,5 @@ public class Mission {
 
     public void setTitre(String titre) {
         this.titre = titre;
-    }
-
-    public List<Avis> getAvis() {
-        return avis;
-    }
-
-    public void setAvis(List<Avis> avis) {
-        this.avis = avis;
     }
 }

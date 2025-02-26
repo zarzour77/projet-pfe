@@ -77,7 +77,7 @@ public class MatchingService {
         }
 
         // 2. Facteur domaine
-        double domainFactor = (consultant.getDomaines() != null && consultant.getDomaines().contains(mission.getDomaine())) ? 1.0 : 0.0;
+        double domainFactor = (consultant.getDomaines() != null && consultant.getDomaines().contains(mission.getDomaines())) ? 1.0 : 0.0;
 
         // 3. Facteur budget
         double budgetFactor = (mission.getBudget() != null && mission.getBudget() >= consultant.getBudgetMin()) ? 1.0 : 0.0;
