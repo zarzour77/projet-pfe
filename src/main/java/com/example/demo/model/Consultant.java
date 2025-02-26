@@ -36,9 +36,13 @@ public class Consultant extends User {
     @Column(nullable = true)
     private Double longitude;
 
-    @ElementCollection(fetch = FetchType.EAGER) // Passage en mode EAGER
-    // Pour stocker une liste de chaînes en base de données
-    private List<String> domaines;
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "consultant_domaines",
+            joinColumns = @JoinColumn(name = "consultant_id"),
+            inverseJoinColumns = @JoinColumn(name = "domaine_id")
+    )
+    private List<Domaine> domaines;
     @Column(nullable = true)
     private Integer budgetMin; // Remplacer budget_min par budgetMin en Java
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER)
@@ -54,67 +58,6 @@ public class Consultant extends User {
 
     public Consultant() {}
 
-    public Consultant(Integer budgetMin, List<Competence> competences, List<String> domaines, Integer experienceYears, Double latitude, Double longitude, String portfolio,  Integer workload) {
-        this.budgetMin = budgetMin;
-        this.competences = competences;
-        this.domaines = domaines;
-        this.experienceYears = experienceYears;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.portfolio = portfolio;
-        this.workload=workload;
-    }
-
-    public Consultant(String adresse, List<Avis> avisRecus, List<Avis> avisRediges, List<Competence> competences, String email, Long id, String nom, List<Notification> notifications, String password, String prenom, String telephone, String role, String photoprofile, String statut, Integer budgetMin, List<Competence> competences1, List<String> domaines, Integer experienceYears, Double latitude, Double longitude, String portfolio, List<Proposition> propositions, Integer workload) {
-        super(adresse, avisRecus, avisRediges, competences, email, id, nom, notifications, password, prenom, telephone, role, photoprofile, statut);
-        this.budgetMin = budgetMin;
-        this.competences = competences1;
-        this.domaines = domaines;
-        this.experienceYears = experienceYears;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.portfolio = portfolio;
-        this.workload=workload;
-
-    }
-
-    public Consultant(List<Avis> avisRecus, String adresse, List<Avis> avisRediges, String email, Long id, String nom, List<Notification> notifications, String password, String telephone, String photoprofile, Integer budgetMin, List<Competence> competences, List<String> domaines, Integer experienceYears, Double latitude, Double longitude, String portfolio,  Integer workload) {
-        super(avisRecus, adresse, avisRediges, email, id, nom, notifications, password, telephone, photoprofile);
-        this.budgetMin = budgetMin;
-        this.competences = competences;
-        this.domaines = domaines;
-        this.experienceYears = experienceYears;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.portfolio = portfolio;
-        this.workload=workload;
-
-    }
-
-    public Consultant(String nom, Integer budgetMin, List<Competence> competences, List<String> domaines, Integer experienceYears, Double latitude, Double longitude, String portfolio, Integer workload) {
-        super(nom);
-        this.budgetMin = budgetMin;
-        this.competences = competences;
-        this.domaines = domaines;
-        this.experienceYears = experienceYears;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.portfolio = portfolio;
-        this.workload=workload;
-    }
-
-    public Consultant(String nom, String prenom, String telephone, String email, String encodedPassword, String role, Integer budgetMin, List<Competence> competences, List<String> domaines, Integer experienceYears, Double latitude, Double longitude, String portfolio, Integer workload) {
-        super(nom, prenom, telephone, email, encodedPassword, role);
-        this.budgetMin = budgetMin;
-        this.competences = competences;
-        this.domaines = domaines;
-        this.experienceYears = experienceYears;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.portfolio = portfolio;
-        this.workload=workload;
-
-    }
 
 
     public Double getLatitude() {
@@ -157,11 +100,11 @@ public class Consultant extends User {
         this.workload = workload;
     }
 
-    public List<String> getDomaines() {
+    public List<Domaine> getDomaines() {
         return domaines;
     }
 
-    public void setDomaines(List<String> domaines) {
+    public void setDomaines(List<Domaine> domaines) {
         this.domaines = domaines;
     }
 

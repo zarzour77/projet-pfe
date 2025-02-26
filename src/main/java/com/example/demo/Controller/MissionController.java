@@ -45,10 +45,7 @@ public class MissionController {
         return ResponseEntity.notFound().build();}
     }
 
-            @GetMapping("/{id}/avis")
-            public ResponseEntity<List<Avis>> getMissionAvis (@PathVariable Long id){
-                return ResponseEntity.ok(missionService.getMissionAvis(id));
-            }
+
 
             @PatchMapping("/{id}/status")
             public ResponseEntity<Mission> updateMissionStatus (@PathVariable Long id, @RequestParam String newStatus){
@@ -82,7 +79,7 @@ public class MissionController {
             // Formatage du budget pour l'affichage (par exemple "$500+")
             dto.setSpent("$" + m.getBudget() + "+");
             // On utilise la date de début si présente, sinon la deadline
-            dto.setPublishedAt(m.getStartdate() != null ? m.getStartdate() : m.getDeadline());
+            dto.setPublishedAt(m.getStartdate() != null ? m.getStartdate() : m.getEnddate());
             // Pour la localisation, on utilise par exemple le nom de l'entreprise
             dto.setLocation(m.getEntreprise() != null ? m.getEntreprise().getNom() : "Unknown");
             // On récupère les compétences requises en tant que tags
