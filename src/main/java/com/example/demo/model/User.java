@@ -30,13 +30,6 @@ public class User {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Notification> notifications;
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "cible", fetch = FetchType.LAZY)
-    private List<Avis> avisRecus;
-
-    @JsonIgnore
-    @OneToMany(mappedBy = "auteur", fetch = FetchType.EAGER)
-    private List<Avis> avisRediges;
 
     private Double rating;
 
@@ -46,10 +39,8 @@ public class User {
         this.nom = nom;
     }
 
-    public User(String adresse, List<Avis> avisRecus, List<Avis> avisRediges, List<Competence> competences, String email, Long id, String nom, List<Notification> notifications, String password, String prenom, String telephone , String role,String photoprofile,String statut) {
+    public User(String adresse, List<Competence> competences, String email, Long id, String nom, List<Notification> notifications, String password, String prenom, String telephone , String role,String photoprofile,String statut) {
         this.adresse = adresse;
-        this.avisRecus = avisRecus;
-        this.avisRediges = avisRediges;
         this.email = email;
         this.id = id;
         this.nom = nom;
@@ -62,10 +53,8 @@ public class User {
         this.statut = statut;
     }
 
-    public User(List<Avis> avisRecus, String adresse, List<Avis> avisRediges, String email, Long id, String nom, List<Notification> notifications, String password, String telephone,String photoprofile) {
-        this.avisRecus = avisRecus;
+    public User( String adresse, String email, Long id, String nom, List<Notification> notifications, String password, String telephone,String photoprofile) {
         this.adresse = adresse;
-        this.avisRediges = avisRediges;
         this.email = email;
         this.id = id;
         this.nom = nom;
@@ -126,18 +115,6 @@ public class User {
     }
     public void setAdresse(String adresse) {
         this.adresse = adresse;
-    }
-    public List<Avis> getAvisRecus() {
-        return avisRecus;
-    }
-    public void setAvisRecus(List<Avis> avisRecus) {
-        this.avisRecus = avisRecus;
-    }
-    public List<Avis> getAvisRediges() {
-        return avisRediges;
-    }
-    public void setAvisRediges(List<Avis> avisRediges) {
-        this.avisRediges = avisRediges;
     }
     public String getEmail() {
         return email;

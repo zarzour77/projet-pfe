@@ -20,6 +20,11 @@ public class Entreprise extends User {
     private Double longitude;
 
     private String nomEntreprise;
+    @OneToMany(mappedBy = "auteur", fetch = FetchType.LAZY)
+    private List<Avis> avisDonnes; // Reviews given by this entreprise (should target consultants)
+
+    @OneToMany(mappedBy = "cible", fetch = FetchType.LAZY)
+    private List<Avis> avisRecus; // Reviews received by this entreprise (should come from consultants)
 
     public Entreprise() {}
 
@@ -55,5 +60,21 @@ public class Entreprise extends User {
     }
     public void setMissions(List<Mission> missions) {
         this.missions = missions;
+    }
+    // Add the corresponding getters and setters
+    public List<Avis> getAvisDonnes() {
+        return avisDonnes;
+    }
+
+    public void setAvisDonnes(List<Avis> avisDonnes) {
+        this.avisDonnes = avisDonnes;
+    }
+
+    public List<Avis> getAvisRecus() {
+        return avisRecus;
+    }
+
+    public void setAvisRecus(List<Avis> avisRecus) {
+        this.avisRecus = avisRecus;
     }
 }

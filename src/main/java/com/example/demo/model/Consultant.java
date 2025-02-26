@@ -52,6 +52,11 @@ public class Consultant extends User {
             inverseJoinColumns = @JoinColumn(name = "experience_id")
     )
     private List<Experience> experiences;
+    @OneToMany(mappedBy = "auteur", fetch = FetchType.LAZY)
+    private List<Avis> avisDonnes; // Reviews given by this consultant (should target entreprises)
+
+    @OneToMany(mappedBy = "cible", fetch = FetchType.LAZY)
+    private List<Avis> avisRecus; // Reviews received by this consultant (should come from entreprises)
 
 
 
@@ -149,6 +154,21 @@ public class Consultant extends User {
                 ", experienceYears=" + experienceYears +
                 ", domaines=" + domaines +
                 '}';
+    }
+    public List<Avis> getAvisDonnes() {
+        return avisDonnes;
+    }
+
+    public void setAvisDonnes(List<Avis> avisDonnes) {
+        this.avisDonnes = avisDonnes;
+    }
+
+    public List<Avis> getAvisRecus() {
+        return avisRecus;
+    }
+
+    public void setAvisRecus(List<Avis> avisRecus) {
+        this.avisRecus = avisRecus;
     }
     public boolean isAvailableDuring(Date startDate, Date endDate) {
         if (propositions == null || propositions.isEmpty()) {

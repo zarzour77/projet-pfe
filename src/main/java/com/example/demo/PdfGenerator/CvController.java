@@ -39,7 +39,6 @@ public class CvController {
         userDetails.put("telephone", consultant.getTelephone());
         userDetails.put("adresse", consultant.getAdresse());
         userDetails.put("experienceYears", consultant.getExperienceYears());
-        userDetails.put("domaines", consultant.getDomaines());
 
 
         userDetails.put("competences",  consultant.getCompetences());

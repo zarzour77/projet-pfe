@@ -50,9 +50,7 @@ public class CvGenerationService {
         parameters.put("experienceYears", userDetails.get("experienceYears"));
         parameters.put("adresse", userDetails.get("adresse"));
 
-        // Join domaines if needed
-        String domaines = String.join(", ", (List<String>) userDetails.get("domaines"));
-        parameters.put("domaines", domaines);
+
         // Create a data source for experiences
         List<?> experiences = (List<?>) userDetails.get("experiences");
         JRBeanCollectionDataSource experienceDataSource = new JRBeanCollectionDataSource(experiences);

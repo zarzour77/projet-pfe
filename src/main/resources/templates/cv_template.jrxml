@@ -19,7 +19,6 @@ bottomMargin="20">
 <parameter name="email" class="java.lang.String"/>
 <parameter name="telephone" class="java.lang.String"/>
 <parameter name="experienceYears" class="java.lang.Integer"/>
-<parameter name="domaines" class="java.lang.String"/>
 <parameter name="adresse" class="java.lang.String"/>
 <parameter name="experienceDataSource" class="net.sf.jasperreports.engine.JRDataSource"/>
 <parameter name="experienceSubreport" class="net.sf.jasperreports.engine.JasperReport"/>
@@ -39,13 +38,7 @@ bottomMargin="20">
             <textFieldExpression><![CDATA[$P{prenom} + " " + $P{nom}]]></textFieldExpression>
         </textField>
         <!-- Subtitle (Domaines) -->
-        <textField>
-            <reportElement x="0" y="40" width="535" height="20"/>
-            <textElement textAlignment="Center">
-                <font size="12" isItalic="true"/>
-            </textElement>
-            <textFieldExpression><![CDATA[$P{domaines}]]></textFieldExpression>
-        </textField>
+
     </band>
 </title>
 
