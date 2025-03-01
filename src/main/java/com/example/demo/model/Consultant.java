@@ -44,7 +44,7 @@ public class Consultant extends User {
     )
     private List<Domaine> domaines;
     @Column(nullable = true)
-    private Integer budgetMin; // Remplacer budget_min par budgetMin en Java
+    private Integer taux_horaire; // Remplacer budget_min par taux_horaire en Java
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER)
     @JoinTable(
             name = "consultant_experiences",
@@ -52,18 +52,147 @@ public class Consultant extends User {
             inverseJoinColumns = @JoinColumn(name = "experience_id")
     )
     private List<Experience> experiences;
+    @JsonIgnore
     @OneToMany(mappedBy = "auteur", fetch = FetchType.LAZY)
     private List<Avis> avisDonnes; // Reviews given by this consultant (should target entreprises)
-
+    @JsonIgnore
     @OneToMany(mappedBy = "cible", fetch = FetchType.LAZY)
     private List<Avis> avisRecus; // Reviews received by this consultant (should come from entreprises)
 
-
-
-
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "consultant_saved_missions",
+            joinColumns = @JoinColumn(name = "consultant_id"),
+            inverseJoinColumns = @JoinColumn(name = "mission_id")
+    )
+    private List<Mission> savedMissions;
     public Consultant() {}
 
+    public Consultant(List<Avis> avisDonnes, List<Avis> avisRecus, Integer taux_horaire, List<Competence> competences, List<Domaine> domaines, List<Experience> experiences, Integer experienceYears, Double latitude, Double longitude, String portfolio, List<Proposition> propositions, List<Mission> savedMissions, Integer workload) {
+        this.avisDonnes = avisDonnes;
+        this.avisRecus = avisRecus;
+        this.taux_horaire = taux_horaire;
+        this.competences = competences;
+        this.domaines = domaines;
+        this.experiences = experiences;
+        this.experienceYears = experienceYears;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.portfolio = portfolio;
+        this.propositions = propositions;
+        this.savedMissions = savedMissions;
+        this.workload = workload;
+    }
 
+    public Consultant(String adresse, List<Competence> competences, String email, Long id, String nom, List<Notification> notifications, String password, String prenom, String telephone, String role, String photoprofile, String statut, List<Avis> avisDonnes, List<Avis> avisRecus, Integer taux_horaire, List<Competence> competences1, List<Domaine> domaines, List<Experience> experiences, Integer experienceYears, Double latitude, Double longitude, String portfolio, List<Proposition> propositions, List<Mission> savedMissions, Integer workload) {
+        super(adresse, competences, email, id, nom, notifications, password, prenom, telephone, role, photoprofile, statut);
+        this.avisDonnes = avisDonnes;
+        this.avisRecus = avisRecus;
+        this.taux_horaire = taux_horaire;
+        this.competences = competences1;
+        this.domaines = domaines;
+        this.experiences = experiences;
+        this.experienceYears = experienceYears;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.portfolio = portfolio;
+        this.propositions = propositions;
+        this.savedMissions = savedMissions;
+        this.workload = workload;
+    }
+
+    public Consultant(String adresse, String email, Long id, String nom, List<Notification> notifications, String password, String telephone, String photoprofile, List<Avis> avisDonnes, List<Avis> avisRecus, Integer taux_horaire, List<Competence> competences, List<Domaine> domaines, List<Experience> experiences, Integer experienceYears, Double latitude, Double longitude, String portfolio, List<Proposition> propositions, List<Mission> savedMissions, Integer workload) {
+        super(adresse, email, id, nom, notifications, password, telephone, photoprofile);
+        this.avisDonnes = avisDonnes;
+        this.avisRecus = avisRecus;
+        this.taux_horaire = taux_horaire;
+        this.competences = competences;
+        this.domaines = domaines;
+        this.experiences = experiences;
+        this.experienceYears = experienceYears;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.portfolio = portfolio;
+        this.propositions = propositions;
+        this.savedMissions = savedMissions;
+        this.workload = workload;
+    }
+
+    public Consultant(String nom, List<Avis> avisDonnes, List<Avis> avisRecus, Integer taux_horaire, List<Competence> competences, List<Domaine> domaines, List<Experience> experiences, Integer experienceYears, Double latitude, Double longitude, String portfolio, List<Proposition> propositions, List<Mission> savedMissions, Integer workload) {
+        super(nom);
+        this.avisDonnes = avisDonnes;
+        this.avisRecus = avisRecus;
+        this.taux_horaire = taux_horaire;
+        this.competences = competences;
+        this.domaines = domaines;
+        this.experiences = experiences;
+        this.experienceYears = experienceYears;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.portfolio = portfolio;
+        this.propositions = propositions;
+        this.savedMissions = savedMissions;
+        this.workload = workload;
+    }
+
+    public Consultant(String nom, String prenom, String email, String encodedPassword, List<Avis> avisDonnes, List<Avis> avisRecus, Integer taux_horaire, List<Competence> competences, List<Domaine> domaines, List<Experience> experiences, Integer experienceYears, Double latitude, Double longitude, String portfolio, List<Proposition> propositions, List<Mission> savedMissions, Integer workload) {
+        super(nom, prenom, email, encodedPassword);
+        this.avisDonnes = avisDonnes;
+        this.avisRecus = avisRecus;
+        this.taux_horaire = taux_horaire;
+        this.competences = competences;
+        this.domaines = domaines;
+        this.experiences = experiences;
+        this.experienceYears = experienceYears;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.portfolio = portfolio;
+        this.propositions = propositions;
+        this.savedMissions = savedMissions;
+        this.workload = workload;
+    }
+
+    public Consultant(String nom, String prenom, String telephone, String email, String encodedPassword, String role, List<Avis> avisDonnes, List<Avis> avisRecus, Integer taux_horaire, List<Competence> competences, List<Domaine> domaines, List<Experience> experiences, Integer experienceYears, Double latitude, Double longitude, String portfolio, List<Proposition> propositions, List<Mission> savedMissions, Integer workload) {
+        super(nom, prenom, telephone, email, encodedPassword, role);
+        this.avisDonnes = avisDonnes;
+        this.avisRecus = avisRecus;
+        this.taux_horaire = taux_horaire;
+        this.competences = competences;
+        this.domaines = domaines;
+        this.experiences = experiences;
+        this.experienceYears = experienceYears;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.portfolio = portfolio;
+        this.propositions = propositions;
+        this.savedMissions = savedMissions;
+        this.workload = workload;
+    }
+
+    public Consultant(String nom, String prenom, String telephone, String email, String encodedPassword, String role, String subscriptionType, List<Avis> avisDonnes, List<Avis> avisRecus, Integer taux_horaire, List<Competence> competences, List<Domaine> domaines, List<Experience> experiences, Integer experienceYears, Double latitude, Double longitude, String portfolio, List<Proposition> propositions, List<Mission> savedMissions, Integer workload) {
+        super(nom, prenom, telephone, email, encodedPassword, role, subscriptionType);
+        this.avisDonnes = avisDonnes;
+        this.avisRecus = avisRecus;
+        this.taux_horaire = taux_horaire;
+        this.competences = competences;
+        this.domaines = domaines;
+        this.experiences = experiences;
+        this.experienceYears = experienceYears;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.portfolio = portfolio;
+        this.propositions = propositions;
+        this.savedMissions = savedMissions;
+        this.workload = workload;
+    }
+
+    public List<Mission> getSavedMissions() {
+        return savedMissions;
+    }
+
+    public void setSavedMissions(List<Mission> savedMissions) {
+        this.savedMissions = savedMissions;
+    }
 
     public Double getLatitude() {
         return latitude;
@@ -81,12 +210,12 @@ public class Consultant extends User {
         this.longitude = longitude;
     }
 
-    public Integer getBudgetMin() {
-        return budgetMin;
+    public Integer getTaux_horaire() {
+        return taux_horaire;
     }
 
-    public void setBudgetMin(Integer budgetMin) {
-        this.budgetMin = budgetMin;
+    public void setTaux_horaire(Integer taux_horaire) {
+        this.taux_horaire = taux_horaire;
     }
 
     public List<Competence> getCompetences() {

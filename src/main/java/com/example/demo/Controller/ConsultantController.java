@@ -4,6 +4,7 @@ package com.example.demo.Controller;
 
 import com.example.demo.Service.ConsultantService;
 import com.example.demo.model.Consultant;
+import com.example.demo.model.Mission;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -52,5 +53,27 @@ public class ConsultantController {
     public ResponseEntity<Void> deleteConsultant(@PathVariable Long id) {
         consultantService.deleteConsultant(id);
         return ResponseEntity.noContent().build();
+    }
+    @PostMapping("/{consultantId}/savedMissions")
+    public ResponseEntity<Consultant> saveMission(
+            @PathVariable Long consultantId,
+            @RequestParam Long missionId) {
+        try {
+            Consultant updatedConsultant = consultantService.saveMissionForConsultant(consultantId, missionId);
+            return ResponseEntity.ok(updatedConsultant);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // Endpoint pour récupérer les missions sauvegardées d'un consultant
+    @GetMapping("/{consultantId}/savedMissions")
+    public ResponseEntity<List<Mission>> getSavedMissions(@PathVariable Long consultantId) {
+        try {
+            List<Mission> savedMissions = consultantService.getSavedMissionsForConsultant(consultantId);
+            return ResponseEntity.ok(savedMissions);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

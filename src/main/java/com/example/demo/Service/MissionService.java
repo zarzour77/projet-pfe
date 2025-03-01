@@ -67,4 +67,25 @@ public class MissionService {
     public List<Mission> getAllMissions() {
         return missionRepository.findAll();
     }
+
+    // Nouvelle méthode de filtrage par domaines
+    public List<Mission> getMissionsByDomainIds(List<Long> domainIds) {
+        return missionRepository.findDistinctByDomainesIdIn(domainIds);
+    }
+
+    public List<Mission> getMissionsByExperience(String experience) {
+        return missionRepository.findDistinctByNiveauExperienceRequisIgnoreCase(experience);
+    }
+    // Filtrage par porte de travail
+    public List<Mission> getMissionsByPorteDeTravail(String portetravail) {
+        return missionRepository.findDistinctByPortetravailIgnoreCase(portetravail);
+    }
+
+    public List<Mission> getMissionsByBudgetRange(Double minBudget, Double maxBudget) {
+        return missionRepository.findByBudgetBetween(minBudget, maxBudget);
+    }
+    // Nouveau filtre : Filtrage par durée estimée
+    public List<Mission> getMissionsByDureeEstime(String dureeEstime) {
+        return missionRepository.findDistinctByDureeEstimeIgnoreCase(dureeEstime);
+    }
 }
