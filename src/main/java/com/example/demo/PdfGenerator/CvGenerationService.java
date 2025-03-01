@@ -7,11 +7,9 @@ import org.springframework.stereotype.Service;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
 import java.io.InputStream;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class CvGenerationService {
@@ -41,6 +39,14 @@ public class CvGenerationService {
         }
         JasperReport compiledCompetenceSubreport = JasperCompileManager.compileReport(competenceSubReportStream);
 
+        // Load and compile the domaines subreport template
+        ClassPathResource domainesSubReportResource = new ClassPathResource("templates/domaines_subreport.jrxml");
+        InputStream domainesSubReportStream = domainesSubReportResource.getInputStream();
+        if (domainesSubReportStream == null) {
+            throw new RuntimeException("Could not find domaines subreport Jasper template");
+        }
+        JasperReport compiledDomainesSubreport = JasperCompileManager.compileReport(domainesSubReportStream);
+
         // Prepare main report parameters
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("nom", userDetails.get("nom"));
@@ -50,23 +56,26 @@ public class CvGenerationService {
         parameters.put("experienceYears", userDetails.get("experienceYears"));
         parameters.put("adresse", userDetails.get("adresse"));
 
-
         // Create a data source for experiences
         List<?> experiences = (List<?>) userDetails.get("experiences");
         JRBeanCollectionDataSource experienceDataSource = new JRBeanCollectionDataSource(experiences);
         parameters.put("experienceDataSource", experienceDataSource);
         parameters.put("experienceSubreport", compiledSubreport);
 
+        // Create a data source for competences
         List<Competence> competences = (List<Competence>) userDetails.get("competences");
         JRBeanCollectionDataSource competenceDataSource = new JRBeanCollectionDataSource(competences);
         parameters.put("competenceDataSource", competenceDataSource);
         parameters.put("competenceSubreport", compiledCompetenceSubreport);
 
+        // Create a data source for domaines (expects a List of Domaine objects)
+        List<?> domaines = (List<?>) userDetails.get("domaines");
+        JRBeanCollectionDataSource domainesDataSource = new JRBeanCollectionDataSource(domaines);
+        parameters.put("domainesDataSource", domainesDataSource);
+        parameters.put("domainesSubreport", compiledDomainesSubreport);
 
         // Generate the PDF report using an empty datasource for the main report.
         JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());
         return JasperExportManager.exportReportToPdf(jasperPrint);
     }
-
-
 }

@@ -52,12 +52,20 @@ public class Consultant extends User {
             inverseJoinColumns = @JoinColumn(name = "experience_id")
     )
     private List<Experience> experiences;
+
+    @JsonIgnore
     @OneToMany(mappedBy = "auteur", fetch = FetchType.LAZY)
     private List<Avis> avisDonnes; // Reviews given by this consultant (should target entreprises)
+
+    @JsonIgnore
 
     @OneToMany(mappedBy = "cible", fetch = FetchType.LAZY)
     private List<Avis> avisRecus; // Reviews received by this consultant (should come from entreprises)
 
+    // New field for CV storage (as PDF bytes)
+    @Lob
+    @Column(nullable = true, columnDefinition = "LONGBLOB")
+    private byte[] cv;
 
 
 
@@ -219,5 +227,14 @@ public class Consultant extends User {
                 .count();
 
         return (double) acceptedCount / propositions.size();
+    }
+
+    // Getters and setters for new field
+    public byte[] getCv() {
+        return cv;
+    }
+
+    public void setCv(byte[] cv) {
+        this.cv = cv;
     }
 }

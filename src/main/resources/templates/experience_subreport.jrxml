@@ -15,22 +15,22 @@
     <field name="description" class="java.lang.String"/>
 
     <detail>
-        <band height="60">
-            <!-- Role, entreprise, and dates -->
+        <!-- Let each record expand if needed -->
+        <band height="60" splitType="Stretch">
             <textField>
                 <reportElement x="0" y="0" width="350" height="20"/>
                 <textElement>
                     <font isBold="true"/>
                 </textElement>
                 <textFieldExpression><![CDATA[
-                $F{role} + " chez " + $F{entreprise} +
-                " ( " + ($F{dateDebut} != null ? $F{dateDebut}.toString() : "") +
-                " - " + ($F{dateFin} != null ? $F{dateFin}.toString() : "") + " )"
-            ]]></textFieldExpression>
+                    $F{role} + " chez " + $F{entreprise} +
+                    " ( " + ($F{dateDebut} != null ? $F{dateDebut}.toString() : "") +
+                    " - " + ($F{dateFin} != null ? $F{dateFin}.toString() : "") + " )"
+                ]]></textFieldExpression>
             </textField>
 
-            <!-- Description with indentation, wrapping, and prefixed "." -->
-            <textField textAdjust="StretchHeight">
+            <!-- Description can be multiple lines -->
+            <textField isStretchWithOverflow="true" textAdjust="StretchHeight">
                 <reportElement x="20" y="25" width="250" height="20"/>
                 <textElement>
                     <font size="10"/>
@@ -39,5 +39,4 @@
             </textField>
         </band>
     </detail>
-
 </jasperReport>

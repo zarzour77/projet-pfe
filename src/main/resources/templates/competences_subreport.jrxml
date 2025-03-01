@@ -17,9 +17,10 @@
     <field name="nom" class="java.lang.String"/>
 
     <detail>
-        <band height="20">
-            <!-- Each competence is printed on a new line, indented a bit -->
-            <textField>
+        <!-- Use splitType="Stretch" to allow the band to grow if there are many competences -->
+        <band height="20" splitType="Stretch">
+            <!-- If competences might be long, enable stretching -->
+            <textField isStretchWithOverflow="true" textAdjust="StretchHeight">
                 <reportElement x="10" y="0" width="525" height="20"/>
                 <textFieldExpression><![CDATA[$F{nom}]]></textFieldExpression>
             </textField>

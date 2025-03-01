@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport
+        xmlns="http://jasperreports.sourceforge.net/jasperreports"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+                        http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+        name="DomainesSubreport"
+        pageWidth="535"
+        pageHeight="60"
+        columnWidth="535"
+        leftMargin="0"
+        rightMargin="0"
+        topMargin="0"
+        bottomMargin="0">
+
+    <!-- Field for domaine name -->
+    <field name="nom" class="java.lang.String"/>
+
+    <!-- Variable to concatenate domaine names -->
+    <variable name="ConcatenatedDomaines" class="java.lang.String" calculation="Nothing" resetType="Report">
+        <variableExpression><![CDATA[
+            $V{ConcatenatedDomaines} == null || $V{ConcatenatedDomaines}.isEmpty()
+                ? $F{nom}
+                : $V{ConcatenatedDomaines} + ", " + $F{nom}
+        ]]></variableExpression>
+        <initialValueExpression><![CDATA[""]]></initialValueExpression>
+    </variable>
+
+    <!-- If you don't need a detail band, you can leave it empty or remove it -->
+    <detail>
+        <band height="1" splitType="Stretch"/>
+    </detail>
+
+    <!-- Summary band outputs the concatenated domaines on one line -->
+    <summary>
+        <band height="20" splitType="Stretch">
+            <textField isStretchWithOverflow="true" textAdjust="StretchHeight">
+                <reportElement x="10" y="0" width="525" height="20"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$V{ConcatenatedDomaines}]]></textFieldExpression>
+            </textField>
+        </band>
+    </summary>
+</jasperReport>

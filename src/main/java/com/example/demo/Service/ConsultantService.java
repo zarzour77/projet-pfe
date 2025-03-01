@@ -1,21 +1,25 @@
 package com.example.demo.Service;
 
 import com.example.demo.model.Consultant;
+import com.example.demo.model.Experience;
 import com.example.demo.repository.ConsultantRepository;
+import com.example.demo.repository.ExperienceRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class ConsultantService {
     private final ConsultantRepository consultantRepository;
-
+    private final ExperienceRepository experienceRepository;
     @Autowired
-    public ConsultantService(ConsultantRepository consultantRepository) {
+    public ConsultantService(ConsultantRepository consultantRepository, ExperienceRepository experienceRepository) {
         this.consultantRepository = consultantRepository;
+        this.experienceRepository = experienceRepository;
     }
 
     public List<Consultant> getAllConsultants() {
@@ -104,4 +108,41 @@ public class ConsultantService {
     public void deleteConsultant(Long id) {
         consultantRepository.deleteById(id);
     }
+    @Transactional
+    public Consultant addExperienceToConsultant(Long consultantId, Experience experience) {
+        return consultantRepository.findById(consultantId).map(consultant -> {
+            // Initialize experiences list if null
+            if (consultant.getExperiences() == null) {
+                consultant.setExperiences(new ArrayList<>());
+            }
+            consultant.getExperiences().add(experience);
+            return consultantRepository.save(consultant);
+        }).orElseThrow(() -> new RuntimeException("Consultant not found with id " + consultantId));
+    }
+    @Transactional
+    public String deleteExperience(Long consultantId, Long experienceId) {
+        // Find the consultant by their ID
+        Consultant consultant = consultantRepository.findById(consultantId).orElse(null);
+        if (consultant == null) {
+            return "Consultant not found!";
+        }
+
+        // Find the experience by its ID
+        Experience experience =experienceRepository.findById(experienceId).orElse(null);
+        if (experience == null) {
+            return "Experience not found!";
+        }
+
+        // Remove the experience from the consultant's list of experiences
+        consultant.getExperiences().remove(experience);
+
+        // Save the consultant with the updated list of experiences
+        consultantRepository.save(consultant);
+
+        // Delete the experience from the database
+        experienceRepository.delete(experience);
+
+        return "Experience deleted successfully!";
+    }
+
 }

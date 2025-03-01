@@ -1,9 +1,8 @@
 package com.example.demo.Controller;
 
-
-
 import com.example.demo.Service.ConsultantService;
 import com.example.demo.model.Consultant;
+import com.example.demo.model.Experience;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -52,5 +51,19 @@ public class ConsultantController {
     public ResponseEntity<Void> deleteConsultant(@PathVariable Long id) {
         consultantService.deleteConsultant(id);
         return ResponseEntity.noContent().build();
+    }
+    @PostMapping("/{id}/addExperience")
+    public ResponseEntity<Consultant> addExperience(@PathVariable Long id, @RequestBody Experience experience) {
+        try {
+            Consultant updatedConsultant = consultantService.addExperienceToConsultant(id, experience);
+            return ResponseEntity.ok(updatedConsultant);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    @DeleteMapping("/{consultantId}/deleteExperience/{experienceId}")
+    public String deleteExperience(@PathVariable Long consultantId, @PathVariable Long experienceId) {
+        // Call the service layer to delete the experience
+        return consultantService.deleteExperience(consultantId, experienceId);
     }
 }
