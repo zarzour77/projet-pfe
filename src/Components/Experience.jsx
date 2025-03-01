@@ -21,6 +21,10 @@ const Experience = () => {
   // State to hold multiple experiences
   const [experienceList, setExperienceList] = useState([]);
 
+  // State for modal and PDF preview
+  const [showCvModal, setShowCvModal] = useState(false);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState("");
+
   const handleSelection = (phase) => {
     if (step === 2) {
       setSelectedPhases((prev) =>
@@ -90,7 +94,7 @@ const Experience = () => {
     setExpDescription("");
   };
 
-  // Final submission: send all experiences to the backend
+  // Final submission: update experiences then display the CV modal
   const handleFinishExperience = async () => {
     try {
       // Format the experiences data as required by the backend
@@ -104,22 +108,58 @@ const Experience = () => {
   
       const storedConsultant = JSON.parse(localStorage.getItem("Consultant"));
       const userId = storedConsultant?.id;
-      console.log(storedConsultant)
+      console.log(storedConsultant);
   
-      // Send the data to the backend using the updateConsultant function
-      const response=await ConsultantService.updateConsultant(userId, { experiences:  formattedExperiences });
+      // Update consultant experiences in the backend
+      const response = await ConsultantService.updateConsultant(userId, { experiences: formattedExperiences });
       if (response){
         console.log("Experiences updated successfully!");
-        localStorage.setItem("Consultant",JSON.stringify(response))
-      navigate("/subscription");
-
+        localStorage.setItem("Consultant", JSON.stringify(response));
+        // Instead of navigating, display the modal for CV preview
+        setShowCvModal(true);
       }
     } catch (error) {
       alert("Failed to add experiences.");
       console.error(error);
     }
   };
-  
+
+  // Generate CV preview by calling the backend endpoint
+  const handleGenerateCV = async () => {
+    const storedConsultant = JSON.parse(localStorage.getItem("Consultant"));
+    const userId = storedConsultant?.id;
+    try {
+      const response = await ConsultantService.generateCv(userId);
+      // Create a blob URL from the response (assuming response is a Blob)
+      const blob = new Blob([response], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      setPdfPreviewUrl(url);
+    } catch (error) {
+      console.error("Error generating CV preview:", error);
+    }
+  };
+
+  // Save the CV in the database and redirect to the subscription page
+  const handleSaveAndSubscribe = async () => {
+    const storedConsultant = JSON.parse(localStorage.getItem("Consultant"));
+    const userId = storedConsultant?.id;
+    try {
+      await ConsultantService.saveCv(userId);
+      navigate("/subscription");
+    } catch (error) {
+      console.error("Error saving CV:", error);
+    }
+  };
+
+  // Download the CV file using the preview URL
+  const handleDownloadCV = () => {
+    if (pdfPreviewUrl) {
+      const link = document.createElement("a");
+      link.href = pdfPreviewUrl;
+      link.download = "cv.pdf";
+      link.click();
+    }
+  };
 
   return (
     <div className={styles.container}>
@@ -218,101 +258,102 @@ const Experience = () => {
         </div>
       )}
 
-{step === 4 && (
-  <div className={styles.experienceContainer}>
-    <div className={styles.experienceForm}>
-      <h2 className={styles.formTitle}>Ajouter votre expérience</h2>
-      <div className={styles.formGroup}>
-        <label>Date de début</label>
-        <input 
-          type="date" 
-          value={expDateDebut}
-          onChange={(e) => setExpDateDebut(e.target.value)}
-          className={styles.formInput}
-        />
-      </div>
-      <div className={styles.formGroup}>
-        <label>Date de fin</label>
-        <input 
-          type="date" 
-          value={expDateFin}
-          onChange={(e) => setExpDateFin(e.target.value)}
-          className={styles.formInput}
-        />
-      </div>
-      <div className={styles.formGroup}>
-        <label>Entreprise</label>
-        <input 
-          type="text" 
-          placeholder="Entreprise" 
-          value={expEntreprise}
-          onChange={(e) => setExpEntreprise(e.target.value)}
-          className={styles.formInput}
-        />
-      </div>
-      <div className={styles.formGroup}>
-        <label>Votre rôle</label>
-        <input 
-          type="text" 
-          placeholder="Votre rôle (ex: traducteur, directeur, etc.)" 
-          value={expRole}
-          onChange={(e) => setExpRole(e.target.value)}
-          className={styles.formInput}
-        />
-      </div>
-      <div className={styles.formGroup}>
-        <label>Description</label>
-        <textarea 
-          placeholder="Description de votre expérience"
-          value={expDescription}
-          onChange={(e) => setExpDescription(e.target.value)}
-          className={styles.formTextarea}
-        ></textarea>
-      </div>
-    </div>
+      {step === 4 && (
+        <div className={styles.experienceContainer}>
+          <div className={styles.experienceForm}>
+            <h2 className={styles.formTitle}>Ajouter votre expérience</h2>
+            <div className={styles.formGroup}>
+              <label>Date de début</label>
+              <input 
+                type="date" 
+                value={expDateDebut}
+                onChange={(e) => setExpDateDebut(e.target.value)}
+                className={styles.formInput}
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label>Date de fin</label>
+              <input 
+                type="date" 
+                value={expDateFin}
+                onChange={(e) => setExpDateFin(e.target.value)}
+                className={styles.formInput}
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label>Entreprise</label>
+              <input 
+                type="text" 
+                placeholder="Entreprise" 
+                value={expEntreprise}
+                onChange={(e) => setExpEntreprise(e.target.value)}
+                className={styles.formInput}
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label>Votre rôle</label>
+              <input 
+                type="text" 
+                placeholder="Votre rôle (ex: traducteur, directeur, etc.)" 
+                value={expRole}
+                onChange={(e) => setExpRole(e.target.value)}
+                className={styles.formInput}
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label>Description</label>
+              <textarea 
+                placeholder="Description de votre expérience"
+                value={expDescription}
+                onChange={(e) => setExpDescription(e.target.value)}
+                className={styles.formTextarea}
+              ></textarea>
+            </div>
+          </div>
 
-    {experienceList.length > 0 && (
-      <div className={styles.experienceList}>
-        <h3>Expériences ajoutées</h3>
-        <ul>
-          {experienceList.map((exp, index) => (
-            <li key={index} className={styles.experienceItem}>
-              <div className={styles.experienceContent}>
-                <span className={styles.entreprise}>{exp.entreprise}</span>
-                <span className={styles.role}>{exp.role}</span>
-                <span className={styles.duree}>({exp.duree} mois)</span>
-              </div>
-              <button
-                className={styles.deleteButton}
-                onClick={() => setExperienceList(experienceList.filter((_, i) => i !== index))}
+          {experienceList.length > 0 && (
+            <div className={styles.experienceList}>
+              <h3>Expériences ajoutées</h3>
+              <ul>
+                {experienceList.map((exp, index) => (
+                  <li key={index} className={styles.experienceItem}>
+                    <div className={styles.experienceContent}>
+                      <span className={styles.entreprise}>{exp.entreprise}</span>
+                      <span className={styles.role}>{exp.role}</span>
+                      <span className={styles.duree}>({exp.duree} mois)</span>
+                    </div>
+                    <button
+                      className={styles.deleteButton}
+                      onClick={() => setExperienceList(experienceList.filter((_, i) => i !== index))}
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <button 
+                className={styles.finishButton}
+                onClick={handleFinishExperience}
               >
-                ×
+                Terminer
               </button>
-            </li>
-          ))}
-        </ul>
-        <button 
-          className={styles.finishButton}
-          onClick={handleFinishExperience}
-        >
-          Terminer
-        </button>
-      </div>
-      
-    )}
-  </div>
-)}
-      {step ===4 &&(<div className={styles.formActions}>
-      <button 
-        className={styles.addExperienceButton}
-        onClick={handleAddExperience}
-        disabled={!expDateDebut || !expDateFin || !expEntreprise || !expRole || !expDescription}
-      >
-        Ajouter l'expérience
-      </button>
-      
-    </div>)}
-  
+            </div>
+          )}
+        </div>
+      )}
+
+      {step === 4 && (
+        <div className={styles.formActions}>
+          <button 
+            className={styles.addExperienceButton}
+            onClick={handleAddExperience}
+            disabled={!expDateDebut || !expDateFin || !expEntreprise || !expRole || !expDescription}
+          >
+            Ajouter l'expérience
+          </button>
+        </div>
+      )}
+
       {step !== 4 && (
         <div className={styles.progressBar}>
           <div className={styles.progress} style={{ width: `${(step / 4) * 100}%` }}></div>
@@ -335,6 +376,53 @@ const Experience = () => {
           )}
         </div>
       </div>
+
+      {showCvModal && (
+  <div className={styles.modalOverlay}>
+    <div className={styles.modalContent}>
+      <h2>Aperçu de votre CV</h2>
+      {!pdfPreviewUrl ? (
+        <div className={styles.modalActions}>
+          <button onClick={handleGenerateCV} className={styles.generateButton}>
+            Générer le CV
+          </button>
+          <button onClick={handleSaveAndSubscribe} className={styles.ignoreButton}>
+            Ignorer pour le moment
+          </button>
+        </div>
+      ) : (
+        <>
+          <iframe src={pdfPreviewUrl} title="CV Preview" className={styles.pdfPreview} />
+          <div className={styles.modalActions}>
+            <div className={styles.actionRow}>
+              <button onClick={handleDownloadCV} className={styles.downloadButton}>
+                Télécharger le CV
+              </button>
+              <button onClick={handleSaveAndSubscribe} className={styles.saveButton}>
+                Valider & S'abonner
+              </button>
+            </div>
+            <div className={styles.closeRow}>
+              <button
+                onClick={() => {
+                  setShowCvModal(false);
+                  setPdfPreviewUrl(""); // Clear the preview for updated experiences
+                }}
+                className={styles.closeModal}
+              >
+                Modifier mes expériences
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  </div>
+)}
+
+
+
+
     </div>
   );
 };

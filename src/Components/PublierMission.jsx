@@ -1,5 +1,4 @@
 /* eslint-disable react/no-unescaped-entities */
-// src/components/PublierMission.jsx
 import  { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import CreatableSelect from "react-select/creatable";
@@ -7,7 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
 import styles from "./publiermission.module.css";
-import publiermissionService from "../Services/publiermissionService";
+
+import publiermissionService from "../Services/PublierMissionService";
 import CompetenceService from "../Services/CompetenceService";
 import DomaineService from "../Services/DomaineService";
 
@@ -103,7 +103,6 @@ const PublierMission = () => {
   const [competenceOptions, setCompetenceOptions] = useState([]);
   const [domaineOptions, setDomaineOptions] = useState([]);
 
-  // Récupérer et filtrer les compétences et domaines (une seule occurrence par nom, en minuscules)
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -188,7 +187,6 @@ const PublierMission = () => {
     setCurrentStep(prev => Math.max(prev - 1, 0));
   };
 
-  // Lorsqu'on clique sur "Create" pour une compétence, la nouvelle valeur est créée et ajoutée directement à la sélection
   const handleCreateCompetence = async (inputValue) => {
     const exists = competenceOptions.some(
       option => option.label.toLowerCase() === inputValue.toLowerCase()
@@ -209,9 +207,7 @@ const PublierMission = () => {
     try {
       const newCompetence = await CompetenceService.createCompetence({ nom: inputValue });
       const newOption = { value: newCompetence.id, label: newCompetence.nom };
-      // Ajout de la nouvelle option dans la liste
       setCompetenceOptions(prev => [...prev, newOption]);
-      // Mise à jour immédiate de la sélection pour afficher la bulle
       const currentSkills = getValues("skills") || [];
       setValue("skills", [...currentSkills, newOption]);
     } catch (error) {
@@ -219,7 +215,6 @@ const PublierMission = () => {
     }
   };
 
-  // Pareil pour les domaines
   const handleCreateDomain = async (inputValue) => {
     const exists = domaineOptions.some(
       option => option.label.toLowerCase() === inputValue.toLowerCase()
@@ -248,7 +243,7 @@ const PublierMission = () => {
     }
   };
 
-  // Transformation des données avant soumission
+  // Transformation des données avant soumission, avec ajout de publishedAt
   const onSubmit = async (data) => {
     if (currentStep < steps.length - 1) {
       nextStep();
@@ -258,8 +253,9 @@ const PublierMission = () => {
         titre: data.title,
         description: data.description,
         budget: data.budget,
+        publishedAt: new Date(), // La date de soumission
         domaines: data.domaines.map(dom => ({
-          id: dom.value, // id présent si existant
+          id: dom.value,
           nom: dom.label || dom.value,
         })),
         competencesRequises: data.skills.map(skill => ({

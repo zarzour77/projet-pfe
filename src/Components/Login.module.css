@@ -278,3 +278,14 @@
   .user{
 width: 100px;
   }
+  .errorMessage {
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 0.5rem;
+    border-radius: 4px;
+    margin-top: 8px;
+    font-size: 0.9em;
+    font-weight: bold;
+  }
+  

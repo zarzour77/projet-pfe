@@ -16,12 +16,21 @@ const Login = () => {
   // States for Sign In
   const [signinEmail, setSigninEmail] = useState("");
   const [signinPassword, setSigninPassword] = useState("");
-  const navigate = useNavigate();
+  const [passwordError, setPasswordError] = useState("");
 
+  const navigate = useNavigate();
+  // Password validation function
+  const validatePassword = (pwd) => {
+    // At least one lowercase, one uppercase, one digit and minimum 8 characters
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    return regex.test(pwd);
+  };
 // In your Login component:
 const handleSignup = async (e) => {
   e.preventDefault();
-
+  if (!validatePassword(password)) {
+    return;
+  }
   try {
     const userData = {
       nom,
@@ -83,8 +92,22 @@ const handleSignup = async (e) => {
             </div>
             <input type="text" placeholder="Nom" required value={nom} onChange={(e) => setNom(e.target.value)} />
             <input type="text" placeholder="Prénom" required value={prenom} onChange={(e) => setPrenom(e.target.value)} />
-            <input type="text" placeholder="Email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-            <input type="password" placeholder="Mot de passe" required value={password} onChange={(e) => setPassword(e.target.value)} />
+            <input type="email" placeholder="Email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input type="password" placeholder="Mot de passe" required value={password} onChange={(e) => {
+                const pwd = e.target.value;
+                setPassword(pwd);
+                if (!validatePassword(pwd)) {
+                  setPasswordError(
+                    "Le mot de passe doit contenir au moins 8 caractères, une lettre majuscule, une lettre minuscule et un chiffre."
+                  );
+                } else {
+                  setPasswordError("");
+                }
+              }}
+            />
+            {passwordError && (
+              <div className={styles.errorMessage}>{passwordError}</div>
+            )}
             <button type="submit" className={styles.loginButton}>S&apos;inscrire</button>
           </form>
         </div>
