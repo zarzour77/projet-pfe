@@ -1,4 +1,4 @@
-import  { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import styles from "./Messenger.module.css";
@@ -15,14 +15,14 @@ import {
 } from "lucide-react";
 
 /** Services WebSocket et API **/
-import { connect, disconnect } from "../Services/WebSocket";
+import { connect, disconnect } from "../services/WebSocket";
 import { 
   getConversations, 
   getConversationHistory, 
   createConversation, 
   sendMessage as apiSendMessage,
   uploadFileMessage
-} from "../Services/MessengerService";
+} from "../services/MessengerService";
 import EmojiPicker from "emoji-picker-react";
 
 export default function Messenger() {
@@ -35,13 +35,11 @@ export default function Messenger() {
   const [conversations, setConversations] = useState([]);
   const [selectedConv, setSelectedConv] = useState(null);
   const [inputMessage, setInputMessage] = useState("");
-  const [autoOpened, setAutoOpened] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortCriteria, setSortCriteria] = useState("lastActivity");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   /** Références **/
-  const autoOpenedRef = useRef(false);
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null); // Pour scroller en bas
 
@@ -49,24 +47,6 @@ export default function Messenger() {
   const messageVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 }
-  };
-
-  // Helper function to render message content (text or file)
-  const renderMessageContent = (msg) => {
-    if (msg.content.startsWith("[FILE]")) {
-      const parts = msg.content.split(" | ");
-      // Extract the file name and the data URL
-      const fileName = parts[0].replace("[FILE] ", "");
-      const dataUrl = parts[1];
-      // If the data URL is for an image, display it as an image; otherwise, provide a download link.
-      if (dataUrl.startsWith("data:image")) {
-        return <img src={dataUrl} alt={fileName} style={{ maxWidth: "200px" }} />;
-      } else {
-        return <a href={dataUrl} download={fileName}>{fileName}</a>;
-      }
-    } else {
-      return <span>{msg.content}</span>;
-    }
   };
 
   // Transformation d'une conversation pour l'affichage
@@ -92,10 +72,12 @@ export default function Messenger() {
     try {
       const data = await getConversations(currentUser);
       const transformed = data.map(transformConversation);
+      // Tri par lastActivity (le plus récent en premier)
+      transformed.sort((a, b) => (b.lastActivity || 0) - (a.lastActivity || 0));
       setConversations(transformed);
 
       // Sélection automatique de la première conversation si aucune n’est ouverte
-      if (transformed.length > 0 && !autoOpened) {
+      if (transformed.length > 0 && !selectedConv) {
         setSelectedConv(transformed[0]);
         loadConversationHistory(transformed[0].id);
       }
@@ -145,7 +127,7 @@ export default function Messenger() {
         }
         return conv;
       });
-      updated.sort((a, b) => b.lastActivity - a.lastActivity);
+      updated.sort((a, b) => (b.lastActivity || 0) - (a.lastActivity || 0));
       setConversations(updated);
       setSelectedConv(updated.find(c => c.id === selectedConv.id));
     }
@@ -162,6 +144,28 @@ export default function Messenger() {
     };
   }, []);
 
+  // Lorsque location.state contient une conversation et un consultant (depuis LandingEntreprise)
+  useEffect(() => {
+    if (location.state && location.state.conversation) {
+      // Transformation éventuelle de la conversation
+      const convFromLanding = transformConversation(location.state.conversation);
+      setConversations(prev => {
+        const exists = prev.find(c => c.id === convFromLanding.id);
+        let updated;
+        if (exists) {
+          updated = prev.map(c => c.id === convFromLanding.id ? convFromLanding : c);
+        } else {
+          updated = [convFromLanding, ...prev];
+        }
+        // Tri par dernière activité
+        updated.sort((a, b) => (b.lastActivity || 0) - (a.lastActivity || 0));
+        return updated;
+      });
+      setSelectedConv(convFromLanding);
+      loadConversationHistory(convFromLanding.id);
+    }
+  }, [location.state]);
+
   // Scroller en bas lorsqu’on ajoute un nouveau message
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -169,23 +173,7 @@ export default function Messenger() {
     }
   }, [selectedConv?.messages]);
 
-  // Ouverture auto depuis location.state
-  useEffect(() => {
-    if (location.state && location.state.mission && !autoOpenedRef.current) {
-      const mission = location.state.mission;
-      if (mission.entreprise && mission.entreprise.email) {
-        const userFromMission = {
-          email: mission.entreprise.email,
-          avatar: mission.entreprise.photoprofile || "/default-avatar.png",
-          name: mission.entreprise.nomentreprise || mission.entreprise.nom
-        };
-        handleUserSelected(userFromMission);
-        autoOpenedRef.current = true;
-      }
-    }
-  }, [location.state]);
-
-  // Sélection d’un utilisateur
+  // Sélection d’un utilisateur (pour créer une nouvelle conversation)
   const handleUserSelected = async (user) => {
     try {
       let conversation = await createConversation(currentUser, user.email);
@@ -194,7 +182,7 @@ export default function Messenger() {
       setConversations(prev => {
         const exists = prev.some(conv => conv.id === conversation.id);
         if (!exists) {
-          return [...prev, conversation];
+          return [conversation, ...prev];
         }
         return prev;
       });
@@ -250,7 +238,7 @@ export default function Messenger() {
       }
       return conv;
     });
-    updated.sort((a, b) => b.lastActivity - a.lastActivity);
+    updated.sort((a, b) => (b.lastActivity || 0) - (a.lastActivity || 0));
     setConversations(updated);
     setSelectedConv(updated.find(c => c.id === selectedConv.id));
     setInputMessage("");
@@ -268,14 +256,13 @@ export default function Messenger() {
     if (!files || files.length === 0 || !selectedConv) return;
     const file = files[0];
 
-    // On crée un FormData pour envoyer le fichier en multipart/form-data
+    // Création d'un FormData pour envoyer le fichier en multipart/form-data
     const formData = new FormData();
     formData.append("file", file);
     formData.append("sender", currentUser);
     formData.append("receiver", selectedConv.partnerEmail);
 
     try {
-      // Appel du service d'upload de fichier
       const savedMessage = await uploadFileMessage(formData);
       console.log("Fichier envoyé avec succès, message sauvegardé:", savedMessage);
 
@@ -283,7 +270,6 @@ export default function Messenger() {
       const newMessage = {
         id: savedMessage.idMessage,
         sender: currentUser,
-        // On récupère la partie après " | " pour obtenir le data URL créé sur le backend.
         content: `[FILE] ${file.name} | ${savedMessage.contenu.split(" | ")[1] || ""}`,
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
       };
@@ -298,7 +284,7 @@ export default function Messenger() {
         }
         return conv;
       });
-      updated.sort((a, b) => b.lastActivity - a.lastActivity);
+      updated.sort((a, b) => (b.lastActivity || 0) - (a.lastActivity || 0));
       setConversations(updated);
       setSelectedConv(updated.find(c => c.id === selectedConv.id));
     } catch (error) {
@@ -334,12 +320,10 @@ export default function Messenger() {
   }, [sortCriteria]);
 
   const onEmojiClick = (emojiData, event) => {
-    // Vous pouvez soit ajouter l'emoji à la fin du texte actuel, soit le remplacer
     setInputMessage((prev) => prev + emojiData.emoji);
     setShowEmojiPicker(false);
   };
 
-  // Modifiez la fonction de clic sur l'icône Emoji pour afficher/masquer le picker
   const handleEmojiIconClick = () => {
     setShowEmojiPicker((prev) => !prev);
   };
@@ -420,13 +404,22 @@ export default function Messenger() {
                   className={msg.sender === currentUser ? styles.messageMe : styles.messageOther}
                 >
                   <div className={styles.messageText}>
-                    {renderMessageContent(msg)}
+                    {msg.content.startsWith("[FILE]") 
+                      ? (() => {
+                          const parts = msg.content.split(" | ");
+                          const fileName = parts[0].replace("[FILE] ", "");
+                          const dataUrl = parts[1];
+                          return dataUrl.startsWith("data:image") 
+                            ? <img src={dataUrl} alt={fileName} style={{ maxWidth: "200px" }} />
+                            : <a href={dataUrl} download={fileName}>{fileName}</a>;
+                        })() 
+                      : <span>{msg.content}</span>}
                   </div>
                   <div className={styles.messageTime}>{msg.time}</div>
                 </motion.div>
               ))
             }
-            {/* Réf invisible pour scroller en bas */}
+            {/* Référence invisible pour scroller en bas */}
             <div ref={messagesEndRef} />
           </div>
 
@@ -435,7 +428,6 @@ export default function Messenger() {
             {/* Icône Fichier (à gauche) */}
             <div className={styles.iconLeft} onClick={handleFileIconClick}>
               <Paperclip size={20} />
-              {/* Input masqué pour sélectionner les fichiers */}
               <input
                 type="file"
                 ref={fileInputRef}
@@ -456,8 +448,7 @@ export default function Messenger() {
             />
 
             {/* Icône Emoji (à droite) */}
-
-              <div className={styles.iconRight} onClick={handleEmojiIconClick}>
+            <div className={styles.iconRight} onClick={handleEmojiIconClick}>
               <Smile size={20} />
             </div>
 
@@ -466,8 +457,7 @@ export default function Messenger() {
               <Send size={20} />
             </button>
           </div>
-                    {/* Render the Emoji Picker */}
-                    {showEmojiPicker && (
+          {showEmojiPicker && (
             <div className={styles.emojiPickerContainer}>
               <EmojiPicker onEmojiClick={onEmojiClick} />
             </div>

@@ -1,7 +1,6 @@
-
 // src/components/UserInformation.js
 import React, { useState, Suspense, useEffect } from 'react';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { Formik, Form, Field, ErrorMessage, useFormikContext } from 'formik';
 import * as Yup from 'yup';
 import CreatableSelect from 'react-select/creatable';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -13,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import L from 'leaflet';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import styles from './UserInformation.module.css';
 import UserService from '../Services/UserService';
 import ConsultantService from '../Services/ConsultantService';
@@ -21,11 +20,11 @@ import EntrepriseService from '../Services/EntrepriseService';
 import DomaineService from '../services/DomaineService';
 import CompetenceService from '../services/CompetenceService';
 import { useNavigate } from "react-router-dom";
+import axios from 'axios';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const getSafeKey = (comp) => comp.replace(/\./g, '_');
-
 const defaultPosition = [36.8065, 10.1815];
 
 const customIcon = L.icon({
@@ -36,6 +35,53 @@ const customIcon = L.icon({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
   shadowSize: [41, 41],
 });
+
+// Clé API Openrouteservice (remplacez-la par votre clé)
+const API_KEY = '5b3ce3597851110001cf62482cbdc17076234bec8173d3b80ed1a1bf';
+
+// Reverse geocoding : coordonnées -> adresse
+const reverseGeocode = async (lat, lng) => {
+  try {
+    const response = await axios.get(
+      `https://api.openrouteservice.org/geocode/reverse?api_key=${API_KEY}&point.lat=${lat}&point.lon=${lng}`
+    );
+    if (response.data && response.data.features && response.data.features.length > 0) {
+      return response.data.features[0].properties.label;
+    }
+    return '';
+  } catch (error) {
+    console.error('Erreur dans le reverse geocoding :', error);
+    return '';
+  }
+};
+
+// Forward geocoding : adresse -> coordonnées
+const forwardGeocode = async (address) => {
+  try {
+    const response = await axios.get(
+      `https://api.openrouteservice.org/geocode/search?api_key=${API_KEY}&text=${encodeURIComponent(address)}`
+    );
+    if (response.data && response.data.features && response.data.features.length > 0) {
+      const [lng, lat] = response.data.features[0].geometry.coordinates;
+      return { lat, lng };
+    }
+    return null;
+  } catch (error) {
+    console.error('Erreur dans le géocodage direct :', error);
+    return null;
+  }
+};
+
+// Composant pour recentrer la carte
+function MapUpdater({ latitude, longitude }) {
+  const map = useMap();
+  useEffect(() => {
+    if (latitude && longitude) {
+      map.setView([latitude, longitude], map.getZoom(), { animate: true });
+    }
+  }, [latitude, longitude, map]);
+  return null;
+}
 
 function ClickableMap({ latitude, longitude, onLocationSelect }) {
   const MapClickHandler = () => {
@@ -65,6 +111,8 @@ function ClickableMap({ latitude, longitude, onLocationSelect }) {
         attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+      {/* Composant pour mettre à jour la vue de la carte */}
+      <MapUpdater latitude={latitude} longitude={longitude} />
       <MapClickHandler />
       {(latitude && longitude) && (
         <Marker position={[latitude, longitude]} icon={customIcon}>
@@ -105,7 +153,7 @@ const Step2Schema = Yup.object().shape({
   experienceYears: Yup.number()
     .required('Champ requis')
     .typeError('Doit être un nombre'),
-  budgetMin: Yup.number()
+  taux_horaire: Yup.number()
     .required('Champ requis')
     .typeError('Doit être un nombre'),
 });
@@ -130,15 +178,36 @@ const StarRating = ({ rating, onChange }) => {
   );
 };
 
+// Composant personnalisé pour le champ adresse (déclenche géocodage direct au blur)
+const AddressField = ({ field, form, ...props }) => {
+  const { setFieldValue } = form;
+  const handleBlur = async (e) => {
+    field.onBlur(e);
+    const address = e.target.value;
+    if (address) {
+      const coords = await forwardGeocode(address);
+      if (coords) {
+        setFieldValue('latitude', coords.lat);
+        setFieldValue('longitude', coords.lng);
+        toast.success(`Coordonnées mises à jour: lat ${coords.lat}, lng ${coords.lng}`);
+      } else {
+        toast.error("Impossible de géocoder cette adresse.");
+      }
+    }
+  };
+
+  return <input {...field} {...props} onBlur={handleBlur} />;
+};
+
 const UserInformation = () => {
   const user = JSON.parse(localStorage.getItem("user")) || {};
-  // Valeurs initiales
   const initialValues = {
     nom: user?.nom || '',
     prenom: user?.prenom || '',
     email: user?.email || '',
     password: user?.password || '',
     photoprofile: user?.photoprofile || '',
+    adresse: user?.adresse || '',
     latitude: user?.latitude || '',
     longitude: user?.longitude || '',
     domaines: user?.domaines || [],
@@ -153,7 +222,6 @@ const UserInformation = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState(null);
 
-  // États pour récupérer domaines et compétences depuis la base
   const [fetchedDomaines, setFetchedDomaines] = useState([]);
   const [fetchedCompetences, setFetchedCompetences] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
@@ -174,9 +242,7 @@ const UserInformation = () => {
     fetchData();
   }, []);
 
-  // Transformation des données en options pour react-select
   const domainOptions = fetchedDomaines.map(d => ({ value: d.nom, label: d.nom }));
-  // Filtrer les doublons par nom (en ignorant la casse)
   const competenceOptions = Array.from(
     new Map(
       fetchedCompetences.map(c => [c.nom.toLowerCase(), { value: c.nom, label: c.nom }])
@@ -224,8 +290,7 @@ const UserInformation = () => {
       const storedUser = JSON.parse(localStorage.getItem("user"));
       const userId = storedUser?.id;
       if (values.photoprofile) {
-        const updatedUserPic = await UserService.updateProfilePicture(userId, values.photoprofile);
-        console.log("Updated profile picture:", updatedUserPic);
+        await UserService.updateProfilePicture(userId, values.photoprofile);
       }
       
       const transformedCompetences = values.competences.map(comp => ({
@@ -237,11 +302,7 @@ const UserInformation = () => {
         const existing = fetchedDomaines.find(
           d => d.nom.toLowerCase() === dom.toLowerCase()
         );
-        if (existing) {
-          return { id: existing.id, nom: existing.nom };
-        } else {
-          return { nom: dom };
-        }
+        return existing ? existing : { nom: dom, category: null };
       });
       
       const consultantData = {
@@ -256,16 +317,14 @@ const UserInformation = () => {
         domaines: transformedDomaines,
         portfolio: values.portfolio,
         experienceYears: values.experienceYears,
-        budgetMin: values.budgetMin,
+        taux_horaire: values.taux_horaire,
         latitude: values.latitude,
         longitude: values.longitude,
         workload: values.workload || 0,
       };
       
       const newConsultant = await ConsultantService.updateConsultant(userId, consultantData);
-
       localStorage.setItem("Consultant", JSON.stringify(newConsultant));
-      console.log(newConsultant)
       if (newConsultant) {
         navigate("/SignupSuccess");
       }
@@ -291,6 +350,7 @@ const UserInformation = () => {
     ],
   };
 
+  // Étape 1 pour les consultants : affichage du formulaire et de la carte interactive
   const renderConsultantStep = (values, setFieldValue, isSubmitting, isValid) => {
     return (
       <AnimatePresence exitBeforeEnter>
@@ -318,8 +378,14 @@ const UserInformation = () => {
               <Field type="text" name="telephone" placeholder="Téléphone" className="form-control" />
               <ErrorMessage name="telephone" component="div" className="text-danger" />
             </div>
+            {/* Utilisation du composant AddressField pour mettre à jour l'adresse et les coordonnées */}
             <div className="mb-3">
-              <Field type="text" name="adresse" placeholder="Adresse" className="form-control" />
+              <Field
+                name="adresse"
+                placeholder="Adresse"
+                className="form-control"
+                component={AddressField}
+              />
               <ErrorMessage name="adresse" component="div" className="text-danger" />
             </div>
             <div className="mb-3">
@@ -345,9 +411,17 @@ const UserInformation = () => {
                 <LazyClickableMap
                   latitude={values.latitude}
                   longitude={values.longitude}
-                  onLocationSelect={(lat, lng) => {
+                  onLocationSelect={async (lat, lng) => {
+                    // Mise à jour via clic sur la carte (reverse geocoding)
                     setFieldValue('latitude', lat);
                     setFieldValue('longitude', lng);
+                    const address = await reverseGeocode(lat, lng);
+                    if (address) {
+                      setFieldValue('adresse', address);
+                      toast.success(`Adresse mise à jour : ${address}`);
+                    } else {
+                      toast.error("Impossible de récupérer l'adresse pour ces coordonnées.");
+                    }
                   }}
                 />
               </Suspense>
@@ -434,7 +508,7 @@ const UserInformation = () => {
               <Field type="number" name="experienceYears" placeholder="Expérience (années)" className="form-control" />
             </div>
             <div className="mb-3">
-              <Field type="number" name="budgetMin" placeholder="Budget Min" className="form-control" />
+              <Field type="number" name="taux_horaire" placeholder="Taux Horaire" className="form-control" />
             </div>
             <div className="d-flex justify-content-between mt-3">
               <Button variant="secondary" onClick={() => setCurrentStep(1)}>
@@ -506,7 +580,7 @@ const UserInformation = () => {
         <ErrorMessage name="telephone" component="div" className="text-danger" />
       </div>
       <div className="mb-3">
-        <Field type="text" name="adresse" placeholder="Adresse" className="form-control" required />
+        <Field type="text" name="adresse" placeholder="Adresse" className="form-control" required component={AddressField} />
         <ErrorMessage name="adresse" component="div" className="text-danger" />
       </div>
       <div className="mb-3">
@@ -525,14 +599,22 @@ const UserInformation = () => {
       </div>
       <div className="mb-3">
         <Suspense fallback={<div>Chargement de la carte...</div>}>
-          <LazyClickableMap
-            latitude={values.latitude}
-            longitude={values.longitude}
-            onLocationSelect={(lat, lng) => {
-              setFieldValue('latitude', lat);
-              setFieldValue('longitude', lng);
-            }}
-          />
+        <LazyClickableMap
+          latitude={values.latitude}
+        longitude={values.longitude}
+        onLocationSelect={async (lat, lng) => {
+          setFieldValue('latitude', lat);
+          setFieldValue('longitude', lng);
+          const address = await reverseGeocode(lat, lng);
+          if (address) {
+            setFieldValue('adresse', address);
+            toast.success(`Adresse mise à jour : ${address}`);
+          } else {
+            toast.error("Impossible de récupérer l'adresse pour ces coordonnées.");
+          }
+  }}
+/>
+
         </Suspense>
         <Button variant="secondary" size="sm" onClick={() => resetLocation(setFieldValue)} className="mt-2">
           Réinitialiser la localisation
@@ -562,7 +644,7 @@ const UserInformation = () => {
     <>
       <div className="container my-5">
         <ToastContainer />
-        <h2 className="text-center mb-4">Formulaire d&lsquo;Inscription</h2>
+        <h2 className="text-center mb-4">Formulaire d’Inscription</h2>
         {userRole === '' ? (
           <div className="d-flex justify-content-center gap-3">
             <motion.div
@@ -649,7 +731,7 @@ const UserInformation = () => {
               <p><strong>Domaines:</strong> {modalData.domaines.join(', ')}</p>
               <p><strong>Portfolio:</strong> {modalData.portfolio}</p>
               <p><strong>Expérience (années):</strong> {modalData.experienceYears}</p>
-              <p><strong>Budget Min:</strong> {modalData.budgetMin}</p>
+              <p><strong>Taux Horaire:</strong> {modalData.taux_horaire}</p>
               {modalData.competences && modalData.competences.length > 0 && (
                 <div className="mt-3">
                   <h5>Visualisation du Profil de Compétences</h5>

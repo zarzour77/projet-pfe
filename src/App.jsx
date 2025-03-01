@@ -15,12 +15,13 @@ import SearchMission from "./components/SearchMission";
 import StatsConsultant from "./components/statsconsultant";
 import PublierMission from "./components/PublierMission";
 import Home from "./components/Home";
-
+import LandingEntreprise from "./components/LandingEntreprise";
 
 const App = () => {
   return (
     <Router>
       <Routes>
+        <Route path="/" element={<Home /> }  />
         <Route path="/login" element={<Login /> }  />
         <Route path="/SignupSuccess" element={<SignupSuccess /> }  />
         <Route path="/CreateProfile" element={<CreateProfile /> }  />
@@ -37,6 +38,7 @@ const App = () => {
         <Route path="/StatsConsultant" element={<StatsConsultant /> }  />
         <Route path="/PublierMission" element={<PublierMission /> }  />
         <Route path="/Home" element={<Home /> }  />
+        <Route path="/LandingEntreprise" element={<LandingEntreprise /> }  />
 
       </Routes>
     </Router>
