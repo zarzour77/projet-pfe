@@ -4,6 +4,9 @@ import com.example.demo.model.Consultant;
 import com.example.demo.model.Experience;
 import com.example.demo.repository.ConsultantRepository;
 import com.example.demo.repository.ExperienceRepository;
+import com.example.demo.model.Mission;
+import com.example.demo.repository.ConsultantRepository;
+import com.example.demo.repository.MissionRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,8 +17,11 @@ import java.util.Optional;
 
 @Service
 public class ConsultantService {
+    @Autowired
     private final ConsultantRepository consultantRepository;
     private final ExperienceRepository experienceRepository;
+    @Autowired
+    private MissionRepository missionRepository;
     @Autowired
     public ConsultantService(ConsultantRepository consultantRepository, ExperienceRepository experienceRepository) {
         this.consultantRepository = consultantRepository;
@@ -96,8 +102,8 @@ public class ConsultantService {
             if (updatedConsultant.getDomaines() != null) {
                 consultant.setDomaines(updatedConsultant.getDomaines());
             }
-            if (updatedConsultant.getBudgetMin() != null) {
-                consultant.setBudgetMin(updatedConsultant.getBudgetMin());
+            if (updatedConsultant.getTaux_horaire() != null) {
+                consultant.setTaux_horaire(updatedConsultant.getTaux_horaire());
             }
             if (updatedConsultant.getExperiences() != null) {
                 consultant.setExperiences(updatedConsultant.getExperiences());
@@ -145,4 +151,28 @@ public class ConsultantService {
         return "Experience deleted successfully!";
     }
 
+
+    public Consultant saveMissionForConsultant(Long consultantId, Long missionId) {
+        Consultant consultant = consultantRepository.findById(consultantId)
+                .orElseThrow(() -> new RuntimeException("Consultant non trouvé"));
+        Mission mission = missionRepository.findById(missionId)
+                .orElseThrow(() -> new RuntimeException("Mission non trouvée"));
+
+        List<Mission> savedMissions = consultant.getSavedMissions();
+        if (savedMissions == null) {
+            savedMissions = new ArrayList<>();
+        }
+        // Ajoute la mission si elle n'est pas déjà sauvegardée
+        if (!savedMissions.contains(mission)) {
+            savedMissions.add(mission);
+        }
+        consultant.setSavedMissions(savedMissions);
+        return consultantRepository.save(consultant);
+    }
+
+    public List<Mission> getSavedMissionsForConsultant(Long consultantId) {
+        Consultant consultant = consultantRepository.findById(consultantId)
+                .orElseThrow(() -> new RuntimeException("Consultant non trouvé"));
+        return consultant.getSavedMissions();
+    }
 }

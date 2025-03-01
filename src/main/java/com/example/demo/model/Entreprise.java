@@ -23,7 +23,6 @@ public class Entreprise extends User {
     @JsonIgnore
     @OneToMany(mappedBy = "auteur", fetch = FetchType.LAZY)
     private List<Avis> avisDonnes; // Reviews given by this entreprise (should target consultants)
-
     @JsonIgnore
     @OneToMany(mappedBy = "cible", fetch = FetchType.LAZY)
     private List<Avis> avisRecus; // Reviews received by this entreprise (should come from consultants)

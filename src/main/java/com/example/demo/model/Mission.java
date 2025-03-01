@@ -56,10 +56,11 @@ public class Mission {
     private String portetravail;
     private String dureeEstime;
     private String niveauExperienceRequis;
+    private Date PublishedAt;
 
     public Mission() {}
 
-    public Mission(Double budget, List<Competence> competencesRequises, String description, List<Domaine> domaines, String dureeEstime, Date enddate, Entreprise entreprise, Long id, double latitude, String logo, double longitude, double matchScore, String niveauExperienceRequis, String portetravail, List<Proposition> propositions, int requiredExperience, Date startdate, String statut, String titre) {
+    public Mission(Double budget, List<Competence> competencesRequises, String description, List<Domaine> domaines, String dureeEstime, Date enddate, Entreprise entreprise, Long id, double latitude, String logo, double longitude, double matchScore, String niveauExperienceRequis, String portetravail, List<Proposition> propositions, Date publishedAt, int requiredExperience, Date startdate, String statut, String titre) {
         this.budget = budget;
         this.competencesRequises = competencesRequises;
         this.description = description;
@@ -75,10 +76,19 @@ public class Mission {
         this.niveauExperienceRequis = niveauExperienceRequis;
         this.portetravail = portetravail;
         this.propositions = propositions;
+        PublishedAt = publishedAt;
         this.requiredExperience = requiredExperience;
         this.startdate = startdate;
         this.statut = statut;
         this.titre = titre;
+    }
+
+    public Date getPublishedAt() {
+        return PublishedAt;
+    }
+
+    public void setPublishedAt(Date publishedAt) {
+        PublishedAt = publishedAt;
     }
 
     // Getters et setters

@@ -6,40 +6,53 @@ import jakarta.persistence.*;
 
 import java.util.List;
 
-@Entity
-@JsonIgnoreProperties({"missions", "consultants"})
-public class Domaine {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Entity
+    @JsonIgnoreProperties({"missions", "consultants"})
+    public class Domaine {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String nom;
+        @Column(nullable = false, unique = true)
+        private String nom;
 
 
-    // Association inverse pour Mission
-    @ManyToMany(mappedBy = "domaines")
-    private List<Mission> missions;
+        // Association inverse pour Mission
+        @ManyToMany(mappedBy = "domaines")
+        private List<Mission> missions;
 
-    // Association inverse pour Consultant
-    @ManyToMany(mappedBy = "domaines")
-    private List<Consultant> consultants;
+        // Association inverse pour Consultant
+        @ManyToMany(mappedBy = "domaines")
+        private List<Consultant> consultants;
+
+        private String category;
 
     public Domaine() {
     }
 
-    public Domaine(String nom) {
+    public Domaine(String category, List<Consultant> consultants, Long id, List<Mission> missions, String nom) {
+        this.category = category;
+        this.consultants = consultants;
+        this.id = id;
+        this.missions = missions;
         this.nom = nom;
     }
 
-    public Domaine(Long id, String nom,  List<Mission> missions, List<Consultant> consultants) {
-        this.id = id;
+    public Domaine(String nom, String category) {
         this.nom = nom;
-        this.missions = missions;
-        this.consultants = consultants;
+        this.category = category;
     }
 
     // Getters et setters
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
     public Long getId() {
         return id;
     }
