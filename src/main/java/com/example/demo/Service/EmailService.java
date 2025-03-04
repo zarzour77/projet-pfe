@@ -1,56 +1,44 @@
 package com.example.demo.Service;
-
-import com.example.demo.model.User;
-import com.example.demo.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 
 @Service
 public class EmailService {
-
-    private final JavaMailSender mailSender;
-    private final UserRepository userRepository;
-
     @Autowired
-    public EmailService(JavaMailSender mailSender, UserRepository userRepository) {
-        this.mailSender = mailSender;
-        this.userRepository = userRepository;
-    }
+    private JavaMailSender mailSender;
 
-
-    public void sendRenewalConfirmation(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé avec l'id: " + userId));
-        String toEmail = user.getEmail();
-        if (toEmail == null || toEmail.isEmpty()) {
-            throw new IllegalArgumentException("L'email de l'utilisateur est invalide");
-        }
-
+    public void sendVerificationEmail(String to, String code) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("noreply@votresite.com"); // Remplacez par votre adresse d'envoi
-        message.setTo(toEmail);
-        message.setSubject("Confirmation de renouvellement");
-        message.setText("Cher " + user.getNom() + ",\n\nVotre abonnement a été renouvelé avec succès.");
+        message.setTo(to);
+        message.setSubject("Vérification de votre adresse email");
+        message.setText("Votre code de vérification est : " + code);
         mailSender.send(message);
     }
+    public void sendApplicationEmail(String to, String subject, String content, byte[] attachmentBytes, String attachmentFilename) {
+        MimeMessage message = mailSender.createMimeMessage();
+        try {
+            // "true" pour multipart (pièces jointes)
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(content, false); // false => contenu en texte brut, true pour HTML
 
-
-    public void sendPaymentFailureNotification(Long userId, String errorMessage) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé avec l'id: " + userId));
-        String toEmail = user.getEmail();
-        if (toEmail == null || toEmail.isEmpty()) {
-            throw new IllegalArgumentException("L'email de l'utilisateur est invalide");
+            if (attachmentBytes != null && attachmentBytes.length > 0) {
+                helper.addAttachment(attachmentFilename, new ByteArrayResource(attachmentBytes));
+            }
+            mailSender.send(message);
+            System.out.println("Email d'application envoyé à " + to);
+        } catch (MessagingException e) {
+            System.err.println("Erreur lors de l'envoi de l'email d'application: " + e.getMessage());
+            e.printStackTrace();
         }
-
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("noreply@votresite.com"); // Remplacez par votre adresse d'envoi
-        message.setTo(toEmail);
-        message.setSubject("Échec de paiement");
-        message.setText("Cher " + user.getNom() + ",\n\nNous avons rencontré un problème lors du renouvellement de votre abonnement : "
-                + errorMessage);
-        mailSender.send(message);
     }
 }

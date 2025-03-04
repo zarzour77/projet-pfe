@@ -36,7 +36,7 @@ public class PropositionController {
         return propositionService.createProposition(proposition);
     }
 
-    @PutMapping("/{id}")
+   /* @PutMapping("/{id}")
     public ResponseEntity<Proposition> updateProposition(@PathVariable Long id, @RequestBody Proposition proposition) {
         try {
             Proposition updatedProposition = propositionService.updateProposition(id, proposition);
@@ -44,12 +44,19 @@ public class PropositionController {
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
-    }
+    }*/
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProposition(@PathVariable Long id) {
         propositionService.deleteProposition(id);
         return ResponseEntity.noContent().build();
+    }
+    @PostMapping("/invite")
+    public Proposition inviteConsultant(@RequestBody Proposition proposition) {
+        // On force l'origine à INVITED dans le cas d'une invitation
+        proposition.setOrigine("INVITED");
+        // Vous pouvez ajouter ici d'autres logiques spécifiques aux invitations
+        return propositionService.createProposition(proposition);
     }
 }
 

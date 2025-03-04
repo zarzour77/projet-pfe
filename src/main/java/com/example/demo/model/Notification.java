@@ -1,6 +1,7 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
+import java.util.Date;
 
 @Entity
 public class Notification {
@@ -8,60 +9,63 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Notification message (e.g., "A consultant applied for your mission X")
+    private String message;
+
+    // Indicates if the notification has been read
+    private boolean readStatus;
+
+    // Creation date of the notification
+    private Date createdAt;
+
+    // Reference to the User (which can be an enterprise or consultant)
     @ManyToOne
-    @JoinColumn(name = "utilisateur_id")
+    @JoinColumn(name = "user_id")
     private User user;
 
-    private String message;
-    private Boolean estLu;
-    private String type;
     public Notification() {}
 
-    public Notification(Boolean estLu, Long id, String message, String type, User user) {
-        this.estLu = estLu;
-        this.id = id;
+    public Notification(String message, User user) {
         this.message = message;
-        this.type = type;
         this.user = user;
     }
 
-    public Boolean getEstLu() {
-        return estLu;
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = new Date();
+        this.readStatus = false;
     }
 
-    public void setEstLu(Boolean estLu) {
-        this.estLu = estLu;
-    }
+    // Getters and setters
 
     public Long getId() {
         return id;
     }
-
     public void setId(Long id) {
         this.id = id;
     }
-
     public String getMessage() {
         return message;
     }
-
     public void setMessage(String message) {
         this.message = message;
     }
-
-    public String getType() {
-        return type;
+    public boolean isReadStatus() {
+        return readStatus;
     }
-
-    public void setType(String type) {
-        this.type = type;
+    public void setReadStatus(boolean readStatus) {
+        this.readStatus = readStatus;
     }
-
-    public User getUtilisateur() {
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
+    public User getUser() {
         return user;
     }
-
-    public void setUtilisateur(User user) {
+    public void setUser(User user) {
         this.user = user;
     }
 }
