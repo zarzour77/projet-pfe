@@ -290,7 +290,7 @@ const UserInformation = () => {
       const storedUser = JSON.parse(localStorage.getItem("user"));
       const userId = storedUser?.id;
       if (values.photoprofile) {
-        await UserService.updateProfilePicture(userId, values.photoprofile);
+        await UserService.uploadProfilePicture(userId, values.photoprofile);
       }
       
       const transformedCompetences = values.competences.map(comp => ({
@@ -538,7 +538,7 @@ const UserInformation = () => {
       const storedUser = JSON.parse(localStorage.getItem("user"));
       const userId = storedUser?.id;
       if (values.photoprofile) {
-        await UserService.updateProfilePicture(userId, values.photoprofile);
+        await UserService.uploadProfilePicture(userId, values.photoprofile);
       }
       const entrepriseData = {
         nom: values.nom,

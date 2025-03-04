@@ -82,23 +82,23 @@ const UserService = {
     }
   },
   // New function: update the user's profile picture
-  updateProfilePicture: async (userId, file) => {
+  uploadProfilePicture: async (id, file) => {
     try {
       const formData = new FormData();
       formData.append("file", file);
       const response = await axios.post(
-        `${API_URL}/${userId}/uploadProfilePic`, // Use POST here
+        `${API_URL}/${id}/uploadProfilePic`,
         formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
+            "Content-Type": "multipart/form-data",
           },
         }
       );
       return response.data;
     } catch (error) {
-      console.error("Error updating profile picture:", error);
+      console.error("Error uploading profile picture:", error);
       throw error;
     }
   }

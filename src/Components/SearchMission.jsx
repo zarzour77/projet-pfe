@@ -1,50 +1,58 @@
-import { useState, useEffect } from 'react';
+import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 import { FaList, FaTh } from 'react-icons/fa';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { formatDistanceToNow } from 'date-fns';
-import { PieChart, Pie, Tooltip as ReTooltip, Legend, Cell } from 'recharts';
 
 // Material UI components
 import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import Select from '@mui/material/Select';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
 import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import TextField from '@mui/material/TextField';
 import MUITooltip from '@mui/material/Tooltip';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 // Importation du CSS
 import styles from './SearchMission.module.css';
 
 // Services API
-import { 
-  getMissions, 
-  getMissionsByDomaine, 
-  getMissionsByExperience, 
-  getMissionsByPorteDeTravail,
-  getMissionsByBudgetRange,
-  getMissionsByDureeEstime,
-  saveMissionForConsultant,
-  getSavedMissions
-} from '../services/SearchMission';
-import DomaineService from '../services/DomaineService';
 import { useNavigate } from 'react-router-dom';
+import DomaineService from '../services/DomaineService';
+import {
+  applyToMission // nouvelle fonction pour appliquer à une mission
+  ,
 
-// Création du thème Material‑UI avec la palette demandée
+
+
+  getMissions,
+  getMissionsByBudgetRange,
+  getMissionsByDomaine,
+  getMissionsByDureeEstime,
+  getMissionsByExperience,
+  getMissionsByPorteDeTravail,
+  getSavedMissions,
+  saveMissionForConsultant
+} from '../services/SearchMission';
+
+// Création du thème Material‑UI
 const theme = createTheme({
   palette: {
     primary: {
-      main: "#009990", // Couleur principale
+      main: "#009990",
     },
     secondary: {
-      main: "#074799", // Élément secondaire
+      main: "#074799",
     },
     background: {
-      default: "#E1FFBB", // Arrière‑plan global
+      default: "#E1FFBB",
     },
     text: {
-      primary: "#001A6E", // Couleur du texte principal
+      primary: "#001A6E",
     }
   },
   typography: {
@@ -62,28 +70,25 @@ function SearchMission() {
   const [budgetRange, setBudgetRange] = useState('');
   const [dureeEstime, setDureeEstime] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [viewMode, setViewMode] = useState('list'); // "list" ou "grid"
+  const [viewMode, setViewMode] = useState('list');
   const [showFilters, setShowFilters] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [missions, setMissions] = useState([]);
   const [domainesOptions, setDomainesOptions] = useState([]);
-  const [sortOption, setSortOption] = useState("newest"); // "newest" ou "oldest"
+  const [sortOption, setSortOption] = useState("newest");
   const [showSaved, setShowSaved] = useState(false);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // Palette pour le PieChart
-  const COLORS = [
-    '#E1FFBB', // Vert pâle
-    '#009990', // Turquoise
-    '#66D2CE', // Turquoise clair
-    '#074799', // Bleu foncé
-    '#001A6E', // Bleu nuit
-    '#FF9B4E', // Orange doux
-    '#F9A8D4'  // Rose pastel
-  ];
+  // États pour le modal d'application
+  const [showApplyModal, setShowApplyModal] = useState(false);
+  const [selectedMission, setSelectedMission] = useState(null);
+  const [propositionMontant, setPropositionMontant] = useState('');
+  const [propositionDuree, setPropositionDuree] = useState('');
+  const [propositionMessage, setPropositionMessage] = useState('');
+
 
   // Chargement des domaines depuis le backend
   useEffect(() => {
@@ -148,8 +153,6 @@ function SearchMission() {
         apiCall = getMissionsByBudgetRange(minBudget, maxBudget);
       } else if (dureeEstime) apiCall = getMissionsByDureeEstime(dureeEstime);
     } else if (filtersSelected > 1) {
-      // Remarque : Ici on appelle la même API que pour 1 filtre,
-      // mais idéalement on ferait un endpoint qui gère plusieurs filtres.
       if (selectedDomaine) apiCall = getMissionsByDomaine([selectedDomaine]);
       else if (experience) apiCall = getMissionsByExperience(experience);
       else if (portetravail) apiCall = getMissionsByPorteDeTravail(portetravail);
@@ -163,7 +166,6 @@ function SearchMission() {
 
     apiCall
       .then((data) => {
-        // Appliquer les autres filtres côté client
         let filtered = data;
         if (experience && !selectedDomaine) {
           filtered = filtered.filter(m =>
@@ -195,33 +197,21 @@ function SearchMission() {
   }, [selectedDomaine, experience, portetravail, budgetRange, dureeEstime, showSaved]);
 
   /**
-   * Filtrage client sur le mot-clé :
-   *  - Titre
-   *  - Description
-   *  - Nom des domaines
-   *  - Nom des compétences
+   * Filtrage client sur le mot-clé : Titre, Description, Domaines, Compétences
    */
   const filteredMissions = missions.filter(mission => {
     if (!searchKeyword) return true;
-
     const lowerKeyword = searchKeyword.toLowerCase();
-
-    // Vérifie si le titre ou la description contiennent le mot-clé
     const inTitleOrDescription = (
       mission.titre.toLowerCase().includes(lowerKeyword) ||
       mission.description.toLowerCase().includes(lowerKeyword)
     );
-
-    // Vérifie si un des domaines contient le mot-clé
     const inDomaines = mission.domaines && mission.domaines.some(d =>
       d.nom && d.nom.toLowerCase().includes(lowerKeyword)
     );
-
-    // Vérifie si une des compétences contient le mot-clé
     const inCompetences = mission.competencesRequises && mission.competencesRequises.some(c =>
       c.nom && c.nom.toLowerCase().includes(lowerKeyword)
     );
-
     return inTitleOrDescription || inDomaines || inCompetences;
   });
 
@@ -238,33 +228,6 @@ function SearchMission() {
   const currentMissions = sortedMissions.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(sortedMissions.length / itemsPerPage);
 
-  // Calculs pour dashboard : statistiques & graphique
-  const budgetsList = sortedMissions.map(m => m.budget).filter(b => !isNaN(b));
-  const avgBudget = budgetsList.length
-    ? (budgetsList.reduce((a, b) => a + b, 0) / budgetsList.length).toFixed(0)
-    : 0;
-  const totalMissions = sortedMissions.length;
-
-  // Graphique par catégories (basé sur le champ "category" des domaines)
-  const chartCategories = ["Design", "Development & IT", "Proofreading", "Writing", "SEO", "Marketing", "Others"];
-  const distributionCount = {};
-  chartCategories.forEach(cat => distributionCount[cat] = 0);
-  sortedMissions.forEach(mission => {
-    if (mission.domaines && mission.domaines.length > 0) {
-      const missionCats = new Set();
-      mission.domaines.forEach(domain => {
-        const cat = domain.category ? domain.category : "Others";
-        missionCats.add(cat);
-      });
-      missionCats.forEach(cat => distributionCount[cat]++);
-    } else {
-      distributionCount["Others"]++;
-    }
-  });
-  const distributionData = Object.entries(distributionCount)
-    .filter(([cat, count]) => count > 0)
-    .map(([cat, count]) => ({ name: cat, value: count }));
-
   const clearFilters = () => {
     setSelectedDomaine('');
     setExperience('');
@@ -274,7 +237,7 @@ function SearchMission() {
     setSearchKeyword('');
   };
 
-  // Fonction pour sauvegarder une mission (avec tooltip explicatif)
+  // Fonction pour sauvegarder une mission
   const handleSaveJob = (missionId) => {
     const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
     const consultantId = storedUser?.user?.id || storedUser?.id;
@@ -319,6 +282,49 @@ function SearchMission() {
     navigate('/Messenger', { state: { mission } });
   };
 
+  // Ouvrir le modal d'application et sauvegarder la mission sélectionnée
+  const handleApplyClick = (mission) => {
+    setSelectedMission(mission);
+    setShowApplyModal(true);
+  };
+
+  // Fermer le modal et réinitialiser les champs
+  const handleCloseApplyModal = () => {
+    setShowApplyModal(false);
+    setSelectedMission(null);
+    setPropositionMontant('');
+    setPropositionDuree('');
+  };
+
+  // Envoyer la proposition via l'API
+  const handleSubmitProposition = () => {
+    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+    const consultantId = storedUser?.user?.id || storedUser?.id;
+    if (!consultantId) {
+      toast.error("Consultant introuvable");
+      return;
+    }
+    const propositionData = {
+      consultant: { id: consultantId },
+      mission: { id: selectedMission.id },
+      montant: parseFloat(propositionMontant),
+      dureeEstime: propositionDuree, // pas d'accents, même nom que dans l'entité
+      message: propositionMessage,    // ajouter le champ message
+      statut: "PENDING",
+      origine:"APPLIED"
+    };
+    
+
+    applyToMission(consultantId, selectedMission.id, propositionData)
+      .then(() => {
+        toast.success("Proposition envoyée !");
+        handleCloseApplyModal();
+      })
+      .catch(error => {
+        toast.error("Erreur lors de l'envoi de la proposition.");
+      });
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <div className={styles.searchMissionContainer}>
@@ -341,39 +347,7 @@ function SearchMission() {
           />
         </motion.div>
 
-        {/* Dashboard interactif avec PieChart */}
-        <div className={styles.dashboard}>
-          <div className={styles.statsSection}>
-            <div className={styles.stat}>
-              <strong>Total Missions:</strong> {totalMissions}
-            </div>
-            <div className={styles.stat}>
-              <strong>Average Budget:</strong> ${avgBudget}
-            </div>
-          </div>
-          <div className={styles.chartSection}>
-            <PieChart width={300} height={300}>
-              <Pie
-                data={distributionData}
-                cx="50%"
-                cy="50%"
-                labelLine
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                outerRadius={100}
-                fill="#074799"
-                dataKey="value"
-              >
-                {distributionData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <ReTooltip />
-              <Legend />
-            </PieChart>
-          </div>
-        </div>
-
-        {/* Barre de contrôle repositionnée sous les graphiques */}
+        {/* Barre de contrôle */}
         <motion.div
           className={styles.controlsBar}
           initial={{ y: -20 }}
@@ -558,7 +532,7 @@ function SearchMission() {
                       <Button
                         variant="contained"
                         size="small"
-                        onClick={() => toast.info("Applied!")}
+                        onClick={() => handleApplyClick(mission)}
                       >
                         Apply
                       </Button>
@@ -598,29 +572,72 @@ function SearchMission() {
         </div>
 
         {sortedMissions.length > itemsPerPage && (
-  <div className={styles.paginationContainer}>
-    <Button
-      variant="outlined"
-      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-      disabled={currentPage === 1}
-    >
-      Previous
-    </Button>
+          <div className={styles.paginationContainer}>
+            <Button
+              variant="outlined"
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
+            <span>
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outlined"
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        )}
 
-    <span>
-      Page {currentPage} of {totalPages}
-    </span>
-
-    <Button
-      variant="outlined"
-      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-      disabled={currentPage === totalPages}
-    >
-      Next
-    </Button>
-  </div>
-)}
-
+// Modal d'application dans le render
+    {showApplyModal && selectedMission && (
+      <Dialog open={true} onClose={handleCloseApplyModal}>
+        <DialogTitle>Postuler à la mission : {selectedMission.titre}</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Montant proposé"
+            type="number"
+            fullWidth
+            value={propositionMontant}
+            onChange={(e) => setPropositionMontant(e.target.value)}
+          />
+          <TextField
+            margin="dense"
+            label="Durée estimée"
+            type="text"
+            fullWidth
+            value={propositionDuree}
+            onChange={(e) => setPropositionDuree(e.target.value)}
+            helperText="Ex: 3 mois"
+          />
+          <TextField
+            margin="dense"
+            label="Votre message"
+            type="text"
+            fullWidth
+            multiline
+            rows={3}
+            value={propositionMessage}
+            onChange={(e) => setPropositionMessage(e.target.value)}
+            helperText="Expliquez brièvement votre proposition"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseApplyModal} color="primary">
+            Annuler
+          </Button>
+          <Button onClick={handleSubmitProposition} color="primary">
+            Envoyer la proposition
+          </Button>
+        </DialogActions>
+      </Dialog>
+    )}
       </div>
     </ThemeProvider>
   );

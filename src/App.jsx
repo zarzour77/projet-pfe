@@ -16,6 +16,8 @@ import StatsConsultant from "./components/statsconsultant";
 import PublierMission from "./components/PublierMission";
 import Home from "./components/Home";
 import LandingEntreprise from "./components/LandingEntreprise";
+import ProfilePage from "./components/ProfilePage";
+import Header from "./components/Header";
 
 const App = () => {
   return (
@@ -39,8 +41,10 @@ const App = () => {
         <Route path="/PublierMission" element={<PublierMission /> }  />
         <Route path="/Home" element={<Home /> }  />
         <Route path="/LandingEntreprise" element={<LandingEntreprise /> }  />
+        <Route path="/ProfilePage" element={<ProfilePage /> }  />
 
       </Routes>
+      
     </Router>
   );
 };

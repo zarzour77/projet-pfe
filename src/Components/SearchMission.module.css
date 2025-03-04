@@ -97,40 +97,6 @@
   margin-left: 0.5rem;
 }
 
-/* Dashboard */
-.dashboard {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 2rem;
-  margin-bottom: 1rem;
-  padding: 1rem;
-  border: 1px solid #eee;
-  border-radius: 4px;
-  background-color: #fff;
-}
-
-.statsSection {
-  flex: 0 0 180px;
-}
-
-.stat {
-  margin-bottom: 1rem;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.chartSection {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  overflow: visible;
-}
-
-.chartSection svg {
-  overflow: visible;
-}
-
 /* Main content */
 .mainContent {
   display: flex;
@@ -270,16 +236,6 @@
   margin-bottom: 1rem;
 }
 
-.pagination button:hover {
-  background-color: #07479910;
-}
-
-/* Graphique */
-.recharts-legend-item-text {
-  fill: #001A6E !important;
-}
-
-/* PAGINATION CENTREE */
 .paginationContainer {
   display: flex;
   justify-content: center; /* Centre horizontalement */
