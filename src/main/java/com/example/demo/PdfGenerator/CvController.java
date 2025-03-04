@@ -45,7 +45,10 @@ public class CvController {
         userDetails.put("competences", consultant.getCompetences());
         userDetails.put("experiences", consultant.getExperiences());
         userDetails.put("domaines", consultant.getDomaines());
-
+// Add new data to userDetails
+        userDetails.put("formations", consultant.getFormations());
+        userDetails.put("certifications", consultant.getCertifications());
+        userDetails.put("langues", consultant.getLangues());
         try {
             byte[] pdfBytes = cvGenerationService.generateCv(userDetails);
             HttpHeaders headers = new HttpHeaders();
@@ -78,7 +81,9 @@ public class CvController {
         userDetails.put("competences", consultant.getCompetences());
         userDetails.put("experiences", consultant.getExperiences());
         userDetails.put("domaines", consultant.getDomaines());
-
+        userDetails.put("formations", consultant.getFormations());
+        userDetails.put("certifications", consultant.getCertifications());
+        userDetails.put("langues", consultant.getLangues());
         try {
             byte[] pdfBytes = cvGenerationService.generateCv(userDetails);
             consultant.setCv(pdfBytes);

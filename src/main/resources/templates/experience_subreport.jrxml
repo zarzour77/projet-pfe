@@ -15,7 +15,6 @@
     <field name="description" class="java.lang.String"/>
 
     <detail>
-        <!-- Let each record expand if needed -->
         <band height="60" splitType="Stretch">
             <textField>
                 <reportElement x="0" y="0" width="350" height="20"/>
@@ -29,8 +28,7 @@
                 ]]></textFieldExpression>
             </textField>
 
-            <!-- Description can be multiple lines -->
-            <textField isStretchWithOverflow="true" textAdjust="StretchHeight">
+            <textField textAdjust="StretchHeight">
                 <reportElement x="20" y="25" width="250" height="20"/>
                 <textElement>
                     <font size="10"/>

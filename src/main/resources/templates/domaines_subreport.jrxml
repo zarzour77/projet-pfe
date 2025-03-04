@@ -26,15 +26,13 @@
         <initialValueExpression><![CDATA[""]]></initialValueExpression>
     </variable>
 
-    <!-- If you don't need a detail band, you can leave it empty or remove it -->
     <detail>
         <band height="1" splitType="Stretch"/>
     </detail>
 
-    <!-- Summary band outputs the concatenated domaines on one line -->
     <summary>
         <band height="20" splitType="Stretch">
-            <textField isStretchWithOverflow="true" textAdjust="StretchHeight">
+            <textField textAdjust="StretchHeight">
                 <reportElement x="10" y="0" width="525" height="20"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle"/>
                 <textFieldExpression><![CDATA[$V{ConcatenatedDomaines}]]></textFieldExpression>

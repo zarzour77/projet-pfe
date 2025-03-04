@@ -12,32 +12,37 @@ public class Competence {
     private Long id;
 
     private String nom;
-
-    private int competenceNiveaux;
+    @Column(name = "competence_niveau")
+    private String competenceNiveau;
 
     @ManyToMany(mappedBy = "competencesRequises")
     private List<Mission> missions;
 
     public Competence() {}
 
-    public Competence(int competenceNiveaux, Long id, List<Mission> missions, String nom) {
-        this.competenceNiveaux = competenceNiveaux;
+    public Competence(Long id, String nom, String competenceNiveau, List<Mission> missions) {
         this.id = id;
+        this.nom = nom;
+        setCompetenceNiveau(competenceNiveau);
         this.missions = missions;
+    }
+
+    public Competence(String nom, String competenceNiveau) {
         this.nom = nom;
+        setCompetenceNiveau(competenceNiveau);
     }
 
-    public Competence(String nom, int competenceNiveaux) {
-        this.nom = nom;
-        this.competenceNiveaux = competenceNiveaux;
+    public String getCompetenceNiveau() { // Fixed missing parenthesis
+        return competenceNiveau;
     }
 
-    public int getCompetenceNiveaux() {
-        return competenceNiveaux;
-    }
-
-    public void setCompetenceNiveaux(int competenceNiveaux) {
-        this.competenceNiveaux = competenceNiveaux;
+    public void setCompetenceNiveau(String competenceNiveau) {
+        if (!competenceNiveau.equalsIgnoreCase("débutant") &&
+                !competenceNiveau.equalsIgnoreCase("intermédiaire") &&
+                !competenceNiveau.equalsIgnoreCase("expert")) {
+            throw new IllegalArgumentException("Invalid competence level: Must be 'débutant', 'intermédiaire', or 'expert'.");
+        }
+        this.competenceNiveau = competenceNiveau;
     }
 
     public Long getId() { return id; }

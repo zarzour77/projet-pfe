@@ -13,16 +13,16 @@
         topMargin="0"
         bottomMargin="0">
 
-    <!-- Define field for the competence name -->
+    <!-- Define fields -->
     <field name="nom" class="java.lang.String"/>
+    <field name="competenceNiveau" class="java.lang.String"/>
 
     <detail>
-        <!-- Use splitType="Stretch" to allow the band to grow if there are many competences -->
         <band height="20" splitType="Stretch">
-            <!-- If competences might be long, enable stretching -->
-            <textField isStretchWithOverflow="true" textAdjust="StretchHeight">
+            <!-- Display competence name and level together -->
+            <textField textAdjust="StretchHeight">
                 <reportElement x="10" y="0" width="525" height="20"/>
-                <textFieldExpression><![CDATA[$F{nom}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{nom} + " : " + $F{competenceNiveau}]]></textFieldExpression>
             </textField>
         </band>
     </detail>

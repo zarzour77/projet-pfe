@@ -14,9 +14,9 @@
         bottomMargin="20">
 
     <!-- Define reusable styles using SansSerif instead of Helvetica -->
-    <style name="HeaderStyle"  fontSize="18" isBold="true" />
-    <style name="SubHeaderStyle"  fontSize="14" isBold="true" />
-    <style name="InfoStyle"  fontSize="12" />
+    <style name="HeaderStyle" fontSize="18" isBold="true" />
+    <style name="SubHeaderStyle" fontSize="14" isBold="true" />
+    <style name="InfoStyle" fontSize="12" />
 
     <!-- PARAMETERS -->
     <parameter name="nom" class="java.lang.String"/>
@@ -31,10 +31,17 @@
     <parameter name="competenceSubreport" class="net.sf.jasperreports.engine.JasperReport"/>
     <parameter name="domainesDataSource" class="net.sf.jasperreports.engine.JRDataSource"/>
     <parameter name="domainesSubreport" class="net.sf.jasperreports.engine.JasperReport"/>
+    <parameter name="formationsDataSource" class="net.sf.jasperreports.engine.JRDataSource"/>
+    <parameter name="formationsSubreport" class="net.sf.jasperreports.engine.JasperReport"/>
+    <parameter name="certificationsDataSource" class="net.sf.jasperreports.engine.JRDataSource"/>
+    <parameter name="certificationsSubreport" class="net.sf.jasperreports.engine.JasperReport"/>
+    <parameter name="languesDataSource" class="net.sf.jasperreports.engine.JRDataSource"/>
+    <parameter name="languesSubreport" class="net.sf.jasperreports.engine.JasperReport"/>
 
     <!-- TITLE SECTION -->
     <title>
-        <band height="120">
+        <!-- Reduced band height to 90 to remove extra white space -->
+        <band height="90">
             <!-- Consultant Name (big and bold, centered) -->
             <textField>
                 <reportElement x="0" y="10" width="535" height="30" style="HeaderStyle"/>
@@ -51,22 +58,23 @@
     </title>
 
     <!-- DETAIL SECTION -->
+    <!-- Increased band height to accommodate all sections -->
     <detail>
-        <band splitType="Stretch" height="320">
+        <band splitType="Stretch" height="700">
             <!-- CONTACT SECTION -->
             <staticText>
                 <reportElement x="0" y="0" width="535" height="20" style="SubHeaderStyle"/>
                 <text><![CDATA[Informations personnelles]]></text>
             </staticText>
-            <textField isStretchWithOverflow="true">
+            <textField textAdjust="StretchHeight">
                 <reportElement x="10" y="25" width="535" height="20" style="InfoStyle" positionType="Float"/>
                 <textFieldExpression><![CDATA["Téléphone : " + $P{telephone}]]></textFieldExpression>
             </textField>
-            <textField isStretchWithOverflow="true">
+            <textField textAdjust="StretchHeight">
                 <reportElement x="10" y="50" width="535" height="20" style="InfoStyle" positionType="Float"/>
                 <textFieldExpression><![CDATA["Email : " + $P{email}]]></textFieldExpression>
             </textField>
-            <textField isStretchWithOverflow="true">
+            <textField textAdjust="StretchHeight">
                 <reportElement x="10" y="75" width="535" height="20" style="InfoStyle" positionType="Float"/>
                 <textFieldExpression><![CDATA["Adresse : " + $P{adresse}]]></textFieldExpression>
             </textField>
@@ -91,6 +99,39 @@
                 <reportElement x="10" y="235" width="535" height="70" positionType="Float"/>
                 <dataSourceExpression><![CDATA[$P{competenceDataSource}]]></dataSourceExpression>
                 <subreportExpression><![CDATA[$P{competenceSubreport}]]></subreportExpression>
+            </subreport>
+
+            <!-- LANGUES SECTION -->
+            <staticText>
+                <reportElement x="0" y="315" width="535" height="20" style="SubHeaderStyle" positionType="Float"/>
+                <text><![CDATA[Langues]]></text>
+            </staticText>
+            <subreport>
+                <reportElement x="10" y="340" width="535" height="70" positionType="Float"/>
+                <dataSourceExpression><![CDATA[$P{languesDataSource}]]></dataSourceExpression>
+                <subreportExpression><![CDATA[$P{languesSubreport}]]></subreportExpression>
+            </subreport>
+
+            <!-- FORMATIONS SECTION -->
+            <staticText>
+                <reportElement x="0" y="420" width="535" height="20" style="SubHeaderStyle" positionType="Float"/>
+                <text><![CDATA[Formations]]></text>
+            </staticText>
+            <subreport>
+                <reportElement x="10" y="445" width="535" height="70" positionType="Float"/>
+                <dataSourceExpression><![CDATA[$P{formationsDataSource}]]></dataSourceExpression>
+                <subreportExpression><![CDATA[$P{formationsSubreport}]]></subreportExpression>
+            </subreport>
+
+            <!-- CERTIFICATIONS SECTION -->
+            <staticText>
+                <reportElement x="0" y="525" width="535" height="20" style="SubHeaderStyle" positionType="Float"/>
+                <text><![CDATA[Certifications]]></text>
+            </staticText>
+            <subreport>
+                <reportElement x="10" y="550" width="535" height="70" positionType="Float"/>
+                <dataSourceExpression><![CDATA[$P{certificationsDataSource}]]></dataSourceExpression>
+                <subreportExpression><![CDATA[$P{certificationsSubreport}]]></subreportExpression>
             </subreport>
         </band>
     </detail>

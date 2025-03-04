@@ -47,6 +47,30 @@ public class CvGenerationService {
         }
         JasperReport compiledDomainesSubreport = JasperCompileManager.compileReport(domainesSubReportStream);
 
+        // Load and compile the formations subreport template
+        ClassPathResource formationsSubReportResource = new ClassPathResource("templates/formations_subreport.jrxml");
+        InputStream formationsSubReportStream = formationsSubReportResource.getInputStream();
+        if (formationsSubReportStream == null) {
+            throw new RuntimeException("Could not find formations subreport Jasper template");
+        }
+        JasperReport compiledFormationsSubreport = JasperCompileManager.compileReport(formationsSubReportStream);
+
+        // Load and compile the certifications subreport template
+        ClassPathResource certificationsSubReportResource = new ClassPathResource("templates/certifications_subreport.jrxml");
+        InputStream certificationsSubReportStream = certificationsSubReportResource.getInputStream();
+        if (certificationsSubReportStream == null) {
+            throw new RuntimeException("Could not find certifications subreport Jasper template");
+        }
+        JasperReport compiledCertificationsSubreport = JasperCompileManager.compileReport(certificationsSubReportStream);
+
+        // Load and compile the langues subreport template
+        ClassPathResource languesSubReportResource = new ClassPathResource("templates/langues_subreport.jrxml");
+        InputStream languesSubReportStream = languesSubReportResource.getInputStream();
+        if (languesSubReportStream == null) {
+            throw new RuntimeException("Could not find langues subreport Jasper template");
+        }
+        JasperReport compiledLanguesSubreport = JasperCompileManager.compileReport(languesSubReportStream);
+
         // Prepare main report parameters
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("nom", userDetails.get("nom"));
@@ -68,11 +92,29 @@ public class CvGenerationService {
         parameters.put("competenceDataSource", competenceDataSource);
         parameters.put("competenceSubreport", compiledCompetenceSubreport);
 
-        // Create a data source for domaines (expects a List of Domaine objects)
+        // Create a data source for domaines
         List<?> domaines = (List<?>) userDetails.get("domaines");
         JRBeanCollectionDataSource domainesDataSource = new JRBeanCollectionDataSource(domaines);
         parameters.put("domainesDataSource", domainesDataSource);
         parameters.put("domainesSubreport", compiledDomainesSubreport);
+
+        // Create a data source for formations
+        List<?> formations = (List<?>) userDetails.get("formations");
+        JRBeanCollectionDataSource formationsDataSource = new JRBeanCollectionDataSource(formations);
+        parameters.put("formationsDataSource", formationsDataSource);
+        parameters.put("formationsSubreport", compiledFormationsSubreport);
+
+        // Create a data source for certifications
+        List<?> certifications = (List<?>) userDetails.get("certifications");
+        JRBeanCollectionDataSource certificationsDataSource = new JRBeanCollectionDataSource(certifications);
+        parameters.put("certificationsDataSource", certificationsDataSource);
+        parameters.put("certificationsSubreport", compiledCertificationsSubreport);
+
+        // Create a data source for langues
+        List<?> langues = (List<?>) userDetails.get("langues");
+        JRBeanCollectionDataSource languesDataSource = new JRBeanCollectionDataSource(langues);
+        parameters.put("languesDataSource", languesDataSource);
+        parameters.put("languesSubreport", compiledLanguesSubreport);
 
         // Generate the PDF report using an empty datasource for the main report.
         JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());

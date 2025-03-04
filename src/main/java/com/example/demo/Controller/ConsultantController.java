@@ -1,9 +1,7 @@
 package com.example.demo.Controller;
 
 import com.example.demo.Service.ConsultantService;
-import com.example.demo.model.Consultant;
-import com.example.demo.model.Experience;
-import com.example.demo.model.Mission;
+import com.example.demo.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +12,7 @@ import java.util.List;
 @RequestMapping("/api/consultants")
 @CrossOrigin(origins = "http://localhost:5173")
 public class ConsultantController {
+
     private final ConsultantService consultantService;
 
     @Autowired
@@ -63,11 +62,44 @@ public class ConsultantController {
             return ResponseEntity.badRequest().build();
         }
     }
+
     @DeleteMapping("/{consultantId}/deleteExperience/{experienceId}")
     public String deleteExperience(@PathVariable Long consultantId, @PathVariable Long experienceId) {
-        // Call the service layer to delete the experience
         return consultantService.deleteExperience(consultantId, experienceId);
     }
+
+    // New endpoints for competences
+    @PostMapping("/{id}/addCompetence")
+    public ResponseEntity<Consultant> addCompetence(@PathVariable Long id, @RequestBody Competence competence) {
+        try {
+            Consultant updatedConsultant = consultantService.addCompetenceToConsultant(id, competence);
+            return ResponseEntity.ok(updatedConsultant);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @DeleteMapping("/{consultantId}/deleteCompetence/{competenceId}")
+    public String deleteCompetence(@PathVariable Long consultantId, @PathVariable Long competenceId) {
+        return consultantService.deleteCompetence(consultantId, competenceId);
+    }
+
+    // New endpoints for domaines
+    @PostMapping("/{id}/addDomaine")
+    public ResponseEntity<Consultant> addDomaine(@PathVariable Long id, @RequestBody Domaine domaine) {
+        try {
+            Consultant updatedConsultant = consultantService.addDomaineToConsultant(id, domaine);
+            return ResponseEntity.ok(updatedConsultant);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @DeleteMapping("/{consultantId}/deleteDomaine/{domaineId}")
+    public String deleteDomaine(@PathVariable Long consultantId, @PathVariable Long domaineId) {
+        return consultantService.deleteDomaine(consultantId, domaineId);
+    }
+
     @PostMapping("/{consultantId}/savedMissions")
     public ResponseEntity<Consultant> saveMission(
             @PathVariable Long consultantId,
@@ -80,7 +112,6 @@ public class ConsultantController {
         }
     }
 
-    // Endpoint pour récupérer les missions sauvegardées d'un consultant
     @GetMapping("/{consultantId}/savedMissions")
     public ResponseEntity<List<Mission>> getSavedMissions(@PathVariable Long consultantId) {
         try {
@@ -89,5 +120,52 @@ public class ConsultantController {
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+    // Formation endpoints
+    @PostMapping("/{id}/addFormation")
+    public ResponseEntity<Consultant> addFormation(@PathVariable Long id, @RequestBody Formation formation) {
+        try {
+            Consultant updatedConsultant = consultantService.addFormationToConsultant(id, formation);
+            return ResponseEntity.ok(updatedConsultant);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @DeleteMapping("/{consultantId}/deleteFormation/{formationId}")
+    public String deleteFormation(@PathVariable Long consultantId, @PathVariable Long formationId) {
+        return consultantService.deleteFormation(consultantId, formationId);
+    }
+
+    // Langue endpoints
+    @PostMapping("/{id}/addLangue")
+    public ResponseEntity<Consultant> addLangue(@PathVariable Long id, @RequestBody Langue langue) {
+        try {
+            Consultant updatedConsultant = consultantService.addLangueToConsultant(id, langue);
+            return ResponseEntity.ok(updatedConsultant);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @DeleteMapping("/{consultantId}/deleteLangue/{langueId}")
+    public String deleteLangue(@PathVariable Long consultantId, @PathVariable Long langueId) {
+        return consultantService.deleteLangue(consultantId, langueId);
+    }
+
+    // Certification endpoints
+    @PostMapping("/{id}/addCertification")
+    public ResponseEntity<Consultant> addCertification(@PathVariable Long id, @RequestBody Certification certification) {
+        try {
+            Consultant updatedConsultant = consultantService.addCertificationToConsultant(id, certification);
+            return ResponseEntity.ok(updatedConsultant);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @DeleteMapping("/{consultantId}/deleteCertification/{certificationId}")
+    public String deleteCertification(@PathVariable Long consultantId, @PathVariable Long certificationId) {
+        return consultantService.deleteCertification(consultantId, certificationId);
     }
 }

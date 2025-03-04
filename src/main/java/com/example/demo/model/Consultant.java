@@ -74,6 +74,30 @@ public class Consultant extends User {
             inverseJoinColumns = @JoinColumn(name = "mission_id")
     )
     private List<Mission> savedMissions;
+
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "consultant_formations",
+            joinColumns = @JoinColumn(name = "consultant_id"),
+            inverseJoinColumns = @JoinColumn(name = "formation_id")
+    )
+    private List<Formation> formations;
+
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "consultant_certifications",
+            joinColumns = @JoinColumn(name = "consultant_id"),
+            inverseJoinColumns = @JoinColumn(name = "certification_id")
+    )
+    private List<Certification> certifications;
+
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "consultant_langues",
+            joinColumns = @JoinColumn(name = "consultant_id"),
+            inverseJoinColumns = @JoinColumn(name = "langue_id")
+    )
+    private List<Langue> langues;
     public Consultant() {}
 
     public Consultant(List<Avis> avisDonnes, List<Avis> avisRecus, Integer taux_horaire, List<Competence> competences, List<Domaine> domaines, List<Experience> experiences, Integer experienceYears, Double latitude, Double longitude, String portfolio, List<Proposition> propositions, List<Mission> savedMissions, Integer workload) {
@@ -365,5 +389,29 @@ public class Consultant extends User {
 
     public void setCv(byte[] cv) {
         this.cv = cv;
+    }
+
+    public List<Formation> getFormations() {
+        return formations;
+    }
+
+    public void setFormations(List<Formation> formations) {
+        this.formations = formations;
+    }
+
+    public List<Certification> getCertifications() {
+        return certifications;
+    }
+
+    public void setCertifications(List<Certification> certifications) {
+        this.certifications = certifications;
+    }
+
+    public List<Langue> getLangues() {
+        return langues;
+    }
+
+    public void setLangues(List<Langue> langues) {
+        this.langues = langues;
     }
 }

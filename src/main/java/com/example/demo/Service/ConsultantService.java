@@ -2,11 +2,13 @@ package com.example.demo.Service;
 
 import com.example.demo.model.Consultant;
 import com.example.demo.model.Experience;
-import com.example.demo.repository.ConsultantRepository;
-import com.example.demo.repository.ExperienceRepository;
+import com.example.demo.model.Competence;
+import com.example.demo.model.Domaine;
 import com.example.demo.model.Mission;
-import com.example.demo.repository.ConsultantRepository;
-import com.example.demo.repository.MissionRepository;
+import com.example.demo.model.Formation;
+import com.example.demo.model.Langue;
+import com.example.demo.model.Certification;
+import com.example.demo.repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,16 +19,30 @@ import java.util.Optional;
 
 @Service
 public class ConsultantService {
+
     @Autowired
     private final ConsultantRepository consultantRepository;
     private final ExperienceRepository experienceRepository;
+    private final MissionRepository missionRepository;
+    private final FormationRepository formationRepository;
+    private final LangueRepository langueRepository;
+    private final CertificationRepository certificationRepository;
+
     @Autowired
-    private MissionRepository missionRepository;
-    @Autowired
-    public ConsultantService(ConsultantRepository consultantRepository, ExperienceRepository experienceRepository) {
+    public ConsultantService(ConsultantRepository consultantRepository,
+                             ExperienceRepository experienceRepository,
+                             MissionRepository missionRepository,
+                             FormationRepository formationRepository,
+                             LangueRepository langueRepository,
+                             CertificationRepository certificationRepository) {
         this.consultantRepository = consultantRepository;
         this.experienceRepository = experienceRepository;
+        this.missionRepository = missionRepository;
+        this.formationRepository = formationRepository;
+        this.langueRepository = langueRepository;
+        this.certificationRepository = certificationRepository;
     }
+
 
     public List<Consultant> getAllConsultants() {
         return consultantRepository.findAll();
@@ -43,7 +59,7 @@ public class ConsultantService {
     @Transactional
     public Consultant updateConsultant(Long id, Consultant updatedConsultant) {
         return consultantRepository.findById(id).map(consultant -> {
-            // Update User fields only if they are provided
+            // Update common User fields if provided
             if (updatedConsultant.getNom() != null) {
                 consultant.setNom(updatedConsultant.getNom());
             }
@@ -108,16 +124,27 @@ public class ConsultantService {
             if (updatedConsultant.getExperiences() != null) {
                 consultant.setExperiences(updatedConsultant.getExperiences());
             }
+            if (updatedConsultant.getLangues() != null) {
+                consultant.setLangues(updatedConsultant.getLangues());
+            }
+            if (updatedConsultant.getFormations() != null) {
+                consultant.setFormations(updatedConsultant.getFormations());
+            }
+            if (updatedConsultant.getCertifications() != null) {
+                consultant.setCertifications(updatedConsultant.getCertifications());
+            }
+
             return consultantRepository.save(consultant);
         }).orElseThrow(() -> new RuntimeException("Consultant not found with id " + id));
     }
+
     public void deleteConsultant(Long id) {
         consultantRepository.deleteById(id);
     }
+
     @Transactional
     public Consultant addExperienceToConsultant(Long consultantId, Experience experience) {
         return consultantRepository.findById(consultantId).map(consultant -> {
-            // Initialize experiences list if null
             if (consultant.getExperiences() == null) {
                 consultant.setExperiences(new ArrayList<>());
             }
@@ -125,32 +152,168 @@ public class ConsultantService {
             return consultantRepository.save(consultant);
         }).orElseThrow(() -> new RuntimeException("Consultant not found with id " + consultantId));
     }
+
     @Transactional
     public String deleteExperience(Long consultantId, Long experienceId) {
-        // Find the consultant by their ID
         Consultant consultant = consultantRepository.findById(consultantId).orElse(null);
         if (consultant == null) {
             return "Consultant not found!";
         }
-
-        // Find the experience by its ID
-        Experience experience =experienceRepository.findById(experienceId).orElse(null);
+        Experience experience = experienceRepository.findById(experienceId).orElse(null);
         if (experience == null) {
             return "Experience not found!";
         }
-
-        // Remove the experience from the consultant's list of experiences
         consultant.getExperiences().remove(experience);
-
-        // Save the consultant with the updated list of experiences
         consultantRepository.save(consultant);
-
-        // Delete the experience from the database
         experienceRepository.delete(experience);
-
         return "Experience deleted successfully!";
     }
 
+    @Transactional
+    public Consultant addCompetenceToConsultant(Long consultantId, Competence competence) {
+        return consultantRepository.findById(consultantId).map(consultant -> {
+            if (consultant.getCompetences() == null) {
+                consultant.setCompetences(new ArrayList<>());
+            }
+            consultant.getCompetences().add(competence);
+            return consultantRepository.save(consultant);
+        }).orElseThrow(() -> new RuntimeException("Consultant not found with id " + consultantId));
+    }
+
+    @Transactional
+    public String deleteCompetence(Long consultantId, Long competenceId) {
+        Consultant consultant = consultantRepository.findById(consultantId).orElse(null);
+        if (consultant == null) {
+            return "Consultant not found!";
+        }
+        Optional<Competence> competenceOpt = consultant.getCompetences().stream()
+                .filter(c -> c.getId().equals(competenceId))
+                .findFirst();
+        if (!competenceOpt.isPresent()) {
+            return "Competence not found!";
+        }
+        consultant.getCompetences().remove(competenceOpt.get());
+        consultantRepository.save(consultant);
+        return "Competence deleted successfully!";
+    }
+
+    @Transactional
+    public Consultant addDomaineToConsultant(Long consultantId, Domaine domaine) {
+        return consultantRepository.findById(consultantId).map(consultant -> {
+            if (consultant.getDomaines() == null) {
+                consultant.setDomaines(new ArrayList<>());
+            }
+            consultant.getDomaines().add(domaine);
+            return consultantRepository.save(consultant);
+        }).orElseThrow(() -> new RuntimeException("Consultant not found with id " + consultantId));
+    }
+
+    @Transactional
+    public String deleteDomaine(Long consultantId, Long domaineId) {
+        Consultant consultant = consultantRepository.findById(consultantId).orElse(null);
+        if (consultant == null) {
+            return "Consultant not found!";
+        }
+        Optional<Domaine> domaineOpt = consultant.getDomaines().stream()
+                .filter(d -> d.getId().equals(domaineId))
+                .findFirst();
+        if (!domaineOpt.isPresent()) {
+            return "Domaine not found!";
+        }
+        consultant.getDomaines().remove(domaineOpt.get());
+        consultantRepository.save(consultant);
+        return "Domaine deleted successfully!";
+    }
+
+    // New methods for Formation
+
+    @Transactional
+    public Consultant addFormationToConsultant(Long consultantId, Formation formation) {
+        return consultantRepository.findById(consultantId).map(consultant -> {
+            if (consultant.getFormations() == null) {
+                consultant.setFormations(new ArrayList<>());
+            }
+            consultant.getFormations().add(formation);
+            return consultantRepository.save(consultant);
+        }).orElseThrow(() -> new RuntimeException("Consultant not found with id " + consultantId));
+    }
+
+    @Transactional
+    public String deleteFormation(Long consultantId, Long formationId) {
+        Consultant consultant = consultantRepository.findById(consultantId).orElse(null);
+        if (consultant == null) {
+            return "Consultant not found!";
+        }
+        Optional<Formation> formationOpt = consultant.getFormations().stream()
+                .filter(f -> f.getId().equals(formationId))
+                .findFirst();
+        if (!formationOpt.isPresent()) {
+            return "Formation not found!";
+        }
+        consultant.getFormations().remove(formationOpt.get());
+        consultantRepository.save(consultant);
+        return "Formation deleted successfully!";
+    }
+
+    // New methods for Langue
+
+    @Transactional
+    public Consultant addLangueToConsultant(Long consultantId, Langue langue) {
+        return consultantRepository.findById(consultantId).map(consultant -> {
+            if (consultant.getLangues() == null) {
+                consultant.setLangues(new ArrayList<>());
+            }
+            consultant.getLangues().add(langue);
+            return consultantRepository.save(consultant);
+        }).orElseThrow(() -> new RuntimeException("Consultant not found with id " + consultantId));
+    }
+
+    @Transactional
+    public String deleteLangue(Long consultantId, Long langueId) {
+        Consultant consultant = consultantRepository.findById(consultantId).orElse(null);
+        if (consultant == null) {
+            return "Consultant not found!";
+        }
+        Optional<Langue> langueOpt = consultant.getLangues().stream()
+                .filter(l -> l.getId().equals(langueId))
+                .findFirst();
+        if (!langueOpt.isPresent()) {
+            return "Langue not found!";
+        }
+        consultant.getLangues().remove(langueOpt.get());
+        consultantRepository.save(consultant);
+        return "Langue deleted successfully!";
+    }
+
+    // New methods for Certification
+
+    @Transactional
+    public Consultant addCertificationToConsultant(Long consultantId, Certification certification) {
+        return consultantRepository.findById(consultantId).map(consultant -> {
+            if (consultant.getCertifications() == null) {
+                consultant.setCertifications(new ArrayList<>());
+            }
+            consultant.getCertifications().add(certification);
+            return consultantRepository.save(consultant);
+        }).orElseThrow(() -> new RuntimeException("Consultant not found with id " + consultantId));
+    }
+
+    @Transactional
+    public String deleteCertification(Long consultantId, Long certificationId) {
+        Consultant consultant = consultantRepository.findById(consultantId).orElse(null);
+        if (consultant == null) {
+            return "Consultant not found!";
+        }
+        Optional<Certification> certOpt = consultant.getCertifications().stream()
+                .filter(c -> c.getId().equals(certificationId))
+                .findFirst();
+        if (!certOpt.isPresent()) {
+            return "Certification not found!";
+        }
+        consultant.getCertifications().remove(certOpt.get());
+        consultantRepository.save(consultant);
+        return "Certification deleted successfully!";
+    }
 
     public Consultant saveMissionForConsultant(Long consultantId, Long missionId) {
         Consultant consultant = consultantRepository.findById(consultantId)
@@ -162,7 +325,6 @@ public class ConsultantService {
         if (savedMissions == null) {
             savedMissions = new ArrayList<>();
         }
-        // Ajoute la mission si elle n'est pas déjà sauvegardée
         if (!savedMissions.contains(mission)) {
             savedMissions.add(mission);
         }
