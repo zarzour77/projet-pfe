@@ -49,8 +49,17 @@ public class AuthController {
         // Authenticate the user
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
-        String jwt = jwtUtils.generateJwtToken(authentication);
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+        // Vérifier si l'email est vérifié
+        if (!userDetails.isEmailVerified()) {
+            // Envoi du code de vérification par email
+            authService.sendVerificationCode(userDetails.getEmail());
+            return ResponseEntity.badRequest().body(new MessageResponse("Votre email n'est pas vérifié. Un code de vérification vous a été envoyé."));
+        }
+
+        // Si vérifié, générer le token JWT
+        String jwt = jwtUtils.generateJwtToken(authentication);
         List<String> roles = List.of(userDetails.getRole());
         return ResponseEntity.ok(new JwtResponse(
                 jwt,
@@ -61,10 +70,16 @@ public class AuthController {
                 roles
         ));
     }
+
     @PostMapping("/signup")
     public ResponseEntity<User> registerUser(@RequestBody SignupRequest signUpRequest) {
         User user = authService.registerUser(signUpRequest);
         return ResponseEntity.ok(user);
     }
 
+    // Endpoint pour vérifier le code envoyé par email
+    @PostMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestParam String email, @RequestParam String code) {
+        return authService.verifyEmail(email, code);
+    }
 }

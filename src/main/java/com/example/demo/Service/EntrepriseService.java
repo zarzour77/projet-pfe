@@ -1,6 +1,7 @@
 package com.example.demo.Service;
 
 import com.example.demo.model.Entreprise;
+import com.example.demo.model.Mission;
 import com.example.demo.repository.EntrepriseRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class EntrepriseService {
@@ -29,7 +31,16 @@ public class EntrepriseService {
     public Entreprise createEntreprise(Entreprise entreprise) {
         return entrepriseRepository.save(entreprise);
     }
-
+    public List<Mission> getPublishedMissionsForEntreprise(Long entrepriseId) {
+        Optional<Entreprise> entrepriseOpt = entrepriseRepository.findById(entrepriseId);
+        if (entrepriseOpt.isPresent()) {
+            Entreprise entreprise = entrepriseOpt.get();
+            // Filtrer les missions avec le statut "PUBLISHED"
+            return entreprise.getMissions();
+        } else {
+            throw new RuntimeException("Entreprise not found with id " + entrepriseId);
+        }
+    }
     @Transactional
     public Entreprise updateEntreprise(Long id, Entreprise updatedEntreprise) {
         return entrepriseRepository.findById(id).map(entreprise -> {

@@ -1,4 +1,5 @@
 package com.example.demo.Sec;
+
 import com.example.demo.model.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -15,8 +16,10 @@ public class UserDetailsImpl implements UserDetails {
     private String email;
     private String password;
     private String role;
+    private boolean emailVerified; // nouveau champ
 
-    public UserDetailsImpl(Long id, String nom, String prenom, String telephone, String email, String password, String role) {
+    // Constructeur modifié dans l'ordre : id, nom, prenom, telephone, email, password, role, emailVerified
+    public UserDetailsImpl(Long id, String nom, String prenom, String telephone, String email, String password, String role, boolean emailVerified) {
         this.id = id;
         this.nom = nom;
         this.prenom = prenom;
@@ -24,6 +27,7 @@ public class UserDetailsImpl implements UserDetails {
         this.email = email;
         this.password = password;
         this.role = role;
+        this.emailVerified = emailVerified;
     }
 
     public static UserDetailsImpl build(User user) {
@@ -34,20 +38,23 @@ public class UserDetailsImpl implements UserDetails {
                 user.getTelephone(),
                 user.getEmail(),
                 user.getPassword(),
-                user.getRole()
+                user.getRole(),
+                user.isEmailVerified()  // passage de la vérification
         );
+    }
+
+    // Getter pour emailVerified
+    public boolean isEmailVerified() {
+        return emailVerified;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (role == null) {
-            // Handle the case where role is null, maybe return an empty authority
-            return Collections.emptyList(); // Or any default role, e.g., "ROLE_USER"
+            return Collections.emptyList();
         }
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
     }
-
-
 
     @Override
     public String getPassword() {
@@ -56,30 +63,28 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public String getUsername() {
-        return email;  // Or username if you prefer
+        return email;
     }
 
     @Override
     public boolean isAccountNonExpired() {
-        return true; // Always true for simplicity
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true; // Always true for simplicity
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true; // Always true for simplicity
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
-        return true; // Always true for simplicity
+        return true;
     }
-
-    // Getters and setters for additional fields
 
     public Long getId() {
         return id;

@@ -19,18 +19,60 @@ public class Proposition {
     private Mission mission;
 
     private Double montant;
-    private Date durée_estimé;
+    @Column(name = "duree_estime")
+    private String dureeEstime;
     private String statut;
+    @Column(length = 2048)
+    private String message;
+
+    // Nouveau champ pour la date de proposition
+    private Date dateProposition;
+    private String origine; // "APPLIED" ou "INVITED"
+
 
     public Proposition() {}
 
-    public Proposition(Consultant consultant, Date durée_estimé, Long id, Mission mission, Double montant, String statut) {
+    public Proposition(Consultant consultant, Date dateProposition, String dureeEstime, Long id, String message, Mission mission, Double montant, String origine, String statut) {
         this.consultant = consultant;
-        this.durée_estimé = durée_estimé;
+        this.dateProposition = dateProposition;
+        this.dureeEstime = dureeEstime;
         this.id = id;
+        this.message = message;
         this.mission = mission;
         this.montant = montant;
+        this.origine = origine;
         this.statut = statut;
+    }
+
+    @PrePersist
+    public void prePersist() {
+        if (dateProposition == null) {
+            dateProposition = new Date();
+        }
+    }
+
+    public String getOrigine() {
+        return origine;
+    }
+
+    public void setOrigine(String origine) {
+        this.origine = origine;
+    }
+
+    public Date getDateProposition() {
+        return dateProposition;
+    }
+
+    public void setDateProposition(Date dateProposition) {
+        this.dateProposition = dateProposition;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     public Consultant getConsultant() {
@@ -41,12 +83,12 @@ public class Proposition {
         this.consultant = consultant;
     }
 
-    public Date getDurée_estimé() {
-        return durée_estimé;
+    public String getDureeEstime() {
+        return dureeEstime;
     }
 
-    public void setDurée_estimé(Date durée_estimé) {
-        this.durée_estimé = durée_estimé;
+    public void setDureeEstime(String dureeEstime) {
+        this.dureeEstime = dureeEstime;
     }
 
     public Long getId() {

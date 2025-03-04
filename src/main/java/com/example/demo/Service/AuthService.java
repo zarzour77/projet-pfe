@@ -6,8 +6,13 @@ import com.example.demo.Sec.UserDetailsServiceImpl;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+
+import static com.example.demo.model.VerificationUtil.generateVerificationCode;
 
 @Service
 public class AuthService {
@@ -47,6 +52,39 @@ public class AuthService {
         );
 
         return userRepository.save(user);
+    }
+    @Autowired
+    private EmailService emailService;
+    public void sendVerificationCode(String email) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            String code = generateVerificationCode();
+            user.setVerificationCode(code);
+            userRepository.save(user);
+            // Envoi de l'email
+            emailService.sendVerificationEmail(email, code);
+            System.out.println("Code de vérification envoyé à " + email + ": " + code);
+        } else {
+            System.out.println("Utilisateur non trouvé pour l'email: " + email);
+        }
+    }
+
+    // Vérification du code de vérification
+    public ResponseEntity<?> verifyEmail(String email, String code) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (!userOpt.isPresent()) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Utilisateur non trouvé"));
+        }
+        User user = userOpt.get();
+        if (user.getVerificationCode() != null && user.getVerificationCode().equals(code)) {
+            user.setEmailVerified(true);
+            user.setVerificationCode(null); // Réinitialisation
+            userRepository.save(user);
+            return ResponseEntity.ok(new MessageResponse("Email vérifié avec succès"));
+        } else {
+            return ResponseEntity.badRequest().body(new MessageResponse("Code de vérification invalide"));
+        }
     }
 
 

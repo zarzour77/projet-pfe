@@ -32,7 +32,10 @@ public class User {
 
 
     private Double rating;
+    private boolean emailVerified = false; // par défaut à false
 
+    // Champ pour stocker le code de vérification (vous pouvez également l'expirer avec une date si besoin)
+    private String verificationCode;
     public User() {}
 
     public User(String nom) {
@@ -88,9 +91,35 @@ public class User {
         this.subscriptionType = subscriptionType; // Initialize subscriptionType
     }
 
-    // Divers constructeurs...
-
-    // Getters and setters
+    public User(String adresse, String email, boolean emailVerified, Long id, String nom, List<Notification> notifications, String password, String photoprofile, String prenom, Double rating, String role, String statut, String subscriptionType, String telephone, String verificationCode) {
+        this.adresse = adresse;
+        this.email = email;
+        this.emailVerified = emailVerified;
+        this.id = id;
+        this.nom = nom;
+        this.notifications = notifications;
+        this.password = password;
+        this.photoprofile = photoprofile;
+        this.prenom = prenom;
+        this.rating = rating;
+        this.role = role;
+        this.statut = statut;
+        this.subscriptionType = subscriptionType;
+        this.telephone = telephone;
+        this.verificationCode = verificationCode;
+    }
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
+    }
+    public String getVerificationCode() {
+        return verificationCode;
+    }
+    public void setVerificationCode(String verificationCode) {
+        this.verificationCode = verificationCode;
+    }
 
     public Double getRating() {
         return rating;
