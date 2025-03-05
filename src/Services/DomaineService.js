@@ -4,11 +4,11 @@ import axios from "axios";
 const API_URL = "http://localhost:8181/api/domaines";
 
 // Récupération de l'utilisateur avec le token depuis le localStorage
-const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-const token = storedUser?.token;
 
 const DomaineService = {
   getAllDomaines: async () => {
+    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+const token = storedUser?.token;
     try {
       const response = await axios.get(API_URL, {
         headers: {
@@ -24,6 +24,8 @@ const DomaineService = {
   },
 
   createDomaine: async (domaineData) => {
+    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+const token = storedUser?.token;
     try {
       const response = await axios.post(API_URL, domaineData, {
         headers: {
@@ -39,6 +41,8 @@ const DomaineService = {
   },
 
   updateDomaine: async (id, domaineData) => {
+    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+const token = storedUser?.token;
     try {
       const response = await axios.put(`${API_URL}/${id}`, domaineData, {
         headers: {
@@ -54,6 +58,8 @@ const DomaineService = {
   },
 
   deleteDomaine: async (id) => {
+    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+const token = storedUser?.token;
     try {
       const response = await axios.delete(`${API_URL}/${id}`, {
         headers: {

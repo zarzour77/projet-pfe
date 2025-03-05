@@ -1,12 +1,16 @@
-import  { useState, useEffect } from 'react';
-import styles from './Header.module.css'; // Assurez-vous d'avoir ce fichier CSS
+// components/Header.jsx
+import { useState, useEffect } from 'react';
+import { FaBell } from 'react-icons/fa';
+import { fetchNotifications } from '../Services/HeaderService'; // Import du service
+import styles from './Header.module.css';
 
 function Header() {
   const [searchType, setSearchType] = useState('Talent');
   const [isScrolled, setIsScrolled] = useState(false);
   const [showMega, setShowMega] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([]);
 
-  // Exemple de structure de catégories, avec icônes et sous-catégories
   const categories = [
     { name: 'Development & IT', icon: '👨‍💻', subcats: ['Web Dev', 'Mobile Dev'] },
     { name: 'AI Services',       icon: '🤖',   subcats: ['Machine Learning', 'Data Science'] },
@@ -16,14 +20,18 @@ function Header() {
     { name: 'More',              icon: '⚙️',   subcats: ['Consulting', 'Writing'] },
   ];
 
-  // Gère l’effet "sticky + shrink" quand on défile
+  // Récupération de l'ID de l'entreprise connectée depuis le localStorage
+  const storedUser = JSON.parse(localStorage.getItem('userWithToken'));
+  const entrepriseId = storedUser?.user?.id || storedUser?.id;
+  const token = storedUser?.token;
+
+
+
+  // Gère l'effet "sticky + shrink" lors du défilement
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
+      const scrolled = window.scrollY > 50;
+      setIsScrolled(scrolled);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -34,19 +42,33 @@ function Header() {
     setSearchType(type);
   };
 
+  // Récupération des notifications via le service
+  useEffect(() => {
+    if (!entrepriseId || !token) {
+      return;
+    }
+    fetchNotifications(entrepriseId, token)
+      .then((res) => {
+        setNotifications(res.data);
+      })
+      .catch((err) => {
+      });
+  }, [entrepriseId, token]);
+
+  const handleNotificationsClick = () => {
+    const newState = !showNotifications;
+    setShowNotifications(newState);
+  };
+
   return (
     <div>
       {/* HEADER PRINCIPAL */}
       <header className={`${styles.mainHeader} ${isScrolled ? styles.shrink : ''}`}>
-        {/* Logo + Titre + Tagline */}
         <div className={styles.logoSection}>
           <h1 className={styles.brandTitle}>Trade for Talent</h1>
           <p className={styles.tagline}>Connecting Businesses & Freelancers Worldwide</p>
         </div>
-
-        {/* Bloc Toggle + Barre de recherche */}
         <div className={styles.searchContainer}>
-          {/* Toggle “Find Talent” / “Find Job” */}
           <div className={styles.toggleButtons}>
             <button
               onClick={() => handleToggle('Talent')}
@@ -61,8 +83,6 @@ function Header() {
               Find Job
             </button>
           </div>
-
-          {/* Champ de recherche (icône loupe intégrée) */}
           <div className={styles.searchWrapper}>
             <input
               type="text"
@@ -72,29 +92,54 @@ function Header() {
             <span className={styles.searchIcon}>🔍</span>
           </div>
         </div>
-
-        {/* Boutons d’authentification */}
         <div className={styles.authButtons}>
+          {/* Bouton de notifications */}
+          <div className={styles.notificationWrapper} onClick={handleNotificationsClick}>
+            <FaBell className={styles.bellIcon} />
+            {notifications.length > 0 && (
+              <span className={styles.notifCount}>{notifications.length}</span>
+            )}
+          </div>
+          {/* Dropdown affichant les notifications */}
+          {showNotifications && (
+            <div className={styles.notificationsDropdown}>
+              {notifications.length === 0 ? (
+                <p className={styles.noNotif}>Aucune notification</p>
+              ) : (
+                notifications.map((notif) => (
+                  <div key={notif.id} className={styles.notificationItem}>
+                    <div className={styles.notifMessage}>{notif.message}</div>
+                    <div className={styles.notifDate}>
+                      {new Date(notif.createdAt).toLocaleString()}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
           <button className={styles.loginBtn}>Log In</button>
           <button className={styles.signupBtn}>Sign Up</button>
         </div>
       </header>
-
-      {/* SUBHEADER (catégories) */}
       <nav className={`${styles.subHeader} ${isScrolled ? styles.stickySubHeader : ''}`}>
         <ul className={styles.navList}>
           {categories.map((cat) => (
             <li
               key={cat.name}
               className={styles.navItem}
-              // Exemple d'affichage d'un "Mega-dropdown" sur 'More'
-              onMouseEnter={() => cat.name === 'More' && setShowMega(true)}
-              onMouseLeave={() => cat.name === 'More' && setShowMega(false)}
+              onMouseEnter={() => {
+                if (cat.name === 'More') {
+                  setShowMega(true);
+                }
+              }}
+              onMouseLeave={() => {
+                if (cat.name === 'More') {
+                  setShowMega(false);
+                }
+              }}
             >
               <span className={styles.navIcon}>{cat.icon}</span>
               {cat.name}
-
-              {/* MEGA-DROPDOWN au survol de "More" */}
               {cat.name === 'More' && showMega && (
                 <div className={styles.megaMenu}>
                   <ul>

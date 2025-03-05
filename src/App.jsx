@@ -17,6 +17,7 @@ import StatsConsultant from "./Components/statsconsultant";
 import PublierMission from "./Components/PublierMission";
 import ProfilePage from "./Components/ProfilePage";
 import LandingEntreprise from "./Components/LandingEntreprise";
+import ProfessionalDetails from "./Components/ProfessionalDetails"
 const App = () => {
   return (
     <Router>
@@ -39,6 +40,8 @@ const App = () => {
         <Route path="/PublierMission" element={<PublierMission /> }  />
         <Route path="/ProfilePage" element={<ProfilePage /> }  />
         <Route path="/LandingEntreprise" element={<LandingEntreprise /> }  />
+        <Route path="/ProfessionalDetails" element={<ProfessionalDetails /> }  />
+
       </Routes>
     </Router>
   );

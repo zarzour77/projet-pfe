@@ -2,7 +2,6 @@
    HEADER PRINCIPAL
 ================================ */
 .mainHeader {
-  /* On le rend sticky en haut */
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -100,7 +99,9 @@
 /* ========== Auth Buttons ========== */
 .authButtons {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
+  position: relative; /* Pour positionner le dropdown notifications */
 }
 
 .loginBtn,
@@ -143,9 +144,7 @@
   transition: all 0.3s ease;
 }
 
-/* Si vous voulez un shrink ou un autre effet sur le subHeader quand isScrolled est true */
 .stickySubHeader {
-  /* Exemple : box-shadow ou changement de style */
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
@@ -170,7 +169,6 @@
   color: #148f4d;
 }
 
-/* Petite icône devant le texte de la catégorie */
 .navIcon {
   margin-right: 0.25rem;
 }
@@ -200,4 +198,88 @@
 
 .megaMenu li:hover {
   text-decoration: underline;
+}
+
+/* ================================
+   NOTIFICATIONS
+================================ */
+/* ================================
+   NOTIFICATIONS
+================================ */
+.notificationWrapper {
+  position: relative;
+  margin-right: 1rem;
+  cursor: pointer;
+}
+
+.bellIcon {
+  font-size: 1.5rem;
+  color: #333; /* Couleur sombre pour l'icône */
+}
+
+/* Badge indiquant le nombre de notifications */
+.notifCount {
+  position: absolute;
+  top: -5px;
+  right: -10px;
+  background: #e63946; /* Rouge vif */
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  text-align: center;
+  line-height: 20px;
+}
+
+/* Dropdown des notifications */
+.notificationsDropdown {
+  position: absolute;
+  right: 0;
+  top: 3rem; /* Ajustez selon la hauteur du header */
+  width: 300px;
+  background: #ffffff; /* Fond blanc */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 9999;
+  padding: 0.75rem;
+}
+
+/* Chaque notification */
+.notificationItem {
+  padding: 0.75rem;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.notificationItem:last-child {
+  border-bottom: none;
+}
+
+.notificationItem:hover {
+  background: #f1f1f1;
+}
+
+/* Message de la notification */
+.notifMessage {
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 0.25rem;
+}
+
+/* Date de la notification */
+.notifDate {
+  font-size: 0.8rem;
+  color: #777;
+}
+
+/* Message s'affichant en cas d'absence de notifications */
+.noNotif {
+  padding: 1rem;
+  text-align: center;
+  color: #555;
 }

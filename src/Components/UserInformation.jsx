@@ -1,5 +1,4 @@
 /* eslint-disable react/no-unescaped-entities */
-// src/components/UserInformation.js
 import React, { useState, Suspense, useEffect } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
@@ -10,8 +9,6 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Modal, Button, ProgressBar } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import styles from './UserInformation.module.css';
@@ -23,11 +20,10 @@ import CompetenceService from '../Services/CompetenceService';
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
-
-const getSafeKey = (comp) => comp.replace(/\./g, '_');
+const userWithToken = JSON.parse(localStorage.getItem("userWithToken")) || {};
+const userId=userWithToken?.id;
+console.log("user pulled from login",userWithToken)
 const defaultPosition = [36.8065, 10.1815];
-
 const customIcon = L.icon({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   iconSize: [25, 41],
@@ -159,25 +155,6 @@ const Step2Schema = Yup.object().shape({
     .typeError('Doit être un nombre'),
 });
 
-const StarRating = ({ rating, onChange }) => {
-  return (
-    <div style={{ display: 'inline-block' }}>
-      {[1, 2, 3, 4, 5].map((star) => (
-        <span
-          key={star}
-          style={{
-            color: star <= rating ? 'gold' : 'lightgray',
-            fontSize: '24px',
-            cursor: 'pointer',
-          }}
-          onClick={() => onChange(star)}
-        >
-          ★
-        </span>
-      ))}
-    </div>
-  );
-};
 
 // Composant personnalisé pour le champ adresse (déclenche géocodage direct au blur)
 const AddressField = ({ field, form, ...props }) => {
@@ -201,20 +178,37 @@ const AddressField = ({ field, form, ...props }) => {
 };
 
 const UserInformation = () => {
-  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const [fetchedUser, setFetchedUser] = useState(null);
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const userData = await UserService.getById(userId);
+        setFetchedUser(userData);
+      } catch (error) {
+        console.error("Erreur lors de la récupération de l'utilisateur :", error);
+        toast.error("Erreur lors de la récupération des données utilisateur.");
+      }
+    }
+    fetchUser();
+  }, [userId]);
+
   const initialValues = {
-    nom: user?.nom || '',
-    prenom: user?.prenom || '',
-    email: user?.email || '',
-    password: user?.password || '',
-    photoprofile: user?.photoprofile || '',
-    adresse: user?.adresse || '',
-    latitude: user?.latitude || '',
-    longitude: user?.longitude || '',
-    domaines: user?.domaines || [],
-    competences: user?.competences || [],
-    competenceDetails: user?.competenceDetails || {}
+    nom: fetchedUser?.nom || '',
+    prenom: fetchedUser?.prenom || '',
+    email: fetchedUser?.email || '',
+    telephone: '',
+    adresse: '',
+    photoprofile: null,
+    latitude: defaultPosition[0],
+    longitude: defaultPosition[1],
+    domaines: [],
+    competences: [],
+    portfolio: '',
+    experienceYears: '',
+    taux_horaire: '',
   };
+  
 
   const [userRole, setUserRole] = useState('');
   const [currentStep, setCurrentStep] = useState(1);
@@ -260,8 +254,7 @@ const UserInformation = () => {
   const navigate = useNavigate();
 
   const handleRoleSelection = (role) => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    const userId = user?.id;
+    console.log(role)
     UserService.updateUserRole(userId, role)
       .then((updatedUser) => {
         setUserRole(updatedUser.role);
@@ -281,6 +274,7 @@ const UserInformation = () => {
 
   const handlePreviewSubmit = (values, setSubmitting) => {
     setModalData(values);
+    console.log(modalData)
     setShowModal(true);
     setSubmitting(false);
   };
@@ -288,16 +282,14 @@ const UserInformation = () => {
   const handleFinalSubmit = async (values) => {
     setLoading(true);
     try {
-      const storedUser = JSON.parse(localStorage.getItem("user"));
-      const userId = storedUser?.id;
       if (values.photoprofile) {
         await UserService.uploadProfilePicture(userId, values.photoprofile);
       }
       
-      const transformedCompetences = values.competences.map(comp => ({
-        nom: comp,
-        competenceNiveaux: values.competenceDetails[getSafeKey(comp)] || 0,
-      }));
+      const transformedCompetences = values.competences.map(comp => {
+        const existing = fetchedCompetences.find(c => c.nom.toLowerCase() === comp.nom.toLowerCase());
+        return existing ? existing : comp; 
+      });
       
       const transformedDomaines = values.domaines.map(dom => {
         const existing = fetchedDomaines.find(
@@ -305,7 +297,6 @@ const UserInformation = () => {
         );
         return existing ? existing : { nom: dom, category: null };
       });
-      
       const consultantData = {
         nom: values.nom,
         prenom: values.prenom,
@@ -323,9 +314,10 @@ const UserInformation = () => {
         longitude: values.longitude,
         workload: values.workload || 0,
       };
-      
+      localStorage.removeItem("user")
       const newConsultant = await ConsultantService.updateConsultant(userId, consultantData);
       localStorage.setItem("Consultant", JSON.stringify(newConsultant));
+      console.log(newConsultant)
       if (newConsultant) {
         navigate("/SignupSuccess");
       }
@@ -335,20 +327,6 @@ const UserInformation = () => {
     }
     setLoading(false);
     setShowModal(false);
-  };
-
-  const chartData = {
-    labels: modalData && modalData.competences ? modalData.competences : [],
-    datasets: [
-      {
-        label: 'Niveau de compétence',
-        data:
-          modalData && modalData.competenceDetails
-            ? modalData.competences.map(comp => modalData.competenceDetails[getSafeKey(comp)] || 0)
-            : [],
-        backgroundColor: 'rgba(75, 85, 192, 0.6)',
-      },
-    ],
   };
 
   // Étape 1 pour les consultants : affichage du formulaire et de la carte interactive
@@ -470,38 +448,51 @@ const UserInformation = () => {
                   />
                 </div>
                 <div className="mb-3">
-                  <CreatableSelect
-                    isMulti
-                    name="competences"
-                    options={competenceOptions}
-                    value={values.competences.map(c => ({ value: c, label: c }))}
-                    onChange={(selected) =>
-                      setFieldValue('competences', selected ? selected.map(s => s.value) : [])
-                    }
-                    placeholder="Compétences"
-                  />
+                <CreatableSelect
+  isMulti
+  name="competences"
+  options={competenceOptions}  // Options are of the form { value, label }
+  value={values.competences.map(comp => ({ value: comp.nom, label: comp.nom }))}
+  onChange={(selected) => {
+    // Map selected options to objects with a default level "Débutant"
+    const competencesArray = selected ? selected.map(s => ({
+      nom: s.value,
+      competenceNiveau: "Débutant"
+    })) : [];
+    setFieldValue('competences', competencesArray);
+  }}
+  placeholder="Compétences"
+/>
+
                 </div>
               </>
             )}
-            {values.competences && values.competences.length > 0 && (
-              <div className="mb-3">
-                <h5 className="mt-3">Niveaux de compétence</h5>
-                {values.competences.map((comp, idx) => {
-                  const safeKey = getSafeKey(comp);
-                  const level = values.competenceDetails[safeKey] ?? 0;
-                  return (
-                    <div key={idx} className="mb-2">
-                      <label>{comp} :</label>
-                      <StarRating
-                        rating={level}
-                        onChange={(value) => setFieldValue(`competenceDetails.${safeKey}`, value)}
-                      />
-                      <span className="ms-2">{level} / 5</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+             {values.competences && values.competences.length > 0 && (
+  <div className="mb-3">
+    <h5 className="mt-3">Niveaux de compétence</h5>
+    {values.competences.map((comp, idx) => (
+      <div key={idx} className="mb-2">
+        <label>{comp.nom} :</label>
+        <select
+          className="form-select d-inline-block w-auto ms-2"
+          value={comp.competenceNiveau}
+          onChange={(e) => {
+            const newLevel = e.target.value;
+            // Create a copy of the competences array and update the level
+            const updatedCompetences = [...values.competences];
+            updatedCompetences[idx].competenceNiveau = newLevel;
+            setFieldValue('competences', updatedCompetences);
+          }}
+        >
+          <option value="Débutant">Débutant</option>
+          <option value="Intermédiaire">Intermédiaire</option>
+          <option value="Expert">Expert</option>
+        </select>
+      </div>
+    ))}
+  </div>
+)}
+
             <div className="mb-3">
               <Field type="text" name="portfolio" placeholder="Portfolio" className="form-control" />
             </div>
@@ -536,8 +527,6 @@ const UserInformation = () => {
   const handleFinalSubmitEntreprise = async (values) => {
     setLoading(true);
     try {
-      const storedUser = JSON.parse(localStorage.getItem("user"));
-      const userId = storedUser?.id;
       if (values.photoprofile) {
         await UserService.uploadProfilePicture(userId, values.photoprofile);
       }
@@ -733,12 +722,7 @@ const UserInformation = () => {
               <p><strong>Portfolio:</strong> {modalData.portfolio}</p>
               <p><strong>Expérience (années):</strong> {modalData.experienceYears}</p>
               <p><strong>Taux Horaire:</strong> {modalData.taux_horaire}</p>
-              {modalData.competences && modalData.competences.length > 0 && (
-                <div className="mt-3">
-                  <h5>Visualisation du Profil de Compétences</h5>
-                  <Bar data={chartData} options={{ responsive: true, plugins: { legend: { position: 'top' } } }} />
-                </div>
-              )}
+              
             </div>
           )}
         </Modal.Body>

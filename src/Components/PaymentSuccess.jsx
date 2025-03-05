@@ -38,7 +38,7 @@ const PaymentSuccess = () => {
 
     // Optionally, you can redirect after a certain time (e.g., 5 seconds)
     const timer = setTimeout(() => {
-      navigate("/TradeForTalent"); // Ensure you navigate correctly to the desired route
+      navigate("/ProfilePage"); // Ensure you navigate correctly to the desired route
     }, 5000);
 
     return () => clearTimeout(timer); // Clean up the timer on component unmount

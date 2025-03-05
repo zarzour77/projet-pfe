@@ -3,7 +3,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Experience.module.css";
 import ConsultantService from "../Services/ConsultantService";
-
+const storedConsultant = JSON.parse(localStorage.getItem("Consultant"));
+const consultantId = storedConsultant?.id;
+console.log(storedConsultant);
 const Experience = () => {
   const [step, setStep] = useState(1);
   const [selectedPhase, setSelectedPhase] = useState(false);
@@ -106,12 +108,10 @@ const Experience = () => {
         description: exp.description,
       }));
   
-      const storedConsultant = JSON.parse(localStorage.getItem("Consultant"));
-      const userId = storedConsultant?.id;
-      console.log(storedConsultant);
+      
   
       // Update consultant experiences in the backend
-      const response = await ConsultantService.updateConsultant(userId, { experiences: formattedExperiences });
+      const response = await ConsultantService.updateConsultant(consultantId, { experiences: formattedExperiences });
       if (response){
         console.log("Experiences updated successfully!");
         localStorage.setItem("Consultant", JSON.stringify(response));
@@ -126,10 +126,9 @@ const Experience = () => {
 
   // Generate CV preview by calling the backend endpoint
   const handleGenerateCV = async () => {
-    const storedConsultant = JSON.parse(localStorage.getItem("Consultant"));
-    const userId = storedConsultant?.id;
+    
     try {
-      const response = await ConsultantService.generateCv(userId);
+      const response = await ConsultantService.generateCv(consultantId);
       // Create a blob URL from the response (assuming response is a Blob)
       const blob = new Blob([response], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
@@ -141,10 +140,9 @@ const Experience = () => {
 
   // Save the CV in the database and redirect to the subscription page
   const handleSaveAndSubscribe = async () => {
-    const storedConsultant = JSON.parse(localStorage.getItem("Consultant"));
-    const userId = storedConsultant?.id;
+    
     try {
-      await ConsultantService.saveCv(userId);
+      await ConsultantService.saveCv(consultantId);
       navigate("/subscription");
     } catch (error) {
       console.error("Error saving CV:", error);

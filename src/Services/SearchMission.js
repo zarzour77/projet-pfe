@@ -6,7 +6,34 @@ const API_URL_exp = "http://localhost:8181/api/missions/searchByExperience";
 const API_URL_portetravail = "http://localhost:8181/api/missions/searchByPortetravail";
 const API_URL_budget = "http://localhost:8181/api/missions/searchByBudget";
 const API_URL_dureeEstime = "http://localhost:8181/api/missions/searchByDureeEstime";
+const API_URL_PROPOSITION = "http://localhost:8181/api/propositions";
 
+export const applyToMission = async (consultantId, missionId, propositionData) => {
+  const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+  const token = storedUser?.token;
+  if (!token) {
+    console.error("JWT Token is missing lors de l'application à la mission.");
+    return Promise.reject(new Error("JWT Token is missing"));
+  }
+  console.log(`Envoi de la proposition pour la mission ${missionId} par le consultant ${consultantId}`, propositionData);
+  try {
+    const response = await axios.post(
+      API_URL_PROPOSITION,
+      propositionData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    console.log("Proposition envoyée avec succès:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Erreur lors de l'envoi de la proposition :", error);
+    throw error;
+  }
+};
 // Récupération de toutes les missions
 export const getMissions = () => {
   const storedUser = JSON.parse(localStorage.getItem("userWithToken"));

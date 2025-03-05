@@ -1,12 +1,13 @@
 import axios from 'axios';
 
 const API_URL = 'http://localhost:8181/api/users';
-const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-const token = storedUser?.token;
-console.log(token)
+
 
 const UserService = {
+  
   updateSubscriptionType: async (userId, subscriptionType) => {
+    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+    const token = storedUser?.token;
     try {
       const response = await axios.put(
         `${API_URL}/${userId}/subscription`, // Endpoint for updating subscription type
@@ -26,8 +27,9 @@ const UserService = {
 
   // Method to get user by ID
   getById: async (userId) => {
+    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+const token = storedUser?.token;
     try {
-      console.log(token)
       const response = await axios.get(
         `${API_URL}/${userId}`, // Endpoint for fetching user by ID
         {
@@ -45,8 +47,8 @@ const UserService = {
 
   // Method to update the role of a user
   updateUserRole: async (userId, role) => {
-    console.log(role)
-    console.log(token)
+    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+    const token = storedUser?.token;
     try {
       const response = await axios.put(
         `${API_URL}/${userId}/role`, // Endpoint for updating user role
@@ -57,7 +59,6 @@ const UserService = {
           },
         }
       );
-      console.log(role)
       return response.data; // Return the updated user data
     } catch (error) {
       console.error("Error updating user role:", error);
@@ -65,6 +66,8 @@ const UserService = {
     }
   },
   updateUser: async (userId, updatedData) => {
+    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+    const token = storedUser?.token;
     try {
       const response = await axios.put(
         `${API_URL}/${userId}`, // Endpoint for updating the user
@@ -83,6 +86,8 @@ const UserService = {
   },
   // New function: update the user's profile picture
   uploadProfilePicture: async (id, file) => {
+    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+    const token = storedUser?.token;
     try {
       const formData = new FormData();
       formData.append("file", file);
