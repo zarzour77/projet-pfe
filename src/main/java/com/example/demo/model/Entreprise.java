@@ -1,13 +1,12 @@
 package com.example.demo.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
+
 import java.util.List;
 
 @Entity
+@DiscriminatorValue("ENTREPRISE")
 public class Entreprise extends User {
     @JsonIgnore
     @OneToMany(mappedBy = "entreprise", fetch = FetchType.EAGER)

@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.List;
 
 @Entity
+@DiscriminatorValue("CONSULTANT")
 public class Consultant extends User {
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, }, fetch = FetchType.EAGER)
     @JoinTable(
