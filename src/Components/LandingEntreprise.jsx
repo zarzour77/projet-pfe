@@ -130,7 +130,8 @@ function LandingEntreprise() {
 
   // Charger les missions publiées par l'entreprise connectée
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    console.log("entttt",storedUser)
     const entrepriseId = storedUser?.user?.id || storedUser?.id;
     if (!entrepriseId) {
       toast.error("Entreprise introuvable");
@@ -245,7 +246,7 @@ function LandingEntreprise() {
 
   const handleChat = async (consultant) => {
     try {
-      const user = JSON.parse(localStorage.getItem("userWithToken"));
+      const user = JSON.parse(localStorage.getItem("user"));
       const senderEmail = user?.email;
       const receiverEmail = consultant.email;
       if (!senderEmail || !receiverEmail) {
@@ -277,7 +278,7 @@ function LandingEntreprise() {
   };
 
   const handleSubmitInvite = () => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+    const storedUser = JSON.parse(localStorage.getItem("user"));
     const entrepriseId = storedUser?.user?.id || storedUser?.id;
     if (!entrepriseId) {
       toast.error("Entreprise introuvable");

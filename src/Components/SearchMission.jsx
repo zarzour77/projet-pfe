@@ -106,7 +106,7 @@ function SearchMission() {
   // Chargement des missions selon filtres ou missions sauvegardées
   useEffect(() => {
     if (showSaved) {
-      const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+      const storedUser = JSON.parse(localStorage.getItem("user"));
       const consultantId = storedUser?.user?.id || storedUser?.id;
       if (!consultantId) {
         toast.error("Consultant introuvable");
@@ -239,7 +239,7 @@ function SearchMission() {
 
   // Fonction pour sauvegarder une mission
   const handleSaveJob = (missionId) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+    const storedUser = JSON.parse(localStorage.getItem("user"));
     const consultantId = storedUser?.user?.id || storedUser?.id;
     if (!consultantId) {
       toast.error("Consultant introuvable");
@@ -256,7 +256,7 @@ function SearchMission() {
 
   // Bascule entre missions normales et sauvegardées
   const handleShowSavedMissions = () => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+    const storedUser = JSON.parse(localStorage.getItem("user"));
     const consultantId = storedUser?.user?.id || storedUser?.id;
     if (!consultantId) {
       toast.error("Consultant introuvable");
@@ -298,7 +298,7 @@ function SearchMission() {
 
   // Envoyer la proposition via l'API
   const handleSubmitProposition = () => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+    const storedUser = JSON.parse(localStorage.getItem("user"));
     const consultantId = storedUser?.user?.id || storedUser?.id;
     if (!consultantId) {
       toast.error("Consultant introuvable");

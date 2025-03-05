@@ -4,7 +4,7 @@ const API_URL = 'http://localhost:8181/api/entreprises'; // Adjust the API URL a
 
 const EntrepriseService = {
   updateEntreprise: async (id, entrepriseData) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+    const storedUser = JSON.parse(localStorage.getItem("user"));
     const token = storedUser?.token;
     try {
       const response = await axios.put(

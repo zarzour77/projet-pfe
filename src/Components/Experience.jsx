@@ -1,12 +1,12 @@
 /* eslint-disable react/no-unescaped-entities */
-import { useState } from "react"; 
+import { useState ,useEffect } from "react"; 
 import { useNavigate } from "react-router-dom";
 import styles from "./Experience.module.css";
 import ConsultantService from "../Services/ConsultantService";
-const storedConsultant = JSON.parse(localStorage.getItem("Consultant"));
-const consultantId = storedConsultant?.id;
-console.log(storedConsultant);
 const Experience = () => {
+  const [consultant, setConsultant] = useState(() => {
+    return JSON.parse(localStorage.getItem("user"));
+  });
   const [step, setStep] = useState(1);
   const [selectedPhase, setSelectedPhase] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -26,7 +26,12 @@ const Experience = () => {
   // State for modal and PDF preview
   const [showCvModal, setShowCvModal] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState("");
-
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    setConsultant(storedUser);
+  }, []);
+  const consultantId = consultant?.id;
+  console.log(consultant);
   const handleSelection = (phase) => {
     if (step === 2) {
       setSelectedPhases((prev) =>
@@ -114,7 +119,7 @@ const Experience = () => {
       const response = await ConsultantService.updateConsultant(consultantId, { experiences: formattedExperiences });
       if (response){
         console.log("Experiences updated successfully!");
-        localStorage.setItem("Consultant", JSON.stringify(response));
+        localStorage.setItem("user", JSON.stringify(response));
         // Instead of navigating, display the modal for CV preview
         setShowCvModal(true);
       }

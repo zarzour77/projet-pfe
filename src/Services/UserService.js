@@ -2,93 +2,89 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:8181/api/users';
 
-
 const UserService = {
-  
   updateSubscriptionType: async (userId, subscriptionType) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-    const token = storedUser?.token;
     try {
+      const token = localStorage.getItem("token");
       const response = await axios.put(
-        `${API_URL}/${userId}/subscription`, // Endpoint for updating subscription type
-        { subscriptionType }, // Request body with the new subscription type
+        `${API_URL}/${userId}/subscription`,
+        { subscriptionType },
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Bearer token for authentication
+            Authorization: `Bearer ${token}`,
           },
         }
       );
-      return response.data; // Return the updated user data
+      console.log("[updateSubscriptionType] Response:", response.data);
+      return response.data;
     } catch (error) {
-      console.error("Error updating subscription:", error);
-      throw error; // Throw error to handle it further
+      console.error("[updateSubscriptionType] Error:", error);
+      throw error;
     }
   },
 
-  // Method to get user by ID
   getById: async (userId) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-const token = storedUser?.token;
     try {
+      const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${API_URL}/${userId}`, // Endpoint for fetching user by ID
+        `${API_URL}/${userId}`,
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Bearer token for authentication
+            Authorization: `Bearer ${token}`,
           },
         }
       );
-      return response.data; // Return the user data
+      console.log("[getById] Response:", response.data);
+      return response.data;
     } catch (error) {
-      console.error("Error fetching user by ID:", error);
-      throw error; // Throw error to handle it further
+      console.error("[getById] Error:", error);
+      throw error;
     }
   },
 
-  // Method to update the role of a user
   updateUserRole: async (userId, role) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-    const token = storedUser?.token;
     try {
+      const token = localStorage.getItem("token");
       const response = await axios.put(
-        `${API_URL}/${userId}/role`, // Endpoint for updating user role
-        { role }, // Request body with the new role
+        `${API_URL}/${userId}/role`,
+        { role },
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Bearer token for authentication
+            Authorization: `Bearer ${token}`,
           },
         }
       );
-      return response.data; // Return the updated user data
+      console.log("[updateUserRole] Response:", response.data);
+      return response.data;
     } catch (error) {
-      console.error("Error updating user role:", error);
-      throw error; // Throw error to handle it further
+      console.error("[updateUserRole] Error:", error);
+      throw error;
     }
   },
+
   updateUser: async (userId, updatedData) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-    const token = storedUser?.token;
     try {
+      const token = localStorage.getItem("token");
       const response = await axios.put(
-        `${API_URL}/${userId}`, // Endpoint for updating the user
-        updatedData, // Request body with the fields to update
+        `${API_URL}/${userId}`,
+        updatedData,
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Bearer token for authentication
+            Authorization: `Bearer ${token}`,
           },
         }
       );
-      return response.data; // Return the updated user data
+      console.log("[updateUser] Response:", response.data);
+      return response.data;
     } catch (error) {
-      console.error("Error updating user:", error);
-      throw error; // Throw error to handle it further
+      console.error("[updateUser] Error:", error);
+      throw error;
     }
   },
-  // New function: update the user's profile picture
+
   uploadProfilePicture: async (id, file) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-    const token = storedUser?.token;
     try {
+      const token = localStorage.getItem("token");
       const formData = new FormData();
       formData.append("file", file);
       const response = await axios.post(
@@ -101,13 +97,13 @@ const token = storedUser?.token;
           },
         }
       );
+      console.log("[uploadProfilePicture] Response:", response.data);
       return response.data;
     } catch (error) {
-      console.error("Error uploading profile picture:", error);
+      console.error("[uploadProfilePicture] Error:", error);
       throw error;
     }
-  }
-  
+  },
 };
 
 export default UserService;

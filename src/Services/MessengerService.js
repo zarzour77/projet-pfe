@@ -5,8 +5,8 @@ const API_URL = 'http://localhost:8181/api';
 
 // Récupère le token depuis le localStorage et construit les headers JSON
 const getAuthHeaders = () => {
-  const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-  const token = storedUser?.token;
+  const token = localStorage.getItem("token");
+
   if (!token) {
     throw new Error("JWT Token is missing");
   }

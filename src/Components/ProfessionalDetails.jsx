@@ -8,10 +8,11 @@ import langueService from "../Services/LangueService"; // Adjust the path as nee
 import consultantService from "../Services/ConsultantService"; // Import your consultant service
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 
-const storedConsultant = JSON.parse(localStorage.getItem("Consultant"));
+
+const ProfessionalDetails = () => {
+  const storedConsultant = JSON.parse(localStorage.getItem("user"));
 const ConsultantId = storedConsultant?.id;
 console.log(storedConsultant)
-const ProfessionalDetails = () => {
   const [step, setStep] = useState(1);
   const navigate = useNavigate(); // Initialize navigate
 
@@ -135,7 +136,8 @@ const ProfessionalDetails = () => {
 
     try {
       const updatedConsultant = await consultantService.updateConsultant(ConsultantId, allData);
-      localStorage.setItem("Consultant", JSON.stringify(updatedConsultant));
+      localStorage.setItem("user", JSON.stringify(updatedConsultant));
+      console.log("")
       toast.success("Vos informations ont été sauvegardées !");
       
       setTimeout(() => {

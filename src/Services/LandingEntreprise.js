@@ -2,55 +2,69 @@ import axios from 'axios';
 
 const BASE_URL = 'http://localhost:8181/api';
 
-// Fonction pour récupérer le token JWT depuis le localStorage
-function getToken() {
-  const storedUser = JSON.parse(localStorage.getItem('userWithToken'));
-  if (!storedUser) return null;
-  return storedUser.token || storedUser.jwt;
-}
-
-// Configuration des headers d'authentification
-function getAuthConfig() {
-  const token = getToken();
-  return {
+// Retrieve all consultants
+export async function getAllConsultants() {
+  const token = localStorage.getItem("token");
+  const response = await axios.get(`${BASE_URL}/consultants`, {
     headers: {
+      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-  };
-}
-
-// Récupérer tous les consultants
-export async function getAllConsultants() {
-  const response = await axios.get(`${BASE_URL}/consultants`, getAuthConfig());
+  });
   return response.data;
 }
 
-// Récupérer tous les domaines
+// Retrieve all domaines
 export async function getAllDomaines() {
-  const response = await axios.get(`${BASE_URL}/domaines`, getAuthConfig());
+  const token = localStorage.getItem("token");
+  const response = await axios.get(`${BASE_URL}/domaines`, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return response.data;
 }
 
-// Récupérer toutes les compétences
+// Retrieve all competences
 export async function getAllCompetences() {
-  const response = await axios.get(`${BASE_URL}/competences`, getAuthConfig());
+  const token = localStorage.getItem("token");
+
+  const response = await axios.get(`${BASE_URL}/competences`, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return response.data;
 }
 
-// Récupérer les missions publiées par l'entreprise
+// Retrieve published missions for an entreprise
 export async function getPublishedMissionsForEntreprise(entrepriseId) {
-  // Par exemple, l'endpoint pourrait être /entreprises/{entrepriseId}/missions
-  const response = await axios.get(`${BASE_URL}/entreprises/${entrepriseId}/missions`, getAuthConfig());
+  const token = localStorage.getItem("token");
+
+  const response = await axios.get(`${BASE_URL}/entreprises/${entrepriseId}/missions`, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return response.data;
 }
 
-// Envoyer une invitation à un consultant (utilise l'entité Proposition)
-// On envoie une requête POST à /propositions avec les données de la proposition
+// Invite a consultant to a job (using the 'Proposition' entity)
 export async function inviteConsultantToJob(entrepriseId, consultantId, propositionData) {
+  const token = localStorage.getItem("token");
+
   const response = await axios.post(
     `${BASE_URL}/propositions`,
     propositionData,
-    getAuthConfig()
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
   );
   return response.data;
 }

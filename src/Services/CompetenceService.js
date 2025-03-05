@@ -3,8 +3,8 @@ import axios from 'axios';
 const API_URL = 'http://localhost:8181/api/competences';
 
 const getAllCompetences = async () => {
-  const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-const token = storedUser?.token;
+  const token = localStorage.getItem("token");
+
   try {
     const response = await axios.get(API_URL, {
       headers: {
@@ -20,8 +20,8 @@ const token = storedUser?.token;
 };
 
 const createCompetence = async (competence) => {
-  const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-const token = storedUser?.token;
+  const token = localStorage.getItem("token");
+
   try {
     const response = await axios.post(API_URL, competence, {
       headers: {

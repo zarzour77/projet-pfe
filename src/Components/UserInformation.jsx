@@ -20,169 +20,176 @@ import CompetenceService from '../Services/CompetenceService';
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 
-const userWithToken = JSON.parse(localStorage.getItem("userWithToken")) || {};
-const userId=userWithToken?.id;
-console.log("user pulled from login",userWithToken)
-const defaultPosition = [36.8065, 10.1815];
-const customIcon = L.icon({
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-  shadowSize: [41, 41],
-});
-
-// Clé API Openrouteservice (remplacez-la par votre clé)
-const API_KEY = '5b3ce3597851110001cf62482cbdc17076234bec8173d3b80ed1a1bf';
-
-// Reverse geocoding : coordonnées -> adresse
-const reverseGeocode = async (lat, lng) => {
-  try {
-    const response = await axios.get(
-      `https://api.openrouteservice.org/geocode/reverse?api_key=${API_KEY}&point.lat=${lat}&point.lon=${lng}`
-    );
-    if (response.data && response.data.features && response.data.features.length > 0) {
-      return response.data.features[0].properties.label;
-    }
-    return '';
-  } catch (error) {
-    console.error('Erreur dans le reverse geocoding :', error);
-    return '';
-  }
-};
-
-// Forward geocoding : adresse -> coordonnées
-const forwardGeocode = async (address) => {
-  try {
-    const response = await axios.get(
-      `https://api.openrouteservice.org/geocode/search?api_key=${API_KEY}&text=${encodeURIComponent(address)}`
-    );
-    if (response.data && response.data.features && response.data.features.length > 0) {
-      const [lng, lat] = response.data.features[0].geometry.coordinates;
-      return { lat, lng };
-    }
-    return null;
-  } catch (error) {
-    console.error('Erreur dans le géocodage direct :', error);
-    return null;
-  }
-};
-
-// Composant pour recentrer la carte
-function MapUpdater({ latitude, longitude }) {
-  const map = useMap();
-  useEffect(() => {
-    if (latitude && longitude) {
-      map.setView([latitude, longitude], map.getZoom(), { animate: true });
-    }
-  }, [latitude, longitude, map]);
-  return null;
-}
-
-function ClickableMap({ latitude, longitude, onLocationSelect }) {
-  const MapClickHandler = () => {
-    useMapEvents({
-      click(e) {
-        onLocationSelect(e.latlng.lat, e.latlng.lng);
-      },
-    });
-    return null;
-  };
-
-  const position = (latitude && longitude) ? [latitude, longitude] : defaultPosition;
-
-  return (
-    <MapContainer
-      center={position}
-      zoom={7}
-      style={{
-        height: '300px',
-        width: '100%',
-        borderRadius: '8px',
-        marginBottom: '20px',
-        boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-      }}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      {/* Composant pour mettre à jour la vue de la carte */}
-      <MapUpdater latitude={latitude} longitude={longitude} />
-      <MapClickHandler />
-      {(latitude && longitude) && (
-        <Marker position={[latitude, longitude]} icon={customIcon}>
-          <Popup>Emplacement sélectionné</Popup>
-        </Marker>
-      )}
-    </MapContainer>
-  );
-}
-
-const LazyClickableMap = React.lazy(() =>
-  Promise.resolve({ default: ClickableMap })
-);
-
-const resetLocation = (setFieldValue) => {
-  setFieldValue('latitude', defaultPosition[0]);
-  setFieldValue('longitude', defaultPosition[1]);
-};
-
-const Step1Schema = Yup.object().shape({
-  nom: Yup.string().required('Champ requis'),
-  prenom: Yup.string().required('Champ requis'),
-  email: Yup.string().email('Email invalide').required('Champ requis'),
-  telephone: Yup.string().required('Champ requis'),
-  adresse: Yup.string().required('Champ requis'),
-  latitude: Yup.number()
-    .transform((value, originalValue) => originalValue === '' ? undefined : value)
-    .required('La latitude est requise'),
-  longitude: Yup.number()
-    .transform((value, originalValue) => originalValue === '' ? undefined : value)
-    .required('La longitude est requise'),
-});
-
-const Step2Schema = Yup.object().shape({
-  domaines: Yup.array().min(1, 'Veuillez sélectionner au moins un domaine'),
-  competences: Yup.array().min(1, 'Veuillez sélectionner au moins une compétence'),
-  portfolio: Yup.string().required('Champ requis'),
-  experienceYears: Yup.number()
-    .required('Champ requis')
-    .typeError('Doit être un nombre'),
-  taux_horaire: Yup.number()
-    .required('Champ requis')
-    .typeError('Doit être un nombre'),
-});
-
-
-// Composant personnalisé pour le champ adresse (déclenche géocodage direct au blur)
-const AddressField = ({ field, form, ...props }) => {
-  const { setFieldValue } = form;
-  const handleBlur = async (e) => {
-    field.onBlur(e);
-    const address = e.target.value;
-    if (address) {
-      const coords = await forwardGeocode(address);
-      if (coords) {
-        setFieldValue('latitude', coords.lat);
-        setFieldValue('longitude', coords.lng);
-        toast.success(`Coordonnées mises à jour: lat ${coords.lat}, lng ${coords.lng}`);
-      } else {
-        toast.error("Impossible de géocoder cette adresse.");
-      }
-    }
-  };
-
-  return <input {...field} {...props} onBlur={handleBlur} />;
-};
-
+// Instead of reading the user only once at the module level,
+// initialize a state variable inside the component.
 const UserInformation = () => {
+  const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState(() => {
+    const stored = localStorage.getItem("user");
+    return stored ? JSON.parse(stored) : {};
+  });
+  console.log("[UserInformation] Current user from localStorage:", currentUser);
+  const userId = currentUser?.id;
+
+  const defaultPosition = [36.8065, 10.1815];
+  const customIcon = L.icon({
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+    shadowSize: [41, 41],
+  });
+
+  // Openrouteservice API key – replace with your own key
+  const API_KEY = '5b3ce3597851110001cf62482cbdc17076234bec8173d3b80ed1a1bf';
+
+  // Reverse geocoding: coordinates -> address
+  const reverseGeocode = async (lat, lng) => {
+    try {
+      const response = await axios.get(
+        `https://api.openrouteservice.org/geocode/reverse?api_key=${API_KEY}&point.lat=${lat}&point.lon=${lng}`
+      );
+      if (response.data && response.data.features && response.data.features.length > 0) {
+        return response.data.features[0].properties.label;
+      }
+      return '';
+    } catch (error) {
+      console.error('Erreur dans le reverse geocoding :', error);
+      return '';
+    }
+  };
+
+  // Forward geocoding: address -> coordinates
+  const forwardGeocode = async (address) => {
+    try {
+      const response = await axios.get(
+        `https://api.openrouteservice.org/geocode/search?api_key=${API_KEY}&text=${encodeURIComponent(address)}`
+      );
+      if (response.data && response.data.features && response.data.features.length > 0) {
+        const [lng, lat] = response.data.features[0].geometry.coordinates;
+        return { lat, lng };
+      }
+      return null;
+    } catch (error) {
+      console.error('Erreur dans le géocodage direct :', error);
+      return null;
+    }
+  };
+
+  // Component to update map view
+  function MapUpdater({ latitude, longitude }) {
+    const map = useMap();
+    useEffect(() => {
+      if (latitude && longitude) {
+        map.setView([latitude, longitude], map.getZoom(), { animate: true });
+      }
+    }, [latitude, longitude, map]);
+    return null;
+  }
+
+  function ClickableMap({ latitude, longitude, onLocationSelect }) {
+    const MapClickHandler = () => {
+      useMapEvents({
+        click(e) {
+          onLocationSelect(e.latlng.lat, e.latlng.lng);
+        },
+      });
+      return null;
+    };
+
+    const position = (latitude && longitude) ? [latitude, longitude] : defaultPosition;
+
+    return (
+      <MapContainer
+        center={position}
+        zoom={7}
+        style={{
+          height: '300px',
+          width: '100%',
+          borderRadius: '8px',
+          marginBottom: '20px',
+          boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+        }}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <MapUpdater latitude={latitude} longitude={longitude} />
+        <MapClickHandler />
+        {(latitude && longitude) && (
+          <Marker position={[latitude, longitude]} icon={customIcon}>
+            <Popup>Emplacement sélectionné</Popup>
+          </Marker>
+        )}
+      </MapContainer>
+    );
+  }
+
+  const LazyClickableMap = React.lazy(() =>
+    Promise.resolve({ default: ClickableMap })
+  );
+
+  const resetLocation = (setFieldValue) => {
+    setFieldValue('latitude', defaultPosition[0]);
+    setFieldValue('longitude', defaultPosition[1]);
+  };
+
+  const Step1Schema = Yup.object().shape({
+    nom: Yup.string().required('Champ requis'),
+    prenom: Yup.string().required('Champ requis'),
+    email: Yup.string().email('Email invalide').required('Champ requis'),
+    telephone: Yup.string().required('Champ requis'),
+    adresse: Yup.string().required('Champ requis'),
+    latitude: Yup.number()
+      .transform((value, originalValue) => originalValue === '' ? undefined : value)
+      .required('La latitude est requise'),
+    longitude: Yup.number()
+      .transform((value, originalValue) => originalValue === '' ? undefined : value)
+      .required('La longitude est requise'),
+  });
+
+  const Step2Schema = Yup.object().shape({
+    domaines: Yup.array().min(1, 'Veuillez sélectionner au moins un domaine'),
+    competences: Yup.array().min(1, 'Veuillez sélectionner au moins une compétence'),
+    portfolio: Yup.string().required('Champ requis'),
+    experienceYears: Yup.number()
+      .required('Champ requis')
+      .typeError('Doit être un nombre'),
+    taux_horaire: Yup.number()
+      .required('Champ requis')
+      .typeError('Doit être un nombre'),
+  });
+
+  // Custom AddressField component for geocoding on blur
+  const AddressField = ({ field, form, ...props }) => {
+    const { setFieldValue } = form;
+    const handleBlur = async (e) => {
+      field.onBlur(e);
+      const address = e.target.value;
+      if (address) {
+        const coords = await forwardGeocode(address);
+        if (coords) {
+          setFieldValue('latitude', coords.lat);
+          setFieldValue('longitude', coords.lng);
+          toast.success(`Coordonnées mises à jour: lat ${coords.lat}, lng ${coords.lng}`);
+        } else {
+          toast.error("Impossible de géocoder cette adresse.");
+        }
+      }
+    };
+
+    return <input {...field} {...props} onBlur={handleBlur} />;
+  };
+
+  // Local state for the form
   const [fetchedUser, setFetchedUser] = useState(null);
 
   useEffect(() => {
     async function fetchUser() {
       try {
+        // Always use the currentUser state for id
         const userData = await UserService.getById(userId);
         setFetchedUser(userData);
       } catch (error) {
@@ -190,7 +197,7 @@ const UserInformation = () => {
         toast.error("Erreur lors de la récupération des données utilisateur.");
       }
     }
-    fetchUser();
+    if (userId) fetchUser();
   }, [userId]);
 
   const initialValues = {
@@ -208,7 +215,6 @@ const UserInformation = () => {
     experienceYears: '',
     taux_horaire: '',
   };
-  
 
   const [userRole, setUserRole] = useState('');
   const [currentStep, setCurrentStep] = useState(1);
@@ -245,19 +251,20 @@ const UserInformation = () => {
   );
 
   const formikRef = React.useRef(null);
-  React.useEffect(() => {
+  useEffect(() => {
     if (formikRef.current) {
       formikRef.current.validateForm();
     }
   }, [currentStep]);
 
-  const navigate = useNavigate();
-
   const handleRoleSelection = (role) => {
-    console.log(role)
+    console.log("Selected role:", role);
+    // Use currentUser.id from state
     UserService.updateUserRole(userId, role)
       .then((updatedUser) => {
+        // Update currentUser state with the new data
         setUserRole(updatedUser.role);
+        setCurrentUser(updatedUser);
       })
       .catch((error) => {
         console.error(error);
@@ -274,7 +281,7 @@ const UserInformation = () => {
 
   const handlePreviewSubmit = (values, setSubmitting) => {
     setModalData(values);
-    console.log(modalData)
+    console.log("Modal data:", values);
     setShowModal(true);
     setSubmitting(false);
   };
@@ -314,10 +321,10 @@ const UserInformation = () => {
         longitude: values.longitude,
         workload: values.workload || 0,
       };
-      localStorage.removeItem("user")
+      // Do NOT remove the stored "user" here so that the same user remains in localStorage.
       const newConsultant = await ConsultantService.updateConsultant(userId, consultantData);
-      localStorage.setItem("Consultant", JSON.stringify(newConsultant));
-      console.log(newConsultant)
+      localStorage.setItem("user", JSON.stringify(newConsultant));
+      console.log("Updated consultant:", newConsultant);
       if (newConsultant) {
         navigate("/SignupSuccess");
       }
@@ -329,7 +336,7 @@ const UserInformation = () => {
     setShowModal(false);
   };
 
-  // Étape 1 pour les consultants : affichage du formulaire et de la carte interactive
+  // Step 1 for Consultants: personal info and interactive map
   const renderConsultantStep = (values, setFieldValue, isSubmitting, isValid) => {
     return (
       <AnimatePresence exitBeforeEnter>
@@ -357,7 +364,7 @@ const UserInformation = () => {
               <Field type="text" name="telephone" placeholder="Téléphone" className="form-control" />
               <ErrorMessage name="telephone" component="div" className="text-danger" />
             </div>
-            {/* Utilisation du composant AddressField pour mettre à jour l'adresse et les coordonnées */}
+            {/* Use AddressField for geocoding on blur */}
             <div className="mb-3">
               <Field
                 name="adresse"
@@ -391,7 +398,6 @@ const UserInformation = () => {
                   latitude={values.latitude}
                   longitude={values.longitude}
                   onLocationSelect={async (lat, lng) => {
-                    // Mise à jour via clic sur la carte (reverse geocoding)
                     setFieldValue('latitude', lat);
                     setFieldValue('longitude', lng);
                     const address = await reverseGeocode(lat, lng);
@@ -448,51 +454,47 @@ const UserInformation = () => {
                   />
                 </div>
                 <div className="mb-3">
-                <CreatableSelect
-  isMulti
-  name="competences"
-  options={competenceOptions}  // Options are of the form { value, label }
-  value={values.competences.map(comp => ({ value: comp.nom, label: comp.nom }))}
-  onChange={(selected) => {
-    // Map selected options to objects with a default level "Débutant"
-    const competencesArray = selected ? selected.map(s => ({
-      nom: s.value,
-      competenceNiveau: "Débutant"
-    })) : [];
-    setFieldValue('competences', competencesArray);
-  }}
-  placeholder="Compétences"
-/>
-
+                  <CreatableSelect
+                    isMulti
+                    name="competences"
+                    options={competenceOptions}
+                    value={values.competences.map(comp => ({ value: comp.nom, label: comp.nom }))}
+                    onChange={(selected) => {
+                      const competencesArray = selected ? selected.map(s => ({
+                        nom: s.value,
+                        competenceNiveau: "Débutant"
+                      })) : [];
+                      setFieldValue('competences', competencesArray);
+                    }}
+                    placeholder="Compétences"
+                  />
                 </div>
               </>
             )}
-             {values.competences && values.competences.length > 0 && (
-  <div className="mb-3">
-    <h5 className="mt-3">Niveaux de compétence</h5>
-    {values.competences.map((comp, idx) => (
-      <div key={idx} className="mb-2">
-        <label>{comp.nom} :</label>
-        <select
-          className="form-select d-inline-block w-auto ms-2"
-          value={comp.competenceNiveau}
-          onChange={(e) => {
-            const newLevel = e.target.value;
-            // Create a copy of the competences array and update the level
-            const updatedCompetences = [...values.competences];
-            updatedCompetences[idx].competenceNiveau = newLevel;
-            setFieldValue('competences', updatedCompetences);
-          }}
-        >
-          <option value="Débutant">Débutant</option>
-          <option value="Intermédiaire">Intermédiaire</option>
-          <option value="Expert">Expert</option>
-        </select>
-      </div>
-    ))}
-  </div>
-)}
-
+            {values.competences && values.competences.length > 0 && (
+              <div className="mb-3">
+                <h5 className="mt-3">Niveaux de compétence</h5>
+                {values.competences.map((comp, idx) => (
+                  <div key={idx} className="mb-2">
+                    <label>{comp.nom} :</label>
+                    <select
+                      className="form-select d-inline-block w-auto ms-2"
+                      value={comp.competenceNiveau}
+                      onChange={(e) => {
+                        const newLevel = e.target.value;
+                        const updatedCompetences = [...values.competences];
+                        updatedCompetences[idx].competenceNiveau = newLevel;
+                        setFieldValue('competences', updatedCompetences);
+                      }}
+                    >
+                      <option value="Débutant">Débutant</option>
+                      <option value="Intermédiaire">Intermédiaire</option>
+                      <option value="Expert">Expert</option>
+                    </select>
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="mb-3">
               <Field type="text" name="portfolio" placeholder="Portfolio" className="form-control" />
             </div>
@@ -542,7 +544,7 @@ const UserInformation = () => {
         latitude: values.latitude    
       };
       const updatedEntreprise = await EntrepriseService.updateEntreprise(userId, entrepriseData);
-      localStorage.setItem("entreprise", JSON.stringify(updatedEntreprise));
+      localStorage.setItem("user", JSON.stringify(updatedEntreprise));
       toast.success("Entreprise mise à jour avec succès!", { icon: "✅" });
     } catch (error) {
       console.error("Error updating entreprise:", error);
@@ -589,22 +591,21 @@ const UserInformation = () => {
       </div>
       <div className="mb-3">
         <Suspense fallback={<div>Chargement de la carte...</div>}>
-        <LazyClickableMap
-          latitude={values.latitude}
-        longitude={values.longitude}
-        onLocationSelect={async (lat, lng) => {
-          setFieldValue('latitude', lat);
-          setFieldValue('longitude', lng);
-          const address = await reverseGeocode(lat, lng);
-          if (address) {
-            setFieldValue('adresse', address);
-            toast.success(`Adresse mise à jour : ${address}`);
-          } else {
-            toast.error("Impossible de récupérer l'adresse pour ces coordonnées.");
-          }
-  }}
-/>
-
+          <LazyClickableMap
+            latitude={values.latitude}
+            longitude={values.longitude}
+            onLocationSelect={async (lat, lng) => {
+              setFieldValue('latitude', lat);
+              setFieldValue('longitude', lng);
+              const address = await reverseGeocode(lat, lng);
+              if (address) {
+                setFieldValue('adresse', address);
+                toast.success(`Adresse mise à jour : ${address}`);
+              } else {
+                toast.error("Impossible de récupérer l'adresse pour ces coordonnées.");
+              }
+            }}
+          />
         </Suspense>
         <Button variant="secondary" size="sm" onClick={() => resetLocation(setFieldValue)} className="mt-2">
           Réinitialiser la localisation
@@ -722,7 +723,6 @@ const UserInformation = () => {
               <p><strong>Portfolio:</strong> {modalData.portfolio}</p>
               <p><strong>Expérience (années):</strong> {modalData.experienceYears}</p>
               <p><strong>Taux Horaire:</strong> {modalData.taux_horaire}</p>
-              
             </div>
           )}
         </Modal.Body>

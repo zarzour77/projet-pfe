@@ -15,19 +15,19 @@ import {
 } from "lucide-react";
 
 /** Services WebSocket et API **/
-import { connect, disconnect } from "../services/WebSocket";
+import { connect, disconnect } from "../Services/WebSocket";
 import { 
   getConversations, 
   getConversationHistory, 
   createConversation, 
   sendMessage as apiSendMessage,
   uploadFileMessage
-} from "../services/MessengerService";
+} from "../Services/MessengerService";
 import EmojiPicker from "emoji-picker-react";
 
 export default function Messenger() {
   const location = useLocation();
-  const userWithToken = JSON.parse(localStorage.getItem("userWithToken")) || {};
+  const userWithToken = JSON.parse(localStorage.getItem("user")) || {};
   const currentUser = userWithToken.email || "me@domain.com";
   const currentUserId = userWithToken.id || null; 
 

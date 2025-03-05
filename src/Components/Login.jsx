@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
-import { useState, useEffect  } from "react";
+import { useState, useEffect } from "react";
 import AuthService from "../Services/AuthService";
 import styles from "./Login.module.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -24,8 +24,8 @@ const Login = () => {
 
   const navigate = useNavigate();
 
+  // Clear localStorage when component mounts so no old user remains.
   useEffect(() => {
-    // Clear localStorage when component mounts
     localStorage.clear();
   }, []);
 
@@ -49,47 +49,43 @@ const Login = () => {
     }
   };
 
-  // Call login only one time. If the login fails because the email isn't verified,
-  // we show the verification code input and do NOT call the login endpoint again automatically.
   const handleLogin = async (e) => {
     e.preventDefault();
-    
+
     // If the verification flow is active, let its handler take over.
     if (showVerify) {
       handleVerifySubmit(e);
       return;
     }
-  
+
     try {
       console.log("Attempting login:", signinEmail, signinPassword);
       // Call the login endpoint once
       const loginResponse = await AuthService.login(signinEmail, signinPassword);
-      
-      // Clear localStorage before saving new user data
+      // Clear any old data and store the full user object (with token) under "user"
       localStorage.clear();
-  
-      // Store the login response (with token) so subsequent calls can use it
-      localStorage.setItem("userWithToken", JSON.stringify(loginResponse));
-  
+      localStorage.setItem("user", JSON.stringify(loginResponse));
+      const token =localStorage.setItem("token",loginResponse.token)
+      console.log(token)
       // Fetch full user details using the ID from the login response
       const fullUser = await UserService.getById(loginResponse.id);
       console.log("Full user:", fullUser);
-  
-      // Merge token if needed
+
+      // Ensure the token is present on the full user object
       if (!fullUser.token) {
         fullUser.token = loginResponse.token;
       }
-  
-      // Store the complete user object
+
+      // Store the complete user object under "user"
       localStorage.setItem("user", JSON.stringify(fullUser));
-  
+
       // Navigate based on user role
       if (fullUser.role === "ROLE_USER") {
         navigate("/UserInformation");
       } else if (fullUser.role === "Consultant") {
         navigate("/ProfilePage");
-      }else{
-        navigate("/LandingEntreprise")
+      } else {
+        navigate("/LandingEntreprise");
       }
     } catch (error) {
       // If the error indicates the email isn't verified, prompt for verification code
@@ -107,8 +103,7 @@ const Login = () => {
       console.error(error);
     }
   };
-  
-  
+
   // Handle verification without re-calling the login endpoint.
   const handleVerifySubmit = async (e) => {
     e.preventDefault();
@@ -116,8 +111,6 @@ const Login = () => {
       const result = await AuthService.verifyEmail(signinEmail, verificationCode);
       alert(result.message);
       setShowVerify(false);
-      // Inform the user that their account is now verified.
-      // They will need to submit the login form again manually.
       alert("Votre compte est désormais vérifié. Veuillez vous reconnecter.");
     } catch (error) {
       alert("Code de vérification invalide. Veuillez réessayer.");

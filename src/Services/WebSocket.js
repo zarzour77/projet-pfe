@@ -4,8 +4,7 @@ import SockJS from 'sockjs-client/dist/sockjs.min.js';
 let stompClient = null;
 
 export const connect = (onMessageReceived, onConnected) => {
-  const userWithToken = JSON.parse(localStorage.getItem("userWithToken"));
-  const token = userWithToken?.token; // Ensure the token exists
+  const token = localStorage.getItem("token");
   // Append token to the WebSocket URL as a query parameter
   const socket = new SockJS(`http://localhost:8181/ws?token=${token}`);
   

@@ -3,7 +3,7 @@ import styles from "./Subscription.module.css";
 import PaymentService from "../Services/PaymentService";
 import UserService from "../Services/UserService";
 import { useNavigate } from "react-router-dom";
-const storedConsultant = JSON.parse(localStorage.getItem("Consultant"));
+const storedConsultant = JSON.parse(localStorage.getItem("user"));
 const consultantId=storedConsultant?.id;
 const Subscription = () => {
   const [selectedPlan, setSelectedPlan] = useState(null);

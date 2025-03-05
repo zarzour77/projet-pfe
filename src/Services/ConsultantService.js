@@ -5,9 +5,10 @@ const API_cv = 'http://localhost:8181/api/cv';
 
 
 const ConsultantService = {
+  
   createConsultant: async (consultantData) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-    const token = storedUser?.token;
+    const token = localStorage.getItem("token");
+
     try {
       const response = await axios.post(
         `${API_URL}`,
@@ -22,8 +23,8 @@ const ConsultantService = {
   },
 
   getConsultantById: async (id) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-    const token = storedUser?.token;
+    const token = localStorage.getItem("token");
+
     try {
       const response = await axios.get(`${API_URL}/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -36,8 +37,8 @@ const ConsultantService = {
   },
 
   updateConsultant: async (id, consultantData) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-    const token = storedUser?.token;
+    const token = localStorage.getItem("token");
+
     try {
       const response = await axios.put(
         `${API_URL}/${id}`,
@@ -52,8 +53,8 @@ const ConsultantService = {
   },
 
   generateCv: async (id) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-    const token = storedUser?.token;
+    const token = localStorage.getItem("token");
+
     try {
       const response = await axios.get(
         `${API_cv}/${id}`,
@@ -70,8 +71,8 @@ const ConsultantService = {
   },
 
   saveCv: async (id) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-    const token = storedUser?.token;
+    const token = localStorage.getItem("token");
+
     try {
       const response = await axios.post(
         `${API_cv}/saveCv/${id}`,
@@ -86,8 +87,8 @@ const ConsultantService = {
   },
 
   uploadProfilePicture: async (id, file) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-    const token = storedUser?.token;
+    const token = localStorage.getItem("token");
+
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -109,8 +110,8 @@ const ConsultantService = {
   },
 
   addExperience: async (consultantId, experienceData) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-    const token = storedUser?.token;
+    const token = localStorage.getItem("token");
+
     try {
       const response = await axios.post(
         `${API_URL}/${consultantId}/addExperience`,
@@ -125,8 +126,8 @@ const ConsultantService = {
   },
 
   deleteExperience: async (consultantId, experienceId) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-    const token = storedUser?.token;
+    const token = localStorage.getItem("token");
+
     try {
       const response = await axios.delete(
         `${API_URL}/${consultantId}/deleteExperience/${experienceId}`,
@@ -141,8 +142,8 @@ const ConsultantService = {
 
   // Competence methods
   addCompetence: async (consultantId, competenceData) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-    const token = storedUser?.token;
+    const token = localStorage.getItem("token");
+
     try {
       const response = await axios.post(
         `${API_URL}/${consultantId}/addCompetence`,
@@ -157,8 +158,8 @@ const ConsultantService = {
   },
 
   deleteCompetence: async (consultantId, competenceId) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-    const token = storedUser?.token;
+    const token = localStorage.getItem("token");
+
     try {
       const response = await axios.delete(
         `${API_URL}/${consultantId}/deleteCompetence/${competenceId}`,
@@ -173,8 +174,8 @@ const ConsultantService = {
 
   // Domaine methods
   addDomaine: async (consultantId, domaineData) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-    const token = storedUser?.token;
+    const token = localStorage.getItem("token");
+
     try {
       const response = await axios.post(
         `${API_URL}/${consultantId}/addDomaine`,
@@ -189,9 +190,9 @@ const ConsultantService = {
   },
 
   deleteDomaine: async (consultantId, domaineId) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-    const token = storedUser?.token;
-    try {
+    
+    const token = localStorage.getItem("token");
+try {
       const response = await axios.delete(
         `${API_URL}/${consultantId}/deleteDomaine/${domaineId}`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -206,9 +207,9 @@ const ConsultantService = {
   // New methods for Langue, Formation, Certification
 
   addLangue: async (consultantId, langueData) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-    const token = storedUser?.token;
-    try {
+    
+    const token = localStorage.getItem("token");
+try {
       const response = await axios.post(
         `${API_URL}/${consultantId}/addLangue`,
         langueData,
@@ -222,9 +223,9 @@ const ConsultantService = {
   },
 
   addFormation: async (consultantId, formationData) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-    const token = storedUser?.token;
-    try {
+    
+    const token = localStorage.getItem("token");
+try {
       const response = await axios.post(
         `${API_URL}/${consultantId}/addFormation`,
         formationData,
@@ -238,9 +239,9 @@ const ConsultantService = {
   },
 
   addCertification: async (consultantId, certificationData) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-    const token = storedUser?.token;
-    try {
+  
+    const token = localStorage.getItem("token");
+try {
       const response = await axios.post(
         `${API_URL}/${consultantId}/addCertification`,
         certificationData,
@@ -255,9 +256,9 @@ const ConsultantService = {
 // Add these methods to your ConsultantService object
 
 deleteLangue: async (consultantId, langueId) => {
-  const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-  const token = storedUser?.token;
-  try {
+
+  const token = localStorage.getItem("token");
+try {
     const response = await axios.delete(
       `${API_URL}/${consultantId}/deleteLangue/${langueId}`,
       { headers: { Authorization: `Bearer ${token}` } }
@@ -270,9 +271,9 @@ deleteLangue: async (consultantId, langueId) => {
 },
 
 deleteFormation: async (consultantId, formationId) => {
-  const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-  const token = storedUser?.token;
-  try {
+  
+  const token = localStorage.getItem("token");
+try {
     const response = await axios.delete(
       `${API_URL}/${consultantId}/deleteFormation/${formationId}`,
       { headers: { Authorization: `Bearer ${token}` } }
@@ -285,9 +286,9 @@ deleteFormation: async (consultantId, formationId) => {
 },
 
 deleteCertification: async (consultantId, certificationId) => {
-  const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-  const token = storedUser?.token;
-  try {
+  
+  const token = localStorage.getItem("token");
+try {
     const response = await axios.delete(
       `${API_URL}/${consultantId}/deleteCertification/${certificationId}`,
       { headers: { Authorization: `Bearer ${token}` } }
@@ -299,9 +300,9 @@ deleteCertification: async (consultantId, certificationId) => {
   }
 },
   saveMissionForConsultant: async (consultantId, missionId) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-    const token = storedUser?.token;
-    try {
+    
+    const token = localStorage.getItem("token");
+try {
       const response = await axios.post(
         `${API_URL}/${consultantId}/savedMissions?missionId=${missionId}`,
         {},
@@ -315,9 +316,9 @@ deleteCertification: async (consultantId, certificationId) => {
   },
 
   getSavedMissionsForConsultant: async (consultantId) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-    const token = storedUser?.token;
-    try {
+    
+    const token = localStorage.getItem("token");
+try {
       const response = await axios.get(
         `${API_URL}/${consultantId}/savedMissions`,
         { headers: { Authorization: `Bearer ${token}` } }

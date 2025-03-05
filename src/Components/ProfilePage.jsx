@@ -8,9 +8,10 @@ import LangueService from '../Services/LangueService';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const storedConsultant = JSON.parse(localStorage.getItem("userWithToken"));
-const consultantId=storedConsultant?.id;
+
 const ProfilePage = () => {
+  const storedConsultant = JSON.parse(localStorage.getItem("user"));
+const consultantId=storedConsultant?.id;
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
