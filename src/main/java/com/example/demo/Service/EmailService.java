@@ -1,4 +1,5 @@
 package com.example.demo.Service;
+
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.core.io.ByteArrayResource;
@@ -6,9 +7,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-
 import org.springframework.beans.factory.annotation.Autowired;
-
 
 @Service
 public class EmailService {
@@ -22,6 +21,7 @@ public class EmailService {
         message.setText("Votre code de vérification est : " + code);
         mailSender.send(message);
     }
+
     public void sendApplicationEmail(String to, String subject, String content, byte[] attachmentBytes, String attachmentFilename) {
         MimeMessage message = mailSender.createMimeMessage();
         try {
@@ -38,6 +38,23 @@ public class EmailService {
             System.out.println("Email d'application envoyé à " + to);
         } catch (MessagingException e) {
             System.err.println("Erreur lors de l'envoi de l'email d'application: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // Nouvelle méthode pour envoyer l'email d'invitation
+    public void sendInvitationEmail(String to, String subject, String content) {
+        MimeMessage message = mailSender.createMimeMessage();
+        try {
+            // false car pas de pièce jointe pour l'invitation
+            MimeMessageHelper helper = new MimeMessageHelper(message, false);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(content, false); // false pour texte brut, true pour HTML si nécessaire
+            mailSender.send(message);
+            System.out.println("Email d'invitation envoyé à " + to);
+        } catch (MessagingException e) {
+            System.err.println("Erreur lors de l'envoi de l'email d'invitation: " + e.getMessage());
             e.printStackTrace();
         }
     }
