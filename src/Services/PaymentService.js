@@ -2,14 +2,14 @@ import axios from "axios";
 
 const API_BASE_URL = 'http://localhost:8081/payment' //st the URL if needed
 
+const token = localStorage.getItem("token");
+
 const PaymentService = {
   createPayment: async (amount) => {
     try {
-      const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-      console.log(storedUser);
+      
 
       // Define token before checking it
-      const token = storedUser?.token;
       if (!token) throw new Error("JWT Token is missing");
 
       console.log(token);
@@ -37,8 +37,7 @@ const PaymentService = {
 
   verifyPayment: async (paymentId) => {
     try {
-      const storedUser = JSON.parse(localStorage.getItem("user"));
-      const token = storedUser?.token;
+      
       if (!token) throw new Error("JWT Token is missing");
 
       const response = await axios.get(`${API_BASE_URL}/success`, {

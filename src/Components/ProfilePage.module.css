@@ -1,560 +1,889 @@
 /* Définition des variables de couleur */
 :root {
-    --color-dark-blue: #001A6E;
-    --color-blue: #074799;
-    --color-teal: #009990;
-    --color-light: #E1FFBB;
+  --color-dark-blue: #001A6E;
+  --color-blue: #074799;
+  --color-teal: #009990;
+  --color-light: #E1FFBB;
+}
+
+/* Container & Header */
+.profileContainer {
+  position: relative; /* Added to allow absolute positioning of inner elements */
+
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+}
+
+.profileHeader {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(45deg, var(--color-dark-blue), var(--color-blue));
+  border-radius: 10px;
+}
+
+/* Profile Photo Container & Hover Overlay */
+.profilePhotoContainer {
+  position: relative;
+  display: inline-block;
+}
+
+.profilePhoto {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 1.5rem;
+  border: 3px solid var(--color-light);
+  transition: filter 0.3s ease;
+}
+
+.profilePhotoContainer:hover .profilePhoto {
+  filter: brightness(0.7);
+}
+
+/* Edit Button Overlay for Profile Photo */
+.profilePhotoEditBtn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.profilePhotoContainer:hover .profilePhotoEditBtn {
+  opacity: 1;
+}
+
+/* Profile Name & Role Badge */
+.profileName {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  color: #fff;
+}
+
+.roleBadge {
+  display: inline-block;
+  padding: 0.4rem 1.2rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #fff;
+}
+
+.entrepriseBadge {
+  background: var(--color-teal);
+}
+
+.consultantBadge {
+  background: var(--color-blue);
+}
+
+/* Profile Section Container */
+.profileSection {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: #FBFCF2; /* white background */
+  border: none;
+  border-radius: 10px;
+  box-shadow: 8px 14px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Section Title */
+.sectionTitle {
+  font-size: 1.5rem;
+  color: #000;
+  margin-bottom: 1rem;
+  border: none;
+  border-bottom: 2px solid #074799;
+  width: fit-content;
+}
+
+/* Info Grid - Stack vertically */
+.infoGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Individual Info Item */
+.infoItem {
+  padding: 1rem;
+  background: #fff;
+  box-shadow: none;
+  border: none;
+  position: relative;
+}
+
+/* New container for label and add button */
+.infoHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Labels & Values */
+.infoLabel {
+  font-weight: bold;
+  color: #000;
+  margin-bottom: 0.3rem;
+}
+
+.infoValue {
+  font-size: 1rem;
+  color: #000;
+  margin: 0;
+}
+
+/* Edit Button - (for other sections) */
+.editBtn {
+  background: none;
+  border: none;
+  color: #000;
+  cursor: pointer;
+  padding: 0.3rem;
+  font-size: 1rem;
+  transition: transform 0.2s ease, opacity 0.3s ease;
+  opacity: 0;
+  transform: scale(1);
+}
+
+.infoItem:hover .editBtn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.editBtn:hover {
+  transform: scale(1.1);
+}
+
+/* Add Buttons for Competences and Domaines - inline next to the label */
+.addCompetenceBtn,
+.addDomaineBtn,.addLangueBtn {
+  background: var(--color-blue);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+  transform: scale(1);
+}
+
+.infoHeader:hover .addCompetenceBtn,
+.infoHeader:hover .addDomaineBtn,
+.infoHeader:hover .addLangueBtn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Add Button for Experiences - inline next to the section title */
+/* Initially hidden; appears with a smooth fade in when hovering over the header */
+.addExperienceBtn {
+  padding: 0.3rem 0.6rem;
+  background: var(--color-blue);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+  transform: scale(1);
+  width: 35px;
+  height: 35px;
+  margin-top: -12px;
+}
+
+.infoHeader:hover .addExperienceBtn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.addExperienceBtn:hover {
+  background: var(--color-dark-blue);
+  transform: scale(1.1);
+}
+
+/* View Button */
+.viewBtn {
+  background: var(--color-blue);
+  color: #fff;
+  border: none;
+  padding: 0.3rem;
+  border-radius: 5px;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Description Container for Experience Card */
+.descriptionContainer {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.viewBtn {
+  background: var(--color-blue);
+  color: #fff;
+  border: none;
+  padding: 0.3rem;
+  border-radius: 5px;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Delete Button styling */
+.deleteBtn {
+  background: var(--color-blue);
+  color: #fff;
+  border: none;
+  padding: 0.3rem;
+  border-radius: 5px;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  margin-top: 0.5rem;
+}
+
+.experienceCard:hover .descriptionContainer .viewBtn,
+.descriptionContainer:hover .viewBtn,
+.experienceCard:hover .descriptionContainer .deleteBtn,
+.descriptionContainer:hover .deleteBtn,
+.viewBtn:hover,
+.deleteBtn:hover {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.deleteBtn {
+  background-color: red;
+}
+
+/* Tags */
+.tagsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.tag {
+  background: var(--color-blue);
+  padding: 0.4rem 0.9rem;
+  border-radius: 15px;
+  font-size: 0.9rem;
+  color: white;
+}
+
+.noData {
+  color: var(--color-blue);
+  font-style: italic;
+}
+
+/* Reviews */
+.reviewsWrapper {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .reviewsWrapper {
+    grid-template-columns: 1fr 1fr;
   }
-  
-  /* Container & Header */
+}
+
+.reviewCard {
+  background: #fff;
+  padding: 1.25rem;
+  margin: 0.75rem 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.reviewText {
+  color: var(--color-dark-blue);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.4;
+}
+
+.reviewRating {
+  color: var(--color-teal);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.noReviews {
+  color: var(--color-blue);
+  text-align: center;
+  padding: 1rem;
+}
+
+.loading,
+.error {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.2rem;
+  color: var(--color-dark-blue);
+}
+
+/* Expériences professionnelles */
+.experiencesGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.experienceCard {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid var(--color-blue);
+  position: relative;
+}
+
+.experienceHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.experienceRole {
+  font-size: 1.2rem;
+  color: var(--color-dark-blue);
+  margin: 0;
+}
+
+.experienceDates {
+  font-size: 0.9rem;
+  color: var(--color-teal);
+  margin: 9px;
+  font-weight: bold;
+}
+
+.experienceEntreprise {
+  font-size: 1rem;
+  color: var(--color-blue);
+  margin: 0.5rem 0;
+}
+
+.experienceDescription {
+  font-size: 0.9rem;
+  color: var(--color-dark-blue);
+  display: none;
+}
+
+/* Modal Styles with Fade In Animation */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modalContent {
+  background: #fff;
+  padding: 2.5rem;
+  border-radius: 10px;
+  width: 70%;
+  max-width: 800px;
+  max-height: 90%;
+  overflow-y: auto;
+  animation: fadeIn 0.5s ease-out;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.modalCloseBtn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: var(--color-blue);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.modalCloseBtn:hover {
+  background: var(--color-dark-blue);
+}
+
+/* Form Groups for the add experience modal */
+.formGroup {
+  margin-bottom: 1rem;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-weight: bold;
+}
+
+.formGroup input,
+.formGroup textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+/* Button for submitting the add experience form */
+.modalSubmitBtn {
+  background: var(--color-teal);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.modalSubmitBtn:hover {
+  background: var(--color-blue);
+}
+
+/* Experiences Section - add scroll and max height */
+.experiencesGrid {
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 1rem;
+}
+
+/* Button to add a new experience */
+.headerContainer {
+  position: relative;
+}
+
+/* Responsivité mobile */
+@media (max-width: 768px) {
   .profileContainer {
-    max-width: 1200px;
-    margin: 2rem auto;
-    padding: 2rem;
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
-  }
-  
-  .profileHeader {
-    text-align: center;
-    margin-bottom: 2rem;
-    padding: 1.5rem;
-    background: linear-gradient(45deg, var(--color-dark-blue), var(--color-blue));
-    border-radius: 10px;
-  }
-  
-  /* Profile Photo Container & Hover Overlay */
-  .profilePhotoContainer {
-    position: relative;
-    display: inline-block;
+    padding: 1rem;
+    margin: 1rem;
   }
   
   .profilePhoto {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-bottom: 1.5rem;
-    border: 3px solid var(--color-light);
-    transition: filter 0.3s ease;
+    width: 120px;
+    height: 120px;
   }
   
-  .profilePhotoContainer:hover .profilePhoto {
-    filter: brightness(0.7);
-  }
-  
-  /* Edit Button Overlay for Profile Photo */
-  .profilePhotoEditBtn {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.6);
-    color: #fff;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  
-  .profilePhotoContainer:hover .profilePhotoEditBtn {
-    opacity: 1;
-  }
-  
-  /* Profile Name & Role Badge */
   .profileName {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-    color: #fff;
-  }
-  
-  .roleBadge {
-    display: inline-block;
-    padding: 0.4rem 1.2rem;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #fff;
-  }
-  
-  .entrepriseBadge {
-    background: var(--color-teal);
-  }
-  
-  .consultantBadge {
-    background: var(--color-blue);
-  }
-  
-  /* Profile Section Container */
-  .profileSection {
-    margin: 2rem 0;
-    padding: 1.5rem;
-    background: #FBFCF2; /* white background */
-    border: none;
-    border-radius: 10px;
-    box-shadow: 8px 14px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  /* Section Title */
-  .sectionTitle {
     font-size: 1.5rem;
-    color: #000;
-    margin-bottom: 1rem;
-    border: none;
-    border-bottom: 2px solid #074799;
-    width: fit-content;
   }
   
-  /* Info Grid - Stack vertically */
+  .profileSection {
+    padding: 1rem;
+  }
+  
   .infoGrid {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  /* Individual Info Item */
-  .infoItem {
-    padding: 1rem;
-    background: #fff;
-    box-shadow: none;
-    border: none;
-    position: relative;
-  }
-  
-  /* New container for label and add button */
-  .infoHeader {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  
-  /* Labels & Values */
-  .infoLabel {
-    font-weight: bold;
-    color: #000;
-    margin-bottom: 0.3rem;
-  }
-  
-  .infoValue {
-    font-size: 1rem;
-    color: #000;
-    margin: 0;
-  }
-  
-  /* Edit Button - (for other sections) */
-  .editBtn {
-    background: none;
-    border: none;
-    color: #000;
-    cursor: pointer;
-    padding: 0.3rem;
-    font-size: 1rem;
-    transition: transform 0.2s ease, opacity 0.3s ease;
-    opacity: 0;
-    transform: scale(1);
-  }
-  
-  .infoItem:hover .editBtn {
-    opacity: 1;
-    transform: scale(1);
-  }
-  
-  .editBtn:hover {
-    transform: scale(1.1);
-  }
-  
-  /* Add Buttons for Competences and Domaines - inline next to the label */
-  .addCompetenceBtn,
-  .addDomaineBtn {
-    background: var(--color-blue);
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    padding: 0.3rem 0.6rem;
-    cursor: pointer;
-    transition: background 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
-    opacity: 0;
-    transform: scale(1);
-  }
-  
-  .infoHeader:hover .addCompetenceBtn,
-  .infoHeader:hover .addDomaineBtn {
-    opacity: 1;
-    transform: scale(1);
-  }
-  
-  /* Add Button for Experiences - inline next to the section title */
-  /* Initially hidden; appears with a smooth fade in when hovering over the header */
-  .addExperienceBtn {
-    padding: 0.3rem 0.6rem;
-    background: var(--color-blue);
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
-    opacity: 0;
-    transform: scale(1);
-    width: 35px;
-    height: 35px;
-    margin-top: -12px;
-  }
-  
-  .infoHeader:hover .addExperienceBtn {
-    opacity: 1;
-    transform: scale(1);
-  }
-  
-  .addExperienceBtn:hover {
-    background: var(--color-dark-blue);
-    transform: scale(1.1);
-  }
-  
-  /* View Button */
-  .viewBtn {
-    background: var(--color-blue);
-    color: #fff;
-    border: none;
-    padding: 0.3rem;
-    border-radius: 5px;
-    cursor: pointer;
-    opacity: 0;
-    transform: scale(0.8);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-  }
-  
-  /* Description Container for Experience Card */
-  .descriptionContainer {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .viewBtn {
-    background: var(--color-blue);
-    color: #fff;
-    border: none;
-    padding: 0.3rem;
-    border-radius: 5px;
-    cursor: pointer;
-    opacity: 0;
-    transform: scale(0.8);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-  }
-  
-  /* Delete Button styling */
-  .deleteBtn {
-    background: var(--color-blue);
-    color: #fff;
-    border: none;
-    padding: 0.3rem;
-    border-radius: 5px;
-    cursor: pointer;
-    opacity: 0;
-    transform: scale(0.8);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    margin-top: 0.5rem;
-  }
-  
-  .experienceCard:hover .descriptionContainer .viewBtn,
-  .descriptionContainer:hover .viewBtn,
-  .experienceCard:hover .descriptionContainer .deleteBtn,
-  .descriptionContainer:hover .deleteBtn,
-  .viewBtn:hover,
-  .deleteBtn:hover {
-    opacity: 1;
-    transform: scale(1);
-  }
-  
-  .deleteBtn {
-    background-color: red;
-  }
-  
-  /* Tags */
-  .tagsContainer {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-  }
-  
-  .tag {
-    background: var(--color-blue);
-    padding: 0.4rem 0.9rem;
-    border-radius: 15px;
-    font-size: 0.9rem;
-    color: white;
-  }
-  
-  .noData {
-    color: var(--color-blue);
-    font-style: italic;
-  }
-  
-  /* Reviews */
-  .reviewsWrapper {
-    display: grid;
     grid-template-columns: 1fr;
-    gap: 2rem;
-    margin-top: 1.5rem;
   }
-  
-  @media (min-width: 768px) {
-    .reviewsWrapper {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-  
-  .reviewCard {
-    background: #fff;
-    padding: 1.25rem;
-    margin: 0.75rem 0;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  }
-  
-  .reviewText {
-    color: var(--color-dark-blue);
-    margin: 0 0 0.5rem 0;
-    line-height: 1.4;
-  }
-  
-  .reviewRating {
-    color: var(--color-teal);
-    font-weight: 600;
-    font-size: 0.9rem;
-  }
-  
-  .noReviews {
-    color: var(--color-blue);
-    text-align: center;
-    padding: 1rem;
-  }
-  
-  .loading,
-  .error {
-    text-align: center;
-    padding: 3rem;
-    font-size: 1.2rem;
-    color: var(--color-dark-blue);
-  }
-  
-  /* Expériences professionnelles */
-  .experiencesGrid {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    margin-top: 1rem;
-  }
-  
-  .experienceCard {
-    background: #fff;
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    border-bottom: 1px solid var(--color-blue);
-    position: relative;
-  }
-  
-  .experienceHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-  }
-  
-  .experienceRole {
-    font-size: 1.2rem;
-    color: var(--color-dark-blue);
-    margin: 0;
-  }
-  
-  .experienceDates {
-    font-size: 0.9rem;
-    color: var(--color-teal);
-    margin: 9px;
-    font-weight: bold;
-  }
-  
-  .experienceEntreprise {
-    font-size: 1rem;
-    color: var(--color-blue);
-    margin: 0.5rem 0;
-  }
-  
-  .experienceDescription {
-    font-size: 0.9rem;
-    color: var(--color-dark-blue);
-    display: none;
-  }
-  
-  /* Modal Styles with Fade In Animation */
-  .modalOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-  }
-  
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  
-  .modalContent {
-    background: #fff;
-    padding: 2.5rem;
-    border-radius: 10px;
-    width: 70%;
-    max-width: 800px;
-    max-height: 90%;
-    overflow-y: auto;
-    animation: fadeIn 0.5s ease-out;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    position: relative;
-  }
-  
-  .modalCloseBtn {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    background: var(--color-blue);
-    color: #fff;
-    border: none;
-    border-radius: 50%;
-    width: 35px;
-    height: 35px;
-    font-size: 1.2rem;
-    cursor: pointer;
-    transition: background 0.3s ease;
-  }
-  
-  .modalCloseBtn:hover {
-    background: var(--color-dark-blue);
-  }
-  
-  /* Form Groups for the add experience modal */
-  .formGroup {
-    margin-bottom: 1rem;
-  }
-  
-  .formGroup label {
-    display: block;
-    margin-bottom: 0.3rem;
-    font-weight: bold;
-  }
-  
-  .formGroup input,
-  .formGroup textarea {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-  }
-  
-  /* Button for submitting the add experience form */
-  .modalSubmitBtn {
-    background: var(--color-teal);
-    color: #fff;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-  }
-  
-  .modalSubmitBtn:hover {
-    background: var(--color-blue);
-  }
-  
-  /* Experiences Section - add scroll and max height */
-  .experiencesGrid {
-    max-height: 500px;
-    overflow-y: auto;
-    padding-right: 1rem;
-  }
-  
-  /* Button to add a new experience */
-  .headerContainer {
-    position: relative;
-  }
-  
-  /* Responsivité mobile */
-  @media (max-width: 768px) {
-    .profileContainer {
-      padding: 1rem;
-      margin: 1rem;
-    }
-    
-    .profilePhoto {
-      width: 120px;
-      height: 120px;
-    }
-    
-    .profileName {
-      font-size: 1.5rem;
-    }
-    
-    .profileSection {
-      padding: 1rem;
-    }
-    
-    .infoGrid {
-      grid-template-columns: 1fr;
-    }
-  }
-  
-  /* Styles for the competence progress bar */
-  .competenceList {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .competenceItem {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.5rem 0;
-  }
-  
-  .competenceName {
-    font-size: 1rem;
-    background: var(--color-blue);
-    padding: 0.4rem 0.9rem;
-    border-radius: 15px;
-    font-size: 0.9rem;
-    color: white;
-  }
-  
-  .progressBarContainer {
-    background-color: #e0e0e0;
-    border-radius: 4px;
-    overflow: hidden;
-    height: 10px;
-    width: 150px;
-    margin-left: auto;
-  }
-  
-  .progressBar {
-    background-color: #4caf50;
-    height: 100%;
-    transition: width 0.3s ease-in-out;
-  }
+}
+
+/* Styles for the competence progress bar */
+.competenceList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.competenceItem {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.competenceName,.domainName,.langueName {
+  font-size: 1rem;
+  background: var(--color-blue);
+  padding: 0.4rem 0.9rem;
+  border-radius: 15px;
+  font-size: 0.9rem;
+  color: white !important;
+}
+
+.progressBarContainer {
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  height: 10px;
+  width: 150px;
+  margin-left: auto;
+}
+
+.progressBar {
+  background-color: #4caf50;
+  height: 100%;
+  transition: width 0.3s ease-in-out;
+}
+.cvButton {
+  position: absolute;
+  top: 2.5rem;
+  right: 2.5rem;
+  background: var(--color-teal);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; /* Initial icon-only width */
+  padding: 0.5rem;
+  transition: width 0.3s ease, background 0.3s ease;
+  z-index: 1100;
+}
+
+.cvButton:hover {
+  width: 180px; /* Expanded width for text */
+  background: var(--color-dark-blue);
+}
+
+/* Icon styling */
+.cvButton i {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.cvButton:hover i {
+  opacity: 0; /* Hide icon on hover */
+}
+
+/* Text styling */
+.cvText {
+  opacity: 0;
+  position: absolute;
+  transition: opacity 0.3s ease;
+  font-size: 1rem;
+}
+
+.cvButton:hover .cvText {
+  opacity: 1; /* Show text on hover */
+}
+.cvIcon{
+  font-size: 1.2rem; /* Increase the icon size */
+  opacity: 1;
+}/* Increase modal size for a better CV preview */
+.modalContent {
+  background: #fff;
+  padding: 2.5rem;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 1000px; /* Increase max width */
+  max-height: 90%;
+  overflow-y: auto;
+  animation: fadeIn 0.5s ease-out;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+/* Center the 'Télécharger le CV' button under the PDF preview */
+.modalActions {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.downloadButton {
+  background: var(--color-teal);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.downloadButton:hover {
+  background: var(--color-dark-blue);
+}
+
+/* Style the iframe for a better preview appearance */
+.pdfPreview {
+  width: 100%;
+  height: 400px;
+  border: none;
+  margin-top: 15px;
+}
+.pdfPreviewTitle{
+  text-align: center;
+}/* Competence List - vertical stacking */
+.competenceList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Each competence item */
+.competenceItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  padding: 0.5rem;
+  background: #f9f9f9;
+  border-radius: 5px;
+  transition: background 0.3s ease;
+}
+
+
+
+/* Delete button for competence */
+.deleteCompetenceBtn {
+  background: red;
+  border: none;
+  color: #fff;
+  border-radius: 5px;
+  padding: 0.2rem 0.3rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.competenceItem:hover .deleteCompetenceBtn {
+  opacity: 1;
+}
+
+/* Domaines List - vertical stacking */
+.domainesList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+/* Apply same styles as domaineItem to langueItem */
+.langueItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  padding: 0.5rem;
+  background: #f9f9f9;
+  border-radius: 5px;
+  transition: background 0.3s ease;
+}
+
+/* Delete button for langue */
+.deleteLangueBtn {
+  background: red;
+  border: none;
+  color: #fff;
+  border-radius: 5px;
+  padding: 0.2rem 0.3rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.langueItem:hover .deleteLangueBtn {
+  opacity: 1;
+}
+
+/* Langue name styling */
+.langueName {
+  font-size: 1rem;
+  color: #000;
+}
+
+/* Each domaine item */
+.domaineItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  padding: 0.5rem;
+  background: #f9f9f9;
+  border-radius: 5px;
+  transition: background 0.3s ease;
+}
+
+.infoLabel{
+  border-bottom: 2px solid #074799;
+}
+
+/* Delete button for domaine */
+.deleteDomaineBtn {
+  background: red;
+  border: none;
+  color: #fff;
+  border-radius: 5px;
+  padding: 0.2rem 0.3rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.domaineItem:hover .deleteDomaineBtn {
+  opacity: 1;
+}
+
+/* Domain name styling */
+.domainName {
+  font-size: 1rem;
+  color: #000;
+}
+/* Formations Grid */
+.formationsGrid {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.formationCard {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  position: relative;
+}
+
+.formationHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.formationTitle {
+  font-size: 1.2rem;
+  color: var(--color-dark-blue);
+  margin: 0;
+}
+
+.formationInstitution {
+  color: var(--color-blue);
+  margin: 0.5rem 0;
+}
+
+.formationDates {
+  color: var(--color-teal);
+  font-size: 0.9rem;
+}
+
+/* Certifications Grid */
+.certificationsGrid {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.certificationCard {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  position: relative;
+}
+
+.certificationHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.certificationTitle {
+  font-size: 1.2rem;
+  color: var(--color-dark-blue);
+  margin: 0;
+}
+
+.certificationOrganisme {
+  color: var(--color-blue);
+  margin: 0.5rem 0;
+}
+
+.certificationDates {
+  color: var(--color-teal);
+  font-size: 0.9rem;
+}
+
+.certificationDescription {
+  color: #666;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+/* Add Buttons */
+.addFormationBtn,
+.addCertificationBtn {
+  background: var(--color-blue);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+  transform: scale(1);
+}
+
+.infoHeader:hover .addFormationBtn,
+.infoHeader:hover .addCertificationBtn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Delete Buttons */
+.deleteFormationBtn,
+.deleteCertificationBtn {
+  background: red;
+  border: none;
+  color: #fff;
+  border-radius: 5px;
+  padding: 0.2rem 0.3rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.formationCard:hover .deleteFormationBtn,
+.certificationCard:hover .deleteCertificationBtn {
+  opacity: 1;
+}

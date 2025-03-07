@@ -1,9 +1,12 @@
 /* eslint-disable react/no-unescaped-entities */
-import { useState } from "react"; 
+import { useState ,useEffect } from "react"; 
 import { useNavigate } from "react-router-dom";
 import styles from "./Experience.module.css";
 import ConsultantService from "../Services/ConsultantService";
 const Experience = () => {
+  const [consultant, setConsultant] = useState(() => {
+    return JSON.parse(localStorage.getItem("user"));
+  });
   const [step, setStep] = useState(1);
   const [selectedPhase, setSelectedPhase] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -23,7 +26,12 @@ const Experience = () => {
   // State for modal and PDF preview
   const [showCvModal, setShowCvModal] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState("");
-
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    setConsultant(storedUser);
+  }, []);
+  const consultantId = consultant?.id;
+  console.log(consultant);
   const handleSelection = (phase) => {
     if (step === 2) {
       setSelectedPhases((prev) =>
@@ -105,15 +113,13 @@ const Experience = () => {
         description: exp.description,
       }));
   
-      const storedConsultant = JSON.parse(localStorage.getItem("Consultant"));
-      const userId = storedConsultant?.id;
-      console.log(storedConsultant);
+      
   
       // Update consultant experiences in the backend
-      const response = await ConsultantService.updateConsultant(userId, { experiences: formattedExperiences });
+      const response = await ConsultantService.updateConsultant(consultantId, { experiences: formattedExperiences });
       if (response){
         console.log("Experiences updated successfully!");
-        localStorage.setItem("Consultant", JSON.stringify(response));
+        localStorage.setItem("user", JSON.stringify(response));
         // Instead of navigating, display the modal for CV preview
         setShowCvModal(true);
       }
@@ -125,10 +131,9 @@ const Experience = () => {
 
   // Generate CV preview by calling the backend endpoint
   const handleGenerateCV = async () => {
-    const storedConsultant = JSON.parse(localStorage.getItem("Consultant"));
-    const userId = storedConsultant?.id;
+    
     try {
-      const response = await ConsultantService.generateCv(userId);
+      const response = await ConsultantService.generateCv(consultantId);
       // Create a blob URL from the response (assuming response is a Blob)
       const blob = new Blob([response], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
@@ -140,10 +145,9 @@ const Experience = () => {
 
   // Save the CV in the database and redirect to the subscription page
   const handleSaveAndSubscribe = async () => {
-    const storedConsultant = JSON.parse(localStorage.getItem("Consultant"));
-    const userId = storedConsultant?.id;
+    
     try {
-      await ConsultantService.saveCv(userId);
+      await ConsultantService.saveCv(consultantId);
       navigate("/subscription");
     } catch (error) {
       console.error("Error saving CV:", error);

@@ -1,14 +1,10 @@
-// src/services/CompetenceService.js
-import axios from "axios";
+import axios from 'axios';
 
-const API_URL = "http://localhost:8081/api/competences";
-
-// Récupération du token depuis le localStorage
-
-const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-const token = storedUser?.token;
+const API_URL = 'http://localhost:8081/api/competences';
 
 const getAllCompetences = async () => {
+  const token = localStorage.getItem("token");
+
   try {
     const response = await axios.get(API_URL, {
       headers: {
@@ -24,6 +20,8 @@ const getAllCompetences = async () => {
 };
 
 const createCompetence = async (competence) => {
+  const token = localStorage.getItem("token");
+
   try {
     const response = await axios.post(API_URL, competence, {
       headers: {

@@ -1,6 +1,6 @@
-// src/components/UserInformation.js
+/* eslint-disable react/no-unescaped-entities */
 import React, { useState, Suspense, useEffect } from 'react';
-import { Formik, Form, Field, ErrorMessage, useFormikContext } from 'formik';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import CreatableSelect from 'react-select/creatable';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -9,210 +9,211 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Modal, Button, ProgressBar } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import styles from './UserInformation.module.css';
 import UserService from '../Services/UserService';
 import ConsultantService from '../Services/ConsultantService';
 import EntrepriseService from '../Services/EntrepriseService';
-import DomaineService from '../services/DomaineService';
-import CompetenceService from '../services/CompetenceService';
+import DomaineService from '../Services/DomaineService';
+import CompetenceService from '../Services/CompetenceService';
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+// Instead of reading the user only once at the module level,
+// initialize a state variable inside the component.
+const UserInformation = () => {
+  const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState(() => {
+    const stored = localStorage.getItem("user");
+    return stored ? JSON.parse(stored) : {};
+  });
+  console.log("[UserInformation] Current user from localStorage:", currentUser);
+  const userId = currentUser?.id;
 
-const getSafeKey = (comp) => comp.replace(/\./g, '_');
-const defaultPosition = [36.8065, 10.1815];
+  const defaultPosition = [36.8065, 10.1815];
+  const customIcon = L.icon({
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+    shadowSize: [41, 41],
+  });
 
-const customIcon = L.icon({
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-  shadowSize: [41, 41],
-});
+  // Openrouteservice API key – replace with your own key
+  const API_KEY = '5b3ce3597851110001cf62482cbdc17076234bec8173d3b80ed1a1bf';
 
-// Clé API Openrouteservice (remplacez-la par votre clé)
-const API_KEY = '5b3ce3597851110001cf62482cbdc17076234bec8173d3b80ed1a1bf';
-
-// Reverse geocoding : coordonnées -> adresse
-const reverseGeocode = async (lat, lng) => {
-  try {
-    const response = await axios.get(
-      `https://api.openrouteservice.org/geocode/reverse?api_key=${API_KEY}&point.lat=${lat}&point.lon=${lng}`
-    );
-    if (response.data && response.data.features && response.data.features.length > 0) {
-      return response.data.features[0].properties.label;
+  // Reverse geocoding: coordinates -> address
+  const reverseGeocode = async (lat, lng) => {
+    try {
+      const response = await axios.get(
+        `https://api.openrouteservice.org/geocode/reverse?api_key=${API_KEY}&point.lat=${lat}&point.lon=${lng}`
+      );
+      if (response.data && response.data.features && response.data.features.length > 0) {
+        return response.data.features[0].properties.label;
+      }
+      return '';
+    } catch (error) {
+      console.error('Erreur dans le reverse geocoding :', error);
+      return '';
     }
-    return '';
-  } catch (error) {
-    console.error('Erreur dans le reverse geocoding :', error);
-    return '';
-  }
-};
-
-// Forward geocoding : adresse -> coordonnées
-const forwardGeocode = async (address) => {
-  try {
-    const response = await axios.get(
-      `https://api.openrouteservice.org/geocode/search?api_key=${API_KEY}&text=${encodeURIComponent(address)}`
-    );
-    if (response.data && response.data.features && response.data.features.length > 0) {
-      const [lng, lat] = response.data.features[0].geometry.coordinates;
-      return { lat, lng };
-    }
-    return null;
-  } catch (error) {
-    console.error('Erreur dans le géocodage direct :', error);
-    return null;
-  }
-};
-
-// Composant pour recentrer la carte
-function MapUpdater({ latitude, longitude }) {
-  const map = useMap();
-  useEffect(() => {
-    if (latitude && longitude) {
-      map.setView([latitude, longitude], map.getZoom(), { animate: true });
-    }
-  }, [latitude, longitude, map]);
-  return null;
-}
-
-function ClickableMap({ latitude, longitude, onLocationSelect }) {
-  const MapClickHandler = () => {
-    useMapEvents({
-      click(e) {
-        onLocationSelect(e.latlng.lat, e.latlng.lng);
-      },
-    });
-    return null;
   };
 
-  const position = (latitude && longitude) ? [latitude, longitude] : defaultPosition;
+  // Forward geocoding: address -> coordinates
+  const forwardGeocode = async (address) => {
+    try {
+      const response = await axios.get(
+        `https://api.openrouteservice.org/geocode/search?api_key=${API_KEY}&text=${encodeURIComponent(address)}`
+      );
+      if (response.data && response.data.features && response.data.features.length > 0) {
+        const [lng, lat] = response.data.features[0].geometry.coordinates;
+        return { lat, lng };
+      }
+      return null;
+    } catch (error) {
+      console.error('Erreur dans le géocodage direct :', error);
+      return null;
+    }
+  };
 
-  return (
-    <MapContainer
-      center={position}
-      zoom={7}
-      style={{
-        height: '300px',
-        width: '100%',
-        borderRadius: '8px',
-        marginBottom: '20px',
-        boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-      }}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      {/* Composant pour mettre à jour la vue de la carte */}
-      <MapUpdater latitude={latitude} longitude={longitude} />
-      <MapClickHandler />
-      {(latitude && longitude) && (
-        <Marker position={[latitude, longitude]} icon={customIcon}>
-          <Popup>Emplacement sélectionné</Popup>
-        </Marker>
-      )}
-    </MapContainer>
+  // Component to update map view
+  function MapUpdater({ latitude, longitude }) {
+    const map = useMap();
+    useEffect(() => {
+      if (latitude && longitude) {
+        map.setView([latitude, longitude], map.getZoom(), { animate: true });
+      }
+    }, [latitude, longitude, map]);
+    return null;
+  }
+
+  function ClickableMap({ latitude, longitude, onLocationSelect }) {
+    const MapClickHandler = () => {
+      useMapEvents({
+        click(e) {
+          onLocationSelect(e.latlng.lat, e.latlng.lng);
+        },
+      });
+      return null;
+    };
+
+    const position = (latitude && longitude) ? [latitude, longitude] : defaultPosition;
+
+    return (
+      <MapContainer
+        center={position}
+        zoom={7}
+        style={{
+          height: '300px',
+          width: '100%',
+          borderRadius: '8px',
+          marginBottom: '20px',
+          boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+        }}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <MapUpdater latitude={latitude} longitude={longitude} />
+        <MapClickHandler />
+        {(latitude && longitude) && (
+          <Marker position={[latitude, longitude]} icon={customIcon}>
+            <Popup>Emplacement sélectionné</Popup>
+          </Marker>
+        )}
+      </MapContainer>
+    );
+  }
+
+  const LazyClickableMap = React.lazy(() =>
+    Promise.resolve({ default: ClickableMap })
   );
-}
 
-const LazyClickableMap = React.lazy(() =>
-  Promise.resolve({ default: ClickableMap })
-);
+  const resetLocation = (setFieldValue) => {
+    setFieldValue('latitude', defaultPosition[0]);
+    setFieldValue('longitude', defaultPosition[1]);
+  };
 
-const resetLocation = (setFieldValue) => {
-  setFieldValue('latitude', defaultPosition[0]);
-  setFieldValue('longitude', defaultPosition[1]);
-};
+  const Step1Schema = Yup.object().shape({
+    nom: Yup.string().required('Champ requis'),
+    prenom: Yup.string().required('Champ requis'),
+    email: Yup.string().email('Email invalide').required('Champ requis'),
+    telephone: Yup.string().required('Champ requis'),
+    adresse: Yup.string().required('Champ requis'),
+    latitude: Yup.number()
+      .transform((value, originalValue) => originalValue === '' ? undefined : value)
+      .required('La latitude est requise'),
+    longitude: Yup.number()
+      .transform((value, originalValue) => originalValue === '' ? undefined : value)
+      .required('La longitude est requise'),
+  });
 
-const Step1Schema = Yup.object().shape({
-  nom: Yup.string().required('Champ requis'),
-  prenom: Yup.string().required('Champ requis'),
-  email: Yup.string().email('Email invalide').required('Champ requis'),
-  telephone: Yup.string().required('Champ requis'),
-  adresse: Yup.string().required('Champ requis'),
-  latitude: Yup.number()
-    .transform((value, originalValue) => originalValue === '' ? undefined : value)
-    .required('La latitude est requise'),
-  longitude: Yup.number()
-    .transform((value, originalValue) => originalValue === '' ? undefined : value)
-    .required('La longitude est requise'),
-});
+  const Step2Schema = Yup.object().shape({
+    domaines: Yup.array().min(1, 'Veuillez sélectionner au moins un domaine'),
+    competences: Yup.array().min(1, 'Veuillez sélectionner au moins une compétence'),
+    portfolio: Yup.string().required('Champ requis'),
+    experienceYears: Yup.number()
+      .required('Champ requis')
+      .typeError('Doit être un nombre'),
+    taux_horaire: Yup.number()
+      .required('Champ requis')
+      .typeError('Doit être un nombre'),
+  });
 
-const Step2Schema = Yup.object().shape({
-  domaines: Yup.array().min(1, 'Veuillez sélectionner au moins un domaine'),
-  competences: Yup.array().min(1, 'Veuillez sélectionner au moins une compétence'),
-  portfolio: Yup.string().required('Champ requis'),
-  experienceYears: Yup.number()
-    .required('Champ requis')
-    .typeError('Doit être un nombre'),
-  taux_horaire: Yup.number()
-    .required('Champ requis')
-    .typeError('Doit être un nombre'),
-});
+  // Custom AddressField component for geocoding on blur
+  const AddressField = ({ field, form, ...props }) => {
+    const { setFieldValue } = form;
+    const handleBlur = async (e) => {
+      field.onBlur(e);
+      const address = e.target.value;
+      if (address) {
+        const coords = await forwardGeocode(address);
+        if (coords) {
+          setFieldValue('latitude', coords.lat);
+          setFieldValue('longitude', coords.lng);
+          toast.success(`Coordonnées mises à jour: lat ${coords.lat}, lng ${coords.lng}`);
+        } else {
+          toast.error("Impossible de géocoder cette adresse.");
+        }
+      }
+    };
 
-const StarRating = ({ rating, onChange }) => {
-  return (
-    <div style={{ display: 'inline-block' }}>
-      {[1, 2, 3, 4, 5].map((star) => (
-        <span
-          key={star}
-          style={{
-            color: star <= rating ? 'gold' : 'lightgray',
-            fontSize: '24px',
-            cursor: 'pointer',
-          }}
-          onClick={() => onChange(star)}
-        >
-          ★
-        </span>
-      ))}
-    </div>
-  );
-};
+    return <input {...field} {...props} onBlur={handleBlur} />;
+  };
 
-// Composant personnalisé pour le champ adresse (déclenche géocodage direct au blur)
-const AddressField = ({ field, form, ...props }) => {
-  const { setFieldValue } = form;
-  const handleBlur = async (e) => {
-    field.onBlur(e);
-    const address = e.target.value;
-    if (address) {
-      const coords = await forwardGeocode(address);
-      if (coords) {
-        setFieldValue('latitude', coords.lat);
-        setFieldValue('longitude', coords.lng);
-        toast.success(`Coordonnées mises à jour: lat ${coords.lat}, lng ${coords.lng}`);
-      } else {
-        toast.error("Impossible de géocoder cette adresse.");
+  // Local state for the form
+  const [fetchedUser, setFetchedUser] = useState(null);
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        // Always use the currentUser state for id
+        const userData = await UserService.getById(userId);
+        setFetchedUser(userData);
+      } catch (error) {
+        console.error("Erreur lors de la récupération de l'utilisateur :", error);
+        toast.error("Erreur lors de la récupération des données utilisateur.");
       }
     }
-  };
+    if (userId) fetchUser();
+  }, [userId]);
 
-  return <input {...field} {...props} onBlur={handleBlur} />;
-};
-
-const UserInformation = () => {
-  const user = JSON.parse(localStorage.getItem("user")) || {};
   const initialValues = {
-    nom: user?.nom || '',
-    prenom: user?.prenom || '',
-    email: user?.email || '',
-    password: user?.password || '',
-    photoprofile: user?.photoprofile || '',
-    adresse: user?.adresse || '',
-    latitude: user?.latitude || '',
-    longitude: user?.longitude || '',
-    domaines: user?.domaines || [],
-    competences: user?.competences || [],
-    competenceDetails: user?.competenceDetails || {}
+    nom: fetchedUser?.nom || '',
+    prenom: fetchedUser?.prenom || '',
+    email: fetchedUser?.email || '',
+    telephone: '',
+    adresse: '',
+    photoprofile: null,
+    latitude: defaultPosition[0],
+    longitude: defaultPosition[1],
+    domaines: [],
+    competences: [],
+    portfolio: '',
+    experienceYears: '',
+    taux_horaire: '',
   };
 
   const [userRole, setUserRole] = useState('');
@@ -250,20 +251,20 @@ const UserInformation = () => {
   );
 
   const formikRef = React.useRef(null);
-  React.useEffect(() => {
+  useEffect(() => {
     if (formikRef.current) {
       formikRef.current.validateForm();
     }
   }, [currentStep]);
 
-  const navigate = useNavigate();
-
   const handleRoleSelection = (role) => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    const userId = user?.id;
+    console.log("Selected role:", role);
+    // Use currentUser.id from state
     UserService.updateUserRole(userId, role)
       .then((updatedUser) => {
+        // Update currentUser state with the new data
         setUserRole(updatedUser.role);
+        setCurrentUser(updatedUser);
       })
       .catch((error) => {
         console.error(error);
@@ -280,6 +281,7 @@ const UserInformation = () => {
 
   const handlePreviewSubmit = (values, setSubmitting) => {
     setModalData(values);
+    console.log("Modal data:", values);
     setShowModal(true);
     setSubmitting(false);
   };
@@ -287,16 +289,15 @@ const UserInformation = () => {
   const handleFinalSubmit = async (values) => {
     setLoading(true);
     try {
-      const storedUser = JSON.parse(localStorage.getItem("user"));
-      const userId = storedUser?.id;
       if (values.photoprofile) {
         await UserService.uploadProfilePicture(userId, values.photoprofile);
       }
-      
-      const transformedCompetences = values.competences.map(comp => ({
-        nom: comp,
-        competenceNiveaux: values.competenceDetails[getSafeKey(comp)] || 0,
-      }));
+            
+      // Modifier la partie transformedCompetences dans handleFinalSubmit
+      const transformedCompetences = values.competences.map(comp => {
+        const existing = fetchedCompetences.find(c => c.nom.toLowerCase() === comp.nom.toLowerCase());
+        return existing ? { ...existing, competenceNiveau: comp.competenceNiveau } : comp;
+      });
       
       const transformedDomaines = values.domaines.map(dom => {
         const existing = fetchedDomaines.find(
@@ -304,7 +305,6 @@ const UserInformation = () => {
         );
         return existing ? existing : { nom: dom, category: null };
       });
-      
       const consultantData = {
         nom: values.nom,
         prenom: values.prenom,
@@ -322,9 +322,10 @@ const UserInformation = () => {
         longitude: values.longitude,
         workload: values.workload || 0,
       };
-      
+      // Do NOT remove the stored "user" here so that the same user remains in localStorage.
       const newConsultant = await ConsultantService.updateConsultant(userId, consultantData);
-      localStorage.setItem("Consultant", JSON.stringify(newConsultant));
+      localStorage.setItem("user", JSON.stringify(newConsultant));
+      console.log("Updated consultant:", newConsultant);
       if (newConsultant) {
         navigate("/SignupSuccess");
       }
@@ -336,21 +337,7 @@ const UserInformation = () => {
     setShowModal(false);
   };
 
-  const chartData = {
-    labels: modalData && modalData.competences ? modalData.competences : [],
-    datasets: [
-      {
-        label: 'Niveau de compétence',
-        data:
-          modalData && modalData.competenceDetails
-            ? modalData.competences.map(comp => modalData.competenceDetails[getSafeKey(comp)] || 0)
-            : [],
-        backgroundColor: 'rgba(75, 85, 192, 0.6)',
-      },
-    ],
-  };
-
-  // Étape 1 pour les consultants : affichage du formulaire et de la carte interactive
+  // Step 1 for Consultants: personal info and interactive map
   const renderConsultantStep = (values, setFieldValue, isSubmitting, isValid) => {
     return (
       <AnimatePresence exitBeforeEnter>
@@ -378,7 +365,7 @@ const UserInformation = () => {
               <Field type="text" name="telephone" placeholder="Téléphone" className="form-control" />
               <ErrorMessage name="telephone" component="div" className="text-danger" />
             </div>
-            {/* Utilisation du composant AddressField pour mettre à jour l'adresse et les coordonnées */}
+            {/* Use AddressField for geocoding on blur */}
             <div className="mb-3">
               <Field
                 name="adresse"
@@ -412,7 +399,6 @@ const UserInformation = () => {
                   latitude={values.latitude}
                   longitude={values.longitude}
                   onLocationSelect={async (lat, lng) => {
-                    // Mise à jour via clic sur la carte (reverse geocoding)
                     setFieldValue('latitude', lat);
                     setFieldValue('longitude', lng);
                     const address = await reverseGeocode(lat, lng);
@@ -473,10 +459,14 @@ const UserInformation = () => {
                     isMulti
                     name="competences"
                     options={competenceOptions}
-                    value={values.competences.map(c => ({ value: c, label: c }))}
-                    onChange={(selected) =>
-                      setFieldValue('competences', selected ? selected.map(s => s.value) : [])
-                    }
+                    value={values.competences.map(comp => ({ value: comp.nom, label: comp.nom }))}
+                    onChange={(selected) => {
+                      const competencesArray = selected ? selected.map(s => ({
+                        nom: s.value,
+                        competenceNiveau: "Débutant"
+                      })) : [];
+                      setFieldValue('competences', competencesArray);
+                    }}
                     placeholder="Compétences"
                   />
                 </div>
@@ -485,20 +475,25 @@ const UserInformation = () => {
             {values.competences && values.competences.length > 0 && (
               <div className="mb-3">
                 <h5 className="mt-3">Niveaux de compétence</h5>
-                {values.competences.map((comp, idx) => {
-                  const safeKey = getSafeKey(comp);
-                  const level = values.competenceDetails[safeKey] ?? 0;
-                  return (
-                    <div key={idx} className="mb-2">
-                      <label>{comp} :</label>
-                      <StarRating
-                        rating={level}
-                        onChange={(value) => setFieldValue(`competenceDetails.${safeKey}`, value)}
-                      />
-                      <span className="ms-2">{level} / 5</span>
-                    </div>
-                  );
-                })}
+                {values.competences.map((comp, idx) => (
+                  <div key={idx} className="mb-2">
+                    <label>{comp.nom} :</label>
+                    <select
+                      className="form-select d-inline-block w-auto ms-2"
+                      value={comp.competenceNiveau}
+                      onChange={(e) => {
+                        const newLevel = e.target.value;
+                        const updatedCompetences = [...values.competences];
+                        updatedCompetences[idx].competenceNiveau = newLevel;
+                        setFieldValue('competences', updatedCompetences);
+                      }}
+                    >
+                      <option value="débutant">Débutant</option>
+                      <option value="intermédiaire">Intermédiaire</option>
+                      <option value="expert">Expert</option>
+                    </select>
+                  </div>
+                ))}
               </div>
             )}
             <div className="mb-3">
@@ -535,8 +530,6 @@ const UserInformation = () => {
   const handleFinalSubmitEntreprise = async (values) => {
     setLoading(true);
     try {
-      const storedUser = JSON.parse(localStorage.getItem("user"));
-      const userId = storedUser?.id;
       if (values.photoprofile) {
         await UserService.uploadProfilePicture(userId, values.photoprofile);
       }
@@ -552,7 +545,7 @@ const UserInformation = () => {
         latitude: values.latitude    
       };
       const updatedEntreprise = await EntrepriseService.updateEntreprise(userId, entrepriseData);
-      localStorage.setItem("entreprise", JSON.stringify(updatedEntreprise));
+      localStorage.setItem("user", JSON.stringify(updatedEntreprise));
       toast.success("Entreprise mise à jour avec succès!", { icon: "✅" });
     } catch (error) {
       console.error("Error updating entreprise:", error);
@@ -599,22 +592,21 @@ const UserInformation = () => {
       </div>
       <div className="mb-3">
         <Suspense fallback={<div>Chargement de la carte...</div>}>
-        <LazyClickableMap
-          latitude={values.latitude}
-        longitude={values.longitude}
-        onLocationSelect={async (lat, lng) => {
-          setFieldValue('latitude', lat);
-          setFieldValue('longitude', lng);
-          const address = await reverseGeocode(lat, lng);
-          if (address) {
-            setFieldValue('adresse', address);
-            toast.success(`Adresse mise à jour : ${address}`);
-          } else {
-            toast.error("Impossible de récupérer l'adresse pour ces coordonnées.");
-          }
-  }}
-/>
-
+          <LazyClickableMap
+            latitude={values.latitude}
+            longitude={values.longitude}
+            onLocationSelect={async (lat, lng) => {
+              setFieldValue('latitude', lat);
+              setFieldValue('longitude', lng);
+              const address = await reverseGeocode(lat, lng);
+              if (address) {
+                setFieldValue('adresse', address);
+                toast.success(`Adresse mise à jour : ${address}`);
+              } else {
+                toast.error("Impossible de récupérer l'adresse pour ces coordonnées.");
+              }
+            }}
+          />
         </Suspense>
         <Button variant="secondary" size="sm" onClick={() => resetLocation(setFieldValue)} className="mt-2">
           Réinitialiser la localisation
@@ -732,12 +724,6 @@ const UserInformation = () => {
               <p><strong>Portfolio:</strong> {modalData.portfolio}</p>
               <p><strong>Expérience (années):</strong> {modalData.experienceYears}</p>
               <p><strong>Taux Horaire:</strong> {modalData.taux_horaire}</p>
-              {modalData.competences && modalData.competences.length > 0 && (
-                <div className="mt-3">
-                  <h5>Visualisation du Profil de Compétences</h5>
-                  <Bar data={chartData} options={{ responsive: true, plugins: { legend: { position: 'top' } } }} />
-                </div>
-              )}
             </div>
           )}
         </Modal.Body>

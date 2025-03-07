@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+/* eslint-disable react/no-unescaped-entities */
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaList, FaTh, FaHeart, FaRegHeart } from 'react-icons/fa';
@@ -24,7 +25,6 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 
-// Import du CSS (personnalisé)
 import styles from './LandingEntreprise.module.css';
 
 // Import des services API
@@ -32,8 +32,8 @@ import {
   getAllConsultants,
   getAllDomaines,
   getAllCompetences,
-  getPublishedMissionsForEntreprise, // fonction pour récupérer les missions publiées par l'entreprise
-  inviteConsultantToJob             // fonction pour envoyer une invitation
+  getPublishedMissionsForEntreprise,
+  inviteConsultantToJob
 } from '../services/LandingEntreprise';
 import { createConversation } from '../services/MessengerService';
 
@@ -129,7 +129,7 @@ function LandingEntreprise() {
 
   // Charger les missions publiées par l'entreprise connectée
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+    const storedUser = JSON.parse(localStorage.getItem("user"));
     const entrepriseId = storedUser?.user?.id || storedUser?.id;
     if (!entrepriseId) {
       toast.error("Entreprise introuvable");
@@ -244,7 +244,7 @@ function LandingEntreprise() {
 
   const handleChat = async (consultant) => {
     try {
-      const user = JSON.parse(localStorage.getItem("userWithToken"));
+      const user = JSON.parse(localStorage.getItem("user"));
       const senderEmail = user?.email;
       const receiverEmail = consultant.email;
       if (!senderEmail || !receiverEmail) {
@@ -276,7 +276,7 @@ function LandingEntreprise() {
   };
 
   const handleSubmitInvite = () => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+    const storedUser = JSON.parse(localStorage.getItem("user"));
     const entrepriseId = storedUser?.user?.id || storedUser?.id;
     if (!entrepriseId) {
       toast.error("Entreprise introuvable");
@@ -293,15 +293,16 @@ function LandingEntreprise() {
       dureeEstime: inviteDuree,
       message: inviteMessage,
       statut: "PENDING",
-      origine: "INVITED"
+      origine: "INVITED" // Cette origine déclenchera l'envoi d'un email et d'une notification côté backend
     };
     inviteConsultantToJob(entrepriseId, selectedConsultantForInvite.id, propositionData)
       .then(() => {
-        toast.success("Invitation envoyée !");
+        toast.success("Invitation envoyée ! Un email et une notification ont été envoyés au consultant.");
         handleCloseInviteModal();
       })
       .catch(error => {
         toast.error("Erreur lors de l'envoi de l'invitation.");
+        console.error("Erreur dans handleSubmitInvite:", error);
       });
   };
 
@@ -728,6 +729,9 @@ function LandingEntreprise() {
                 onChange={(e) => setInviteMessage(e.target.value)}
                 helperText="Expliquez brièvement votre proposition"
               />
+              <Typography variant="body2" color="textSecondary" style={{ marginTop: '0.5rem' }}>
+                Une fois l'invitation envoyée, un email et une notification seront automatiquement envoyés au consultant.
+              </Typography>
             </DialogContent>
             <DialogActions>
               <Button onClick={handleCloseInviteModal} color="primary">

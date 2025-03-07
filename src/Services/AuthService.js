@@ -2,6 +2,7 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:8081/api/auth'; // Ajustez l'URL si besoin
 
+
 const AuthService = {
   async login(email, password) {
     const response = await axios.post(`${API_URL}/login`, {
@@ -31,6 +32,16 @@ const AuthService = {
     return response.data;
   },
 
+  async getById(id) {
+    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+    const token = storedUser?.token;
+    const response = await axios.get(`${API_URL}/users/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  },
   logout: () => {
     localStorage.removeItem('user');
   },

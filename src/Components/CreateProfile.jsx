@@ -2,8 +2,8 @@ import { useNavigate } from "react-router-dom";
 import styles from "./CreateProfile.module.css"; // Using CSS modules
 
 const CreateProfile = () => {
-  const storedUser = JSON.parse(localStorage.getItem("Consultant"));
-  console.log(storedUser)
+  const storedConsultant = JSON.parse(localStorage.getItem("user"));
+  console.log("cons",storedConsultant)
   const navigate = useNavigate(); // React Router navigation
 
   return (
@@ -11,7 +11,7 @@ const CreateProfile = () => {
       {/* Profile Section */}
       <div className={styles.profileContainer}>
         <div className={styles.texts}>
-          <h1>Bienvenue, {storedUser?.prenom} {storedUser?.nom}!</h1>
+          <h1>Bienvenue, {storedConsultant?.prenom} {storedConsultant?.nom}!</h1>
           <h1>Prêt à conquérir votre prochaine grande opportunité ?</h1>
         </div>
 
@@ -24,7 +24,7 @@ const CreateProfile = () => {
 
         {/* Button with Navigation */}
         <div className={styles.buttonContainer}>
-          <button className={styles.showExp} onClick={() => navigate("/experience")}>
+          <button className={styles.showExp} onClick={() => navigate("/ProfessionalDetails")}>
             Commencer
           </button>
           <p className={styles.timeInfo}>Cela ne prend que 5 à 10 minutes et vous pouvez changer votre choix après.</p>

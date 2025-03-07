@@ -1,0 +1,45 @@
+.notificationContainer {
+    background-color: #f7f7f7;
+    min-height: 100vh;
+    padding: 40px 15px;
+  }
+  
+  .card {
+    border: none;
+    border-radius: 12px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .card:hover {
+    transform: scale(1.01);
+    box-shadow: 0 6px 16px rgba(0, 123, 255, 0.15);
+  }
+  
+  .unread {
+    background-color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
+  }
+  
+  .read {
+    background-color: #e9ecef;
+    opacity: 0.75;
+  }
+  
+  .btn-outline-primary {
+    border-radius: 20px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  .btn-outline-primary:hover {
+    background-color: #007bff;
+    color: #fff;
+  }
+  
+  /* Style pour le séparateur visuel */
+  .separator {
+    border: 0;
+    height: 1px;
+    background: #ccc;
+    margin: 40px 0;
+  }
+  

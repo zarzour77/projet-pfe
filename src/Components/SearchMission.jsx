@@ -22,7 +22,7 @@ import styles from './SearchMission.module.css';
 
 // Services API
 import { useNavigate } from 'react-router-dom';
-import DomaineService from '../services/DomaineService';
+import DomaineService from '../Services/DomaineService';
 import {
   applyToMission // nouvelle fonction pour appliquer à une mission
   ,
@@ -37,7 +37,7 @@ import {
   getMissionsByPorteDeTravail,
   getSavedMissions,
   saveMissionForConsultant
-} from '../services/SearchMission';
+} from '../Services/SearchMission';
 
 // Création du thème Material‑UI
 const theme = createTheme({
@@ -106,7 +106,7 @@ function SearchMission() {
   // Chargement des missions selon filtres ou missions sauvegardées
   useEffect(() => {
     if (showSaved) {
-      const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+      const storedUser = JSON.parse(localStorage.getItem("user"));
       const consultantId = storedUser?.user?.id || storedUser?.id;
       if (!consultantId) {
         toast.error("Consultant introuvable");
@@ -239,7 +239,7 @@ function SearchMission() {
 
   // Fonction pour sauvegarder une mission
   const handleSaveJob = (missionId) => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+    const storedUser = JSON.parse(localStorage.getItem("user"));
     const consultantId = storedUser?.user?.id || storedUser?.id;
     if (!consultantId) {
       toast.error("Consultant introuvable");
@@ -256,7 +256,7 @@ function SearchMission() {
 
   // Bascule entre missions normales et sauvegardées
   const handleShowSavedMissions = () => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+    const storedUser = JSON.parse(localStorage.getItem("user"));
     const consultantId = storedUser?.user?.id || storedUser?.id;
     if (!consultantId) {
       toast.error("Consultant introuvable");
@@ -298,7 +298,7 @@ function SearchMission() {
 
   // Envoyer la proposition via l'API
   const handleSubmitProposition = () => {
-    const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
+    const storedUser = JSON.parse(localStorage.getItem("user"));
     const consultantId = storedUser?.user?.id || storedUser?.id;
     if (!consultantId) {
       toast.error("Consultant introuvable");
@@ -592,8 +592,6 @@ function SearchMission() {
             </Button>
           </div>
         )}
-
-// Modal d'application dans le render
     {showApplyModal && selectedMission && (
       <Dialog open={true} onClose={handleCloseApplyModal}>
         <DialogTitle>Postuler à la mission : {selectedMission.titre}</DialogTitle>

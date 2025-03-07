@@ -1,29 +1,38 @@
-import { useState } from "react";
-import AuthService from "../services/AuthService";
+/* eslint-disable react/no-unescaped-entities */
+import { useState, useEffect } from "react";
+import AuthService from "../Services/AuthService";
 import styles from "./Login.module.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { useNavigate } from "react-router-dom";
 import user1 from '../assets/hidingUser.png';
+import UserService from "../Services/UserService";
+import { AuthContext } from "../services/AuthContext";
+import { useContext } from "react";
+
+
 
 const Login = () => {
+  const { setCurrentUser } = useContext(AuthContext);
   const [isActive, setIsActive] = useState(false);
-
   // States for Sign Up
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   // States for Sign In
   const [signinEmail, setSigninEmail] = useState("");
   const [signinPassword, setSigninPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
-
-  // State pour le code de vérification
+  // State for verification code
   const [showVerify, setShowVerify] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
 
   const navigate = useNavigate();
+
+  // Clear localStorage when component mounts so no old user remains.
+  useEffect(() => {
+    localStorage.clear();
+  }, []);
 
   const validatePassword = (pwd) => {
     const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
@@ -37,8 +46,7 @@ const Login = () => {
     }
     try {
       const userData = { nom, prenom, email, password };
-      const response = await AuthService.signup(userData);
-      localStorage.setItem("user", JSON.stringify(response));
+      await AuthService.signup(userData);
       alert("Signup successful!");
     } catch (err) {
       alert("Signup failed! Please check your information.");
@@ -46,26 +54,49 @@ const Login = () => {
     }
   };
 
-  // Si le formulaire de vérification est affiché, on vérifie le code
-  // sinon on procède au login normal.
   const handleLogin = async (e) => {
     e.preventDefault();
+
+    // If the verification flow is active, let its handler take over.
     if (showVerify) {
-      // On appelle la vérification si le champ de code est visible
       handleVerifySubmit(e);
       return;
     }
+
     try {
-      console.log("Tentative de login:", signinEmail, signinPassword);
-      const response = await AuthService.login(signinEmail, signinPassword);
-      localStorage.setItem("userWithToken", JSON.stringify(response));
-      if (response.roles.includes("ROLE_USER") || response.roles.includes("Consultant")) {
+      console.log("Attempting login:", signinEmail, signinPassword);
+      // Call the login endpoint once
+      const loginResponse = await AuthService.login(signinEmail, signinPassword);
+      // Clear any old data and store the full user object (with token) under "user"
+      localStorage.clear();
+      localStorage.setItem("user", JSON.stringify(loginResponse));
+      const token =localStorage.setItem("token",loginResponse.token)
+      console.log(token)
+      // Fetch full user details using the ID from the login response
+      const fullUser = await UserService.getById(loginResponse.id);
+      console.log("Full user:", fullUser);
+
+      // Ensure the token is present on the full user object
+      if (!fullUser.token) {
+        fullUser.token = loginResponse.token;
+      }
+
+      // Store the complete user object under "user"
+      localStorage.setItem("user", JSON.stringify(fullUser));
+      setCurrentUser(fullUser); // Mise à jour du context
+
+      ///lllllllll
+
+      // Navigate based on user role
+      if (fullUser.role === "ROLE_USER") {
         navigate("/UserInformation");
+      } else if (fullUser.role === "Consultant") {
+        navigate("/ProfilePage");
       } else {
-        navigate("/MissionTinder");
+        navigate("/LandingEntreprise");
       }
     } catch (error) {
-      // Vérifier le message d'erreur pour détecter le cas "n'est pas vérifié"
+      // If the error indicates the email isn't verified, prompt for verification code
       if (
         error.response &&
         error.response.data &&
@@ -81,20 +112,14 @@ const Login = () => {
     }
   };
 
+  // Handle verification without re-calling the login endpoint.
   const handleVerifySubmit = async (e) => {
     e.preventDefault();
     try {
       const result = await AuthService.verifyEmail(signinEmail, verificationCode);
       alert(result.message);
       setShowVerify(false);
-      // Après vérification, relancez le login
-      const response = await AuthService.login(signinEmail, signinPassword);
-      localStorage.setItem("userWithToken", JSON.stringify(response));
-      if (response.roles.includes("ROLE_USER") || response.roles.includes("Consultant")) {
-        navigate("/UserInformation");
-      } else {
-        navigate("/MissionTinder");
-      }
+      alert("Votre compte est désormais vérifié. Veuillez vous reconnecter.");
     } catch (error) {
       alert("Code de vérification invalide. Veuillez réessayer.");
       console.error(error);
@@ -177,7 +202,6 @@ const Login = () => {
               value={signinPassword}
               onChange={(e) => setSigninPassword(e.target.value)}
             />
-            {/* Champ de saisie du code de vérification, intégré au formulaire */}
             {showVerify && (
               <input
                 type="text"

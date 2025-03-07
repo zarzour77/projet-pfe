@@ -3,10 +3,11 @@ import axios from "axios";
 
 const API_URL = "http://localhost:8081/api/missions";
 
+
 const publishMission = async (missionData) => {
   // Récupération de l'utilisateur avec le token depuis le localStorage
-  const storedUser = JSON.parse(localStorage.getItem("userWithToken"));
-  const token = storedUser?.token;
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+const token = localStorage.getItem("token");
   if (!token) {
     return Promise.reject(new Error("JWT Token is missing"));
   }

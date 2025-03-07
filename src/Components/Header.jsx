@@ -1,7 +1,7 @@
 // components/Header.jsx
 import { useState, useEffect } from 'react';
 import { FaBell } from 'react-icons/fa';
-import { fetchNotifications } from '../services/HeaderService'; // Import du service
+import { fetchNotifications } from '../Services/HeaderService'; // Import du service
 import styles from './Header.module.css';
 
 function Header() {
