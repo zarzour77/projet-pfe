@@ -4,7 +4,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CreatableSelect from "react-select/creatable";
 import styles from "./ProfessionalDetails.module.css";
-import langueService from "../Services/LangueService"; // Adjust the path as needed
+import langueService from "../services/LangueService"; // Adjust the path as needed
 import consultantService from "../Services/ConsultantService"; // Import your consultant service
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 

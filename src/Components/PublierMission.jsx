@@ -253,6 +253,7 @@ const PublierMission = () => {
         titre: data.title,
         description: data.description,
         budget: data.budget,
+        statut: "en attente", 
         publishedAt: new Date(), // La date de soumission
         domaines: data.domaines.map(dom => ({
           id: dom.value,

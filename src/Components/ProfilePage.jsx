@@ -1,14 +1,12 @@
 /* eslint-disable react/no-unescaped-entities */
 import { useEffect, useRef, useState } from 'react';
 import ConsultantService from '../Services/ConsultantService';
-import CompetenceService from '../Services/CompetenceService';
-import DomaineService from '../Services/DomaineService';
+import CompetenceService from '../services/CompetenceService';
+import DomaineService from '../services/DomaineService';
 import styles from './ProfilePage.module.css';
 import LangueService from '../services/LangueService';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
-
 const ProfilePage = () => {
   const storedConsultant = JSON.parse(localStorage.getItem("user"));
 const consultantId=storedConsultant?.id;
@@ -77,7 +75,6 @@ const closeAddFormationModal = () => {
   setNewFormationDateDebut('');
   setNewFormationDateFin('');
 };
-
 // Certification modal handlers
 const openAddCertificationModal = () => setShowAddCertificationModal(true);
 const closeAddCertificationModal = () => {
@@ -87,7 +84,6 @@ const closeAddCertificationModal = () => {
   setNewCertificationDateObtention('');
 };
   // Fetch consultant data on mount
-
 useEffect(() => {
   const fetchUserData = async () => {
     try {
@@ -190,7 +186,6 @@ useEffect(() => {
       toast.error("Erreur lors du téléchargement de l'image de profil");
     }
   };
-
   // Experience modal handlers
   const openAddExperienceModal = () => setShowAddExperienceModal(true);
   const closeAddExperienceModal = () => {

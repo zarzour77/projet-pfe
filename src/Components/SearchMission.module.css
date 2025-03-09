@@ -243,3 +243,9 @@
   gap: 20px;      
   margin-top: 20px;        /* Espace entre les éléments (boutons + texte) */
 }
+.propositionsCount {
+  font-size: 0.9rem;
+  color: #444;
+  margin-left: 1rem;
+}
+

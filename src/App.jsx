@@ -18,6 +18,8 @@ import ProfessionalDetails from "./components/ProfessionalDetails"
 import Notification from "./components/Notification";
 import ProtectedRoute from "./services/ProtectedRoute";
 import { AuthProvider } from "./services/AuthContext";
+import EntrepriseMission from "./components/EntrepriseMission";
+import VoirProfileConsultant from "./components/VoirProfileConsultant";
 const App = () => {
   return (
     <AuthProvider>
@@ -29,6 +31,9 @@ const App = () => {
         <Route path="/login" element={<Login /> }  />
         <Route path="/UserInformation" element={<UserInformation /> }  />
         <Route path="/Notification" element={<Notification /> }  />
+        <Route path="/EntrepriseMission" element={<EntrepriseMission /> }  />
+        <Route path="/consultant/:consultantId" element={<VoirProfileConsultant />} />
+
         <Route 
           path="/SearchMission" 
           element={

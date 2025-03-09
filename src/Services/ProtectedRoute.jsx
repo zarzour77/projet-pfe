@@ -1,10 +1,10 @@
 // ProtectedRoute.jsx
-import React, { useContext } from 'react';
-import { Navigate } from 'react-router-dom';
-import { AuthContext } from './AuthContext';
+import React from "react";
+import { Navigate } from "react-router-dom";
 
 const ProtectedRoute = ({ allowedRoles, children }) => {
-  const { currentUser } = useContext(AuthContext);
+  const storedUser = localStorage.getItem("user");
+  const currentUser = storedUser ? JSON.parse(storedUser) : null;
 
   // Si l'utilisateur n'est pas connecté ou son rôle n'est pas autorisé, rediriger
   if (!currentUser || !allowedRoles.includes(currentUser.role)) {
