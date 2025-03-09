@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/propositions")
@@ -17,6 +18,11 @@ public class PropositionController {
     @Autowired
     public PropositionController(PropositionService propositionService) {
         this.propositionService = propositionService;
+    }
+    @GetMapping("/mission/{missionId}")
+    public ResponseEntity<List<Proposition>> getPropositionsByMission(@PathVariable Long missionId) {
+        List<Proposition> propositions = propositionService.getPropositionsByMission(missionId);
+        return ResponseEntity.ok(propositions);
     }
 
     @GetMapping
@@ -36,16 +42,20 @@ public class PropositionController {
         return propositionService.createProposition(proposition);
     }
 
-   /* @PutMapping("/{id}")
-    public ResponseEntity<Proposition> updateProposition(@PathVariable Long id, @RequestBody Proposition proposition) {
+    // Endpoint PUT pour mettre à jour le statut d'une proposition
+    @PutMapping("/{id}")
+    public ResponseEntity<Proposition> updatePropositionStatus(@PathVariable Long id, @RequestBody Map<String, String> updateRequest) {
+        String newStatus = updateRequest.get("statut");
+        if (newStatus == null || newStatus.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
         try {
-            Proposition updatedProposition = propositionService.updateProposition(id, proposition);
+            Proposition updatedProposition = propositionService.updatePropositionStatus(id, newStatus);
             return ResponseEntity.ok(updatedProposition);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
-    }*/
-
+    }
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProposition(@PathVariable Long id) {
         propositionService.deleteProposition(id);

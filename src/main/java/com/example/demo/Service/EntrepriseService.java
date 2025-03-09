@@ -35,7 +35,6 @@ public class EntrepriseService {
         Optional<Entreprise> entrepriseOpt = entrepriseRepository.findById(entrepriseId);
         if (entrepriseOpt.isPresent()) {
             Entreprise entreprise = entrepriseOpt.get();
-            // Filtrer les missions avec le statut "PUBLISHED"
             return entreprise.getMissions();
         } else {
             throw new RuntimeException("Entreprise not found with id " + entrepriseId);

@@ -334,4 +334,12 @@ public class ConsultantService {
                 .orElseThrow(() -> new RuntimeException("Consultant non trouvé"));
         return consultant.getSavedMissions();
     }
+    // Méthode pour incrémenter le workload de 1
+    public Consultant incrementWorkload(Long consultantId) {
+        Consultant consultant = consultantRepository.findById(consultantId)
+                .orElseThrow(() -> new RuntimeException("Consultant not found with id " + consultantId));
+        Integer currentWorkload = consultant.getWorkload() == null ? 0 : consultant.getWorkload();
+        consultant.setWorkload(currentWorkload + 1);
+        return consultantRepository.save(consultant);
+    }
 }

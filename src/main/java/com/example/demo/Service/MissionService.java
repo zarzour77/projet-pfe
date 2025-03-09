@@ -9,6 +9,7 @@ import com.example.demo.model.Avis;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,6 +47,10 @@ public class MissionService {
     public Optional<Object> getMissionById(Long missionId) {
         return Optional.of(missionRepository.findById(missionId));
     }
+    public Optional<Mission> getMissionByIdm(Long missionId) {
+        return missionRepository.findById(missionId);
+    }
+
 
 
 
@@ -88,4 +93,15 @@ public class MissionService {
     public List<Mission> getMissionsByDureeEstime(String dureeEstime) {
         return missionRepository.findDistinctByDureeEstimeIgnoreCase(dureeEstime);
     }
+    public Mission acceptMission(Long missionId) {
+        Mission mission = missionRepository.findById(missionId)
+                .orElseThrow(() -> new MissionNotFoundException(missionId));
+        mission.setStatut("en cours"); // Passage au statut "en cours"
+        mission.setStartdate(new Date()); // Mise à jour de la date de démarrage avec la date actuelle
+        return missionRepository.save(mission);
+    }
+    public List<Mission> getMissionsByStatus(String status) {
+        return missionRepository.findByStatut(status);
+    }
+
 }
