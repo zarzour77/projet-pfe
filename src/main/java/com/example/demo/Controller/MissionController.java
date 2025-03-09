@@ -2,14 +2,18 @@ package com.example.demo.Controller;
 
 
 import com.example.demo.Service.MissionService;
+import com.example.demo.model.Consultant;
 import com.example.demo.model.Mission;
 import com.example.demo.exception.MissionNotFoundException;
+import com.example.demo.model.Proposition;
 import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
+import java.util.Optional;
+import java.util.stream.Collectors;
+@CrossOrigin(origins = "http://localhost:5173") // Autorise les requêtes venant du front-end
 @RestController
 @RequestMapping("/api/missions")
 public class MissionController {
@@ -64,7 +68,8 @@ public class MissionController {
     @Transactional
     @GetMapping("/search")
     public List<Mission> searchMissions() {
-        return missionService.getAllMissions();
+        // Retourne uniquement les missions dont le statut est "en attente"
+        return missionService.getMissionsByStatus("en attente");
     }
 
     @Transactional
@@ -105,6 +110,32 @@ public class MissionController {
         List<Mission> missions = missionService.getMissionsByDureeEstime(dureeEstime);
         return ResponseEntity.ok(missions);
     }
+    @GetMapping("/{id}/consultants")
+    public ResponseEntity<List<Consultant>> getConsultantsForMission(@PathVariable Long id) {
+        Optional<Mission> missionOpt = missionService.getMissionByIdm(id);
+        if (!missionOpt.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        Mission mission = missionOpt.get();
+        List<Proposition> propositions = mission.getPropositions();
+        // Extraction des consultants de chaque proposition (en supprimant d'éventuels doublons)
+        List<Consultant> consultants = propositions.stream()
+                .map(Proposition::getConsultant)
+                .distinct()
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(consultants);
+    }
+    @PutMapping("/{id}/accept")
+    public ResponseEntity<Mission> acceptMission(@PathVariable Long id) {
+        try {
+            Mission acceptedMission = missionService.acceptMission(id);
+            return ResponseEntity.ok(acceptedMission);
+        } catch (MissionNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
 }
 
 

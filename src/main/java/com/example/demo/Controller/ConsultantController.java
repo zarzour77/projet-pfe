@@ -168,4 +168,13 @@ public class ConsultantController {
     public String deleteCertification(@PathVariable Long consultantId, @PathVariable Long certificationId) {
         return consultantService.deleteCertification(consultantId, certificationId);
     }
+    @PutMapping("/{id}/incrementWorkload")
+    public ResponseEntity<Consultant> incrementWorkload(@PathVariable Long id) {
+        try {
+            Consultant updatedConsultant = consultantService.incrementWorkload(id);
+            return ResponseEntity.ok(updatedConsultant);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

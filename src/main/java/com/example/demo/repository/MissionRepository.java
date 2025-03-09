@@ -18,6 +18,7 @@ public interface MissionRepository extends JpaRepository<Mission, Long> {
     List<Mission> findDistinctByPortetravailIgnoreCase(String portetravail);
     List<Mission> findByBudgetBetween(Double minBudget, Double maxBudget);
     List<Mission> findDistinctByDureeEstimeIgnoreCase(String dureeEstime);
+    List<Mission> findByStatut(String statut);
 
 
 }

@@ -30,6 +30,9 @@ public class PropositionService {
         this.missionRepository = missionRepository;
         this.emailService = emailService;
     }
+    public List<Proposition> getPropositionsByMission(Long missionId) {
+        return propositionRepository.findByMissionId(missionId);
+    }
 
     public Proposition createProposition(Proposition proposition) {
         if (proposition.getStatut() == null || proposition.getStatut().trim().isEmpty()) {
@@ -125,4 +128,11 @@ public class PropositionService {
     public void deleteProposition(Long id) {
         propositionRepository.deleteById(id);
     }
+    public Proposition updatePropositionStatus(Long id, String newStatus) {
+        Proposition proposition = propositionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Proposition non trouvée pour l'id : " + id));
+        proposition.setStatut(newStatus);
+        return propositionRepository.save(proposition);
+    }
+
 }
