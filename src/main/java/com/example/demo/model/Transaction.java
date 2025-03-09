@@ -1,10 +1,13 @@
 package com.example.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
 import java.util.Date;
 
 @Entity
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,8 +18,8 @@ public class Transaction {
     private String type;
     private String statut;
     @ManyToOne
-    @JoinColumn(name = "debiteur_id")
-    private User expéditeur;
+    @JoinColumn(name = "expediteur_id")
+    private User expediteur;
 
     @ManyToOne
     @JoinColumn(name = "destinataire_id")
@@ -28,12 +31,12 @@ public class Transaction {
 
     public Transaction() {}
 
-    public Transaction(String type, Double montant, Mission mission, Long id, User expéditeur, User destinataire, Date date,String statut) {
+    public Transaction(String type, Double montant, Mission mission, Long id, User expediteur, User destinataire, Date date,String statut) {
         this.type = type;
         this.montant = montant;
         this.mission = mission;
         this.id = id;
-        this.expéditeur = expéditeur;
+        this.expediteur = expediteur;
         this.destinataire = destinataire;
         this.date = date;
         this.statut = statut;
@@ -55,12 +58,12 @@ public class Transaction {
         this.destinataire = destinataire;
     }
 
-    public User getExpéditeur() {
-        return expéditeur;
+    public User getExpediteur() {
+        return expediteur;
     }
 
-    public void setExpéditeur(User expéditeur) {
-        this.expéditeur = expéditeur;
+    public void setExpediteur(User expediteur) {
+        this.expediteur = expediteur;
     }
 
     public Long getId() {
@@ -93,5 +96,13 @@ public class Transaction {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getStatut() {
+        return statut;
+    }
+
+    public void setStatut(String statut) {
+        this.statut = statut;
     }
 }

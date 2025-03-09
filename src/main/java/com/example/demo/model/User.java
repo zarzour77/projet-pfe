@@ -3,6 +3,8 @@ package com.example.demo.model;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -25,7 +27,6 @@ public class User {
     private String photoprofile;
 
     private String statut;
-    private String subscriptionType;
 
     @JsonIgnore
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
@@ -37,6 +38,9 @@ public class User {
 
     // Champ pour stocker le code de vérification (vous pouvez également l'expirer avec une date si besoin)
     private String verificationCode;
+
+    @OneToMany(mappedBy = "expediteur", cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    private List<Transaction> transactions = new ArrayList<>();
     public User() {}
 
     public User(String nom) {
@@ -82,17 +86,8 @@ public class User {
         this.email = email;
         this.password = encodedPassword;
     }
-    public User(String nom, String prenom, String telephone, String email, String encodedPassword, String role, String subscriptionType) {
-        this.nom = nom;
-        this.prenom = prenom;
-        this.telephone = telephone;
-        this.email = email;
-        this.password = encodedPassword;
-        this.role = role;
-        this.subscriptionType = subscriptionType; // Initialize subscriptionType
-    }
 
-    public User(String adresse, String email, boolean emailVerified, Long id, String nom, List<Notification> notifications, String password, String photoprofile, String prenom, Double rating, String role, String statut, String subscriptionType, String telephone, String verificationCode) {
+    public User(String adresse, String email, boolean emailVerified, Long id, String nom, List<Notification> notifications, String password, String photoprofile, String prenom, Double rating, String role, String statut, String telephone, String verificationCode) {
         this.adresse = adresse;
         this.email = email;
         this.emailVerified = emailVerified;
@@ -105,7 +100,6 @@ public class User {
         this.rating = rating;
         this.role = role;
         this.statut = statut;
-        this.subscriptionType = subscriptionType;
         this.telephone = telephone;
         this.verificationCode = verificationCode;
     }
@@ -194,11 +188,12 @@ public class User {
     public void setTelephone(String telephone) {
         this.telephone = telephone;
     }
-    public String getSubscriptionType() {
-        return subscriptionType;
+    public List<Transaction> getTransactions() {
+        return transactions;
     }
-    public void setSubscriptionType(String subscriptionType) {
-        this.subscriptionType = subscriptionType;
+
+    public void setTransactions(List<Transaction> transactions) {
+        this.transactions = transactions;
     }
 
     // Utilisation de @JsonGetter pour retourner l'image avec le préfixe approprié dans la réponse JSON

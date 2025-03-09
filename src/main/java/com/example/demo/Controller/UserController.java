@@ -63,15 +63,7 @@ public class UserController {
             return ResponseEntity.status(500).body("Error updating profile picture");
         }
     }
-    @PutMapping("/{id}/subscription")
-    public ResponseEntity<User> updateSubscriptionType(@PathVariable Long id, @RequestBody User updatedUser) {
-        try {
-            User user = userService.updateSubscriptionType(id, updatedUser.getSubscriptionType());
-            return ResponseEntity.ok(user);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
+
     @PutMapping("/{id}/role")
     public ResponseEntity<User> updateUserRole(@PathVariable Long id, @RequestBody Map<String, String> request) {
         String role = request.get("role");

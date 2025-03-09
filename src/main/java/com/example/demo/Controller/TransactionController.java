@@ -51,4 +51,8 @@ public class TransactionController {
         transactionService.deleteTransaction(id);
         return ResponseEntity.noContent().build();
     }
+    @GetMapping("/user/{userId}")
+    public List<Transaction> getTransactionsByUserId(@PathVariable Long userId) {
+        return transactionService.getTransactionsByUserId(userId);
+    }
 }

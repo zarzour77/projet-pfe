@@ -108,12 +108,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public User updateSubscriptionType(Long id, String subscriptionType) {
-        return userRepository.findById(id).map(user -> {
-            user.setSubscriptionType(subscriptionType);
-            return userRepository.save(user);
-        }).orElseThrow(() -> new RuntimeException("User not found"));
-    }
+
 
     @Transactional
     public User updateUserRole(Long id, String role) {
@@ -137,6 +132,7 @@ public class UserService {
         }
         return updatedUser;
     }
+
 
     public List<User> searchUsers(String query) {
         return userRepository.findByNomContainingIgnoreCase(query);

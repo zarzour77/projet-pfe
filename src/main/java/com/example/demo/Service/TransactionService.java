@@ -35,11 +35,14 @@ public class TransactionService {
             transaction.setMontant(updatedTransaction.getMontant());
             transaction.setDate(updatedTransaction.getDate());
             transaction.setType(updatedTransaction.getType());
-            transaction.setExpéditeur(updatedTransaction.getExpéditeur());
+            transaction.setExpediteur(updatedTransaction.getExpediteur());
             transaction.setDestinataire(updatedTransaction.getDestinataire());
             transaction.setMission(updatedTransaction.getMission());
             return transactionRepository.save(transaction);
         }).orElseThrow(() -> new RuntimeException("Transaction not found with id " + id));
+    }
+    public List<Transaction> getTransactionsByUserId(Long userId) {
+        return transactionRepository.findByExpediteurIdOrDestinataireId(userId, userId);
     }
 
     public void deleteTransaction(Long id) {

@@ -1,6 +1,8 @@
 package com.example.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
@@ -11,6 +13,7 @@ import java.util.List;
 
 @Entity
 @DiscriminatorValue("CONSULTANT")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Consultant extends User {
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, }, fetch = FetchType.EAGER)
     @JoinTable(
@@ -92,6 +95,9 @@ public class Consultant extends User {
             inverseJoinColumns = @JoinColumn(name = "langue_id")
     )
     private List<Langue> langues;
+
+    @OneToMany(mappedBy = "consultant", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
+    private List<Subscription> subscriptions;
     public Consultant() {}
 
     public Consultant(List<Avis> avisDonnes, List<Avis> avisRecus, Integer taux_horaire, List<Competence> competences, List<Domaine> domaines, List<Experience> experiences, Integer experienceYears, Double latitude, Double longitude, String portfolio, List<Proposition> propositions, List<Mission> savedMissions, Integer workload) {
@@ -185,20 +191,6 @@ public class Consultant extends User {
         this.workload = workload;
     }
 
-    public Consultant(String nom, String prenom, String telephone, String email, String encodedPassword, String role, String subscriptionType, List<Avis> avisDonnes, List<Avis> avisRecus, Integer taux_horaire, List<Competence> competences, List<Domaine> domaines, List<Experience> experiences, Integer experienceYears, Double latitude, Double longitude, String portfolio, List<Proposition> propositions, List<Mission> savedMissions, Integer workload) {
-        super(nom, prenom, telephone, email, encodedPassword, role, subscriptionType);
-        this.taux_horaire = taux_horaire;
-        this.competences = competences;
-        this.domaines = domaines;
-        this.experiences = experiences;
-        this.experienceYears = experienceYears;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.portfolio = portfolio;
-        this.propositions = propositions;
-        this.savedMissions = savedMissions;
-        this.workload = workload;
-    }
 
     public List<Mission> getSavedMissions() {
         return savedMissions;
@@ -381,5 +373,12 @@ public class Consultant extends User {
 
     public void setLangues(List<Langue> langues) {
         this.langues = langues;
+    }
+
+    public List<Subscription> getSubscriptions() {
+        return subscriptions;
+    }
+    public void setSubscriptions(List<Subscription> subscriptions) {
+        this.subscriptions = subscriptions;
     }
 }

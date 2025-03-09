@@ -71,9 +71,7 @@ public class EntrepriseService {
             if (updatedEntreprise.getStatut() != null) {
                 entreprise.setStatut(updatedEntreprise.getStatut());
             }
-            if (updatedEntreprise.getSubscriptionType() != null) {
-                entreprise.setSubscriptionType(updatedEntreprise.getSubscriptionType());
-            }
+
             if (updatedEntreprise.getRating() != null) {
                 entreprise.setRating(updatedEntreprise.getRating());
             }

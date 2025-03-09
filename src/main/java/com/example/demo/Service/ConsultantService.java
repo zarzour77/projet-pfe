@@ -87,9 +87,6 @@ public class ConsultantService {
             if (updatedConsultant.getStatut() != null) {
                 consultant.setStatut(updatedConsultant.getStatut());
             }
-            if (updatedConsultant.getSubscriptionType() != null) {
-                consultant.setSubscriptionType(updatedConsultant.getSubscriptionType());
-            }
             if (updatedConsultant.getRating() != null) {
                 consultant.setRating(updatedConsultant.getRating());
             }
