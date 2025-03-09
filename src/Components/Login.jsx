@@ -1,15 +1,13 @@
 /* eslint-disable react/no-unescaped-entities */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import AuthService from "../Services/AuthService";
 import styles from "./Login.module.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { useNavigate } from "react-router-dom";
-import user1 from '../assets/hidingUser.png';
+import user1 from "../assets/hidingUser.png";
 import UserService from "../Services/UserService";
-import { AuthContext } from "../services/AuthContext";
+import { AuthContext } from "../Services/AuthContext";
 import { useContext } from "react";
-
-
 
 const Login = () => {
   const { setCurrentUser } = useContext(AuthContext);
@@ -22,10 +20,13 @@ const Login = () => {
   // States for Sign In
   const [signinEmail, setSigninEmail] = useState("");
   const [signinPassword, setSigninPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
   // State for verification code
   const [showVerify, setShowVerify] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
+  // State to control the popover for password validation
+  const [showPopover, setShowPopover] = useState(false);
+  // Ref for the password input
+  const passwordInputRef = useRef(null);
 
   const navigate = useNavigate();
 
@@ -38,6 +39,22 @@ const Login = () => {
     const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
     return regex.test(pwd);
   };
+
+  // Compute popover position and update CSS variables
+  useEffect(() => {
+    if (showPopover && passwordInputRef.current) {
+      const rect = passwordInputRef.current.getBoundingClientRect();
+      // Set CSS custom properties for left and top positioning.
+      document.documentElement.style.setProperty(
+        "--popover-left",
+        `${rect.right + 10}px`
+      );
+      document.documentElement.style.setProperty(
+        "--popover-top",
+        `${rect.top + rect.height / 2 - 23}px`
+      );
+    }
+  }, [showPopover, password]);
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -56,38 +73,23 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
-    // If the verification flow is active, let its handler take over.
     if (showVerify) {
       handleVerifySubmit(e);
       return;
     }
-
     try {
-      console.log("Attempting login:", signinEmail, signinPassword);
-      // Call the login endpoint once
       const loginResponse = await AuthService.login(signinEmail, signinPassword);
-      // Clear any old data and store the full user object (with token) under "user"
       localStorage.clear();
       localStorage.setItem("user", JSON.stringify(loginResponse));
-      const token =localStorage.setItem("token",loginResponse.token)
-      console.log(token)
-      // Fetch full user details using the ID from the login response
-      const fullUser = await UserService.getById(loginResponse.id);
-      console.log("Full user:", fullUser);
+      localStorage.setItem("token", loginResponse.token);
 
-      // Ensure the token is present on the full user object
+      const fullUser = await UserService.getById(loginResponse.id);
       if (!fullUser.token) {
         fullUser.token = loginResponse.token;
       }
-
       // Store the complete user object under "user"
       localStorage.setItem("user", JSON.stringify(fullUser));
       setCurrentUser(fullUser); // Mise à jour du context
-
-      ///lllllllll
-
-      // Navigate based on user role
       if (fullUser.role === "ROLE_USER") {
         navigate("/UserInformation");
       } else if (fullUser.role === "Consultant") {
@@ -96,7 +98,6 @@ const Login = () => {
         navigate("/LandingEntreprise");
       }
     } catch (error) {
-      // If the error indicates the email isn't verified, prompt for verification code
       if (
         error.response &&
         error.response.data &&
@@ -112,7 +113,6 @@ const Login = () => {
     }
   };
 
-  // Handle verification without re-calling the login endpoint.
   const handleVerifySubmit = async (e) => {
     e.preventDefault();
     try {
@@ -127,115 +127,138 @@ const Login = () => {
   };
 
   return (
-    <div className={`${styles.customBackground}`}>
-      <div className={`${styles.container} ${isActive ? styles.active : ""}`} id="container">
-        {/* Sign Up Form */}
-        <div className={`${styles['form-container']} ${styles['sign-up']}`}>
-          <form onSubmit={handleSignup}>
-            <h1>S'inscrire</h1>
-            <div className={styles['social-icons']}>
-              <a href="#" className={`${styles.icon} ${styles.google}`}>
-                <i className="fa-brands fa-google-plus-g"></i>
-              </a>
-              <a href="#" className={`${styles.icon} ${styles.facebook}`}>
-                <i className="fa-brands fa-facebook-f"></i>
-              </a>
-              <a href="#" className={`${styles.icon} ${styles.github}`}>
-                <i className="fa-brands fa-github"></i>
-              </a>
-              <a href="#" className={`${styles.icon} ${styles.linkedin}`}>
-                <i className="fa-brands fa-linkedin-in"></i>
-              </a>
-            </div>
-            <input type="text" placeholder="Nom" required value={nom} onChange={(e) => setNom(e.target.value)} />
-            <input type="text" placeholder="Prénom" required value={prenom} onChange={(e) => setPrenom(e.target.value)} />
-            <input type="email" placeholder="Email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-            <input
-              type="password"
-              placeholder="Mot de passe"
-              required
-              value={password}
-              onChange={(e) => {
-                const pwd = e.target.value;
-                setPassword(pwd);
-                if (!validatePassword(pwd)) {
-                  setPasswordError("Le mot de passe doit contenir au moins 8 caractères, une lettre majuscule, une lettre minuscule et un chiffre.");
-                } else {
-                  setPasswordError("");
-                }
-              }}
-            />
-            {passwordError && <div className={styles.errorMessage}>{passwordError}</div>}
-            <button type="submit" className={styles.loginButton}>S'inscrire</button>
-          </form>
-        </div>
+    <>
+      <div className={`${styles.customBackground}`}>
+        <div className={`${styles.container} ${isActive ? styles.active : ""}`} id="container">
+          {/* Sign Up Form */}
+          <div className={`${styles["form-container"]} ${styles["sign-up"]}`}>
+            <form onSubmit={handleSignup}>
+              <h1>S'inscrire</h1>
+              <div className={styles["social-icons"]}>
+                <a href="#" className={`${styles.icon} ${styles.google}`}>
+                  <i className="fa-brands fa-google-plus-g"></i>
+                </a>
+                <a href="#" className={`${styles.icon} ${styles.facebook}`}>
+                  <i className="fa-brands fa-facebook-f"></i>
+                </a>
+                <a href="#" className={`${styles.icon} ${styles.github}`}>
+                  <i className="fa-brands fa-github"></i>
+                </a>
+                <a href="#" className={`${styles.icon} ${styles.linkedin}`}>
+                  <i className="fa-brands fa-linkedin-in"></i>
+                </a>
+              </div>
+              <input type="text" placeholder="Nom" required value={nom} onChange={(e) => setNom(e.target.value)} />
+              <input type="text" placeholder="Prénom" required value={prenom} onChange={(e) => setPrenom(e.target.value)} />
+              <input type="email" placeholder="Email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+              {/* Password input wrapped in a container */}
+              <div className={styles.popoverContainer}>
+                <input
+                  ref={passwordInputRef}
+                  type="password"
+                  placeholder="Mot de passe"
+                  required
+                  value={password}
+                  onFocus={() => setShowPopover(true)}
+                  onBlur={() => {
+                    if (validatePassword(password)) setShowPopover(false);
+                  }}
+                  onChange={(e) => {
+                    const pwd = e.target.value;
+                    setPassword(pwd);
+                    if (validatePassword(pwd)) {
+                      setShowPopover(false);
+                    } else {
+                      setShowPopover(true);
+                    }
+                  }}
+                />
+              </div>
+              <button type="submit" className={styles.loginButton}>
+                S'inscrire
+              </button>
+            </form>
+          </div>
 
-        {/* Sign In Form */}
-        <div className={`${styles['form-container']} ${styles['sign-in']}`}>
-          <form onSubmit={handleLogin}>
-            <h1>Se connecter</h1>
-            <div className={styles['social-icons']}>
-              <a href="#" className={`${styles.icon} ${styles.google}`}>
-                <i className="fa-brands fa-google-plus-g"></i>
-              </a>
-              <a href="#" className={`${styles.icon} ${styles.facebook}`}>
-                <i className="fa-brands fa-facebook-f"></i>
-              </a>
-              <a href="#" className={`${styles.icon} ${styles.github}`}>
-                <i className="fa-brands fa-github"></i>
-              </a>
-              <a href="#" className={`${styles.icon} ${styles.linkedin}`}>
-                <i className="fa-brands fa-linkedin-in"></i>
-              </a>
-            </div>
-            <input
-              type="text"
-              placeholder="Email"
-              required
-              value={signinEmail}
-              onChange={(e) => setSigninEmail(e.target.value)}
-            />
-            <input
-              type="password"
-              placeholder="Mot de passe"
-              required
-              value={signinPassword}
-              onChange={(e) => setSigninPassword(e.target.value)}
-            />
-            {showVerify && (
+          {/* Sign In Form */}
+          <div className={`${styles["form-container"]} ${styles["sign-in"]}`}>
+            <form onSubmit={handleLogin}>
+              <h1>Se connecter</h1>
+              <div className={styles["social-icons"]}>
+                <a href="#" className={`${styles.icon} ${styles.google}`}>
+                  <i className="fa-brands fa-google-plus-g"></i>
+                </a>
+                <a href="#" className={`${styles.icon} ${styles.facebook}`}>
+                  <i className="fa-brands fa-facebook-f"></i>
+                </a>
+                <a href="#" className={`${styles.icon} ${styles.github}`}>
+                  <i className="fa-brands fa-github"></i>
+                </a>
+                <a href="#" className={`${styles.icon} ${styles.linkedin}`}>
+                  <i className="fa-brands fa-linkedin-in"></i>
+                </a>
+              </div>
               <input
                 type="text"
-                placeholder="Saisir code"
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value)}
+                placeholder="Email"
                 required
+                value={signinEmail}
+                onChange={(e) => setSigninEmail(e.target.value)}
               />
-            )}
-            <a href="#">Mot de passe oublié ?</a>
-            <button type="submit" className={styles.loginButton}>Se connecter</button>
-          </form>
-        </div>
+              <input
+                type="password"
+                placeholder="Mot de passe"
+                required
+                value={signinPassword}
+                onChange={(e) => setSigninPassword(e.target.value)}
+              />
+              {showVerify && (
+                <input
+                  type="text"
+                  placeholder="Saisir code"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  required
+                />
+              )}
+              <a href="#">Mot de passe oublié ?</a>
+              <button type="submit" className={styles.loginButton}>
+                Se connecter
+              </button>
+            </form>
+          </div>
 
-        {/* Toggle Panel */}
-        <div className={styles['toggle-container']}>
-          <div className={styles.toggle}>
-            <div className={`${styles['toggle-panel']} ${styles['toggle-left']}`}>
-              <h1>Bienvenue !</h1>
-              <p>Entrez vos informations personnelles pour utiliser toutes les fonctionnalités du site</p>
-              <button className={styles.hidden} onClick={() => setIsActive(false)}>Se connecter</button>
-            </div>
-            <div className={`${styles['toggle-panel']} ${styles['toggle-right']}`}>
-              <h1>Bonjour !</h1>
-              <p>Inscrivez-vous avec vos informations personnelles pour utiliser toutes les fonctionnalités du site</p>
-              <button className={styles.hidden} onClick={() => setIsActive(true)}>S'inscrire</button>
+          {/* Toggle Panel */}
+          <div className={styles["toggle-container"]}>
+            <div className={styles.toggle}>
+              <div className={`${styles["toggle-panel"]} ${styles["toggle-left"]}`}>
+                <h1>Bienvenue !</h1>
+                <p>Entrez vos informations personnelles pour utiliser toutes les fonctionnalités du site</p>
+                <button className={styles.hidden} onClick={() => {setIsActive(false);setShowPopover(false)}}>
+                  Se connecter
+                </button>
+              </div>
+              <div className={`${styles["toggle-panel"]} ${styles["toggle-right"]}`}>
+                <h1>Bonjour !</h1>
+                <p>Inscrivez-vous avec vos informations personnelles pour utiliser toutes les fonctionnalités du site</p>
+                <button className={styles.hidden} onClick={() => setIsActive(true)}>
+                  S'inscrire
+                </button>
+              </div>
             </div>
           </div>
         </div>
+        <div className={styles.formHero}>
+          <img className={styles.user} src={user1} alt="Decorative Icon" />
+        </div>
       </div>
-      <div className={styles.formHero}>
-        <img className={styles.user} src={user1} alt="Decorative Icon" />
-      </div>
-    </div>
+      {/* Render the popover using a CSS class */}
+      {showPopover && !validatePassword(password) && (
+        <div className={styles.passwordPopover}>
+          Au moins 8 caractères, 1 majuscule et 1 numéro.
+        </div>
+      )}
+    </>
   );
 };
 

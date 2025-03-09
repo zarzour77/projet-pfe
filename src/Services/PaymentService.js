@@ -1,34 +1,30 @@
 import axios from "axios";
 
-const API_BASE_URL = 'http://localhost:8081/payment' //st the URL if needed
-
-const token = localStorage.getItem("token");
+const API_BASE_URL = 'http://localhost:8081/payment';
 
 const PaymentService = {
   createPayment: async (amount) => {
+    const token = localStorage.getItem("token");
+
     try {
-      
-
-      // Define token before checking it
       if (!token) throw new Error("JWT Token is missing");
-
-      console.log(token);
 
       const response = await axios.post(
         `${API_BASE_URL}/create`,
-        { amount }, // Request body
+        { amount },
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // Attach the token in the Authorization header
+            Authorization: `Bearer ${token}`,
           },
         }
       );
+      // Save the paymentId in localStorage for later processing
+      localStorage.setItem("paymentId", response.data.result.payment_id);
       const link = response.data.result.link;
-      console.log("Redirecting to:", link);      
-      window.location.href = link; // Redirects in the same tab
-
-      return response.data; // Axios automatically parses the response JSON
+      console.log("Redirecting to:", link);
+      window.location.href = link;
+      return response.data;
     } catch (error) {
       console.error("Erreur lors du paiement:", error);
       throw error;
@@ -36,20 +32,42 @@ const PaymentService = {
   },
 
   verifyPayment: async (paymentId) => {
+    const token = localStorage.getItem("token");
     try {
-      
       if (!token) throw new Error("JWT Token is missing");
 
       const response = await axios.get(`${API_BASE_URL}/success`, {
         params: { payment_id: paymentId },
         headers: {
-          Authorization: `Bearer ${token}`, // Attach the token in the Authorization header
+          Authorization: `Bearer ${token}`,
         },
       });
 
-      return response.data; // Axios automatically parses the response JSON
+      return response.data;
     } catch (error) {
       console.error("Erreur de vérification de paiement:", error);
+      throw error;
+    }
+  },
+
+  processPayment: async (payload) => {
+    const token = localStorage.getItem("token");
+    try {
+      if (!token) throw new Error("JWT Token is missing");
+
+      const response = await axios.post(
+        `${API_BASE_URL}/process`,
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erreur lors du traitement du paiement:", error);
       throw error;
     }
   },

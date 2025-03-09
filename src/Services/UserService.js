@@ -3,22 +3,22 @@ import axios from 'axios';
 const API_URL = 'http://localhost:8081/api/users';
 
 const UserService = {
-  updateSubscriptionType: async (userId, subscriptionType) => {
+  createSilverSubscription: async (userId) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.put(
-        `${API_URL}/${userId}/subscription`,
-        { subscriptionType },
+      const response = await axios.post(
+        `${API_URL}/${userId}/subscription/silver`,
+        {}, // No additional body data required for silver plan
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      console.log("[updateSubscriptionType] Response:", response.data);
+      console.log("[createSilverSubscription] Response:", response.data);
       return response.data;
     } catch (error) {
-      console.error("[updateSubscriptionType] Error:", error);
+      console.error("[createSilverSubscription] Error:", error);
       throw error;
     }
   },

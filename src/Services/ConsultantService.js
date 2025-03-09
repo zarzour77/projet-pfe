@@ -30,6 +30,7 @@ const ConsultantService = {
         headers: { Authorization: `Bearer ${token}` },
       });
       return response.data;
+      
     } catch (error) {
       console.error("Error fetching consultant:", error);
       throw error;
@@ -93,7 +94,7 @@ const ConsultantService = {
       const formData = new FormData();
       formData.append("file", file);
       const response = await axios.post(
-        `http://localhost:8081/api/users/${id}/uploadProfilePic`,
+        `http://localhost:8181/api/users/${id}/uploadProfilePic`,
         formData,
         {
           headers: {
