@@ -292,10 +292,11 @@ const UserInformation = () => {
       if (values.photoprofile) {
         await UserService.uploadProfilePicture(userId, values.photoprofile);
       }
-      
+            
+      // Modifier la partie transformedCompetences dans handleFinalSubmit
       const transformedCompetences = values.competences.map(comp => {
         const existing = fetchedCompetences.find(c => c.nom.toLowerCase() === comp.nom.toLowerCase());
-        return existing ? existing : comp; 
+        return existing ? { ...existing, competenceNiveau: comp.competenceNiveau } : comp;
       });
       
       const transformedDomaines = values.domaines.map(dom => {
@@ -487,9 +488,9 @@ const UserInformation = () => {
                         setFieldValue('competences', updatedCompetences);
                       }}
                     >
-                      <option value="Débutant">Débutant</option>
-                      <option value="Intermédiaire">Intermédiaire</option>
-                      <option value="Expert">Expert</option>
+                      <option value="débutant">Débutant</option>
+                      <option value="intermédiaire">Intermédiaire</option>
+                      <option value="expert">Expert</option>
                     </select>
                   </div>
                 ))}

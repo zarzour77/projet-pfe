@@ -3,8 +3,10 @@ import styles from "./Subscription.module.css";
 import PaymentService from "../Services/PaymentService";
 import UserService from "../Services/UserService";
 import { useNavigate } from "react-router-dom";
+
 const storedConsultant = JSON.parse(localStorage.getItem("user"));
-const consultantId=storedConsultant?.id;
+const consultantId = storedConsultant?.id;
+
 const Subscription = () => {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [message, setMessage] = useState("");
@@ -13,9 +15,9 @@ const Subscription = () => {
 
   // Define pricing for each plan
   const planPrices = {
-    Silver: 0, // Price for display purposes (even though it's free)
+    Silver: 0, // Free plan
     Gold: 50000,
-    Platinum: 90000
+    Platinum: 90000,
   };
 
   const handleSelection = (plan) => {
@@ -23,52 +25,42 @@ const Subscription = () => {
     setMessage("");
   };
 
-  // Handle subscription and payment creation
+  // Handle subscription and payment creation/processing
   const handleSubscribe = async () => {
     if (!selectedPlan) return;
 
-    // Save the selected plan in local storage
-    localStorage.setItem("SubscriptionType", JSON.stringify(selectedPlan));
     setLoading(true);
 
-    // Show message immediately upon button click
     if (selectedPlan === "Silver") {
+      // For Silver plan, no payment processing is needed.
       setMessage("Abonnement gratuit activé pour Silver.");
-    } else {
-      setMessage(
-        `Paiement initié avec succès. Votre choix: ${selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1)}.`
-      );
-    }
-
-    setTimeout(async () => {
-      if (selectedPlan === "Silver") {
-        try {
-          await UserService.updateSubscriptionType(consultantId, "Silver");
-          setTimeout(() => {
-            navigate("/ProfilePage");
-            setLoading(false);
-          }, 2000);
-        } catch (error) {
-          console.error("Erreur lors de la mise à jour de l'abonnement:", error);
-          setMessage("Erreur lors de la mise à jour de l'abonnement. Veuillez réessayer.");
+      try {
+        await UserService.createSilverSubscription(consultantId);
+        setTimeout(() => {
+          navigate("/ProfilePage");
           setLoading(false);
-        }
-      } else {
-        const amount = planPrices[selectedPlan];
-        try {
-          await PaymentService.createPayment(amount);
-          await UserService.updateSubscriptionType(consultantId, selectedPlan);
-          setTimeout(() => {
-            navigate("/PaymentSuccess");
-            setLoading(false);
-          }, 2000);
-        } catch (error) {
-          console.error("Erreur lors du paiement:", error);
-          setMessage("Erreur lors du paiement. Veuillez réessayer.");
-          setLoading(false);
-        }
+        }, 2000);
+      } catch (error) {
+        console.error("Erreur lors de la création de l'abonnement Silver:", error);
+        setMessage("Erreur lors de la création de l'abonnement. Veuillez réessayer.");
+        setLoading(false);
       }
-    }, 1000); // 1 second delay before processing starts
+    } else {
+      // For paid plans: create payment then process it.
+      const amount = planPrices[selectedPlan];
+      // Store selected plan and amount in localStorage for later use in PaymentSuccess
+      localStorage.setItem("SubscriptionType", JSON.stringify(selectedPlan));
+      localStorage.setItem("SubscriptionAmount", amount.toString());
+      try {
+        // Create payment and retrieve the payment details (including payment_id)
+        await PaymentService.createPayment(amount);
+        // PaymentService.createPayment will store the paymentId in localStorage and redirect the user.
+      } catch (error) {
+        console.error("Erreur lors du paiement:", error);
+        setMessage("Erreur lors du paiement. Veuillez réessayer.");
+        setLoading(false);
+      }
+    }
   };
 
   return (
@@ -83,9 +75,7 @@ const Subscription = () => {
             className={`${styles.plan} ${selectedPlan === plan ? styles.selected : ""}`}
             onClick={() => handleSelection(plan)}
           >
-            <i className={`bi ${
-              plan === "Silver" ? "bi-award" : plan === "Gold" ? "bi-gem" : "bi-stars"
-            }`}></i>
+            <i className={`bi ${plan === "Silver" ? "bi-award" : plan === "Gold" ? "bi-gem" : "bi-stars"}`}></i>
             <h3>{plan.charAt(0).toUpperCase() + plan.slice(1)}</h3>
             <p>
               {plan === "Silver" && "Accès limité aux fonctionnalités de base"}

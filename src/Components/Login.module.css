@@ -278,14 +278,39 @@
   .user{
 width: 100px;
   }
-  .errorMessage {
-    color: #721c24;
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
-    padding: 0.5rem;
-    border-radius: 4px;
-    margin-top: 8px;
-    font-size: 0.9em;
-    font-weight: bold;
+  
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
+  
+  .popoverContainer {
+    position: relative;
+    width: 100%;
+  }
+  
+  /* Popover styling using CSS variables for dynamic positioning */
+  .passwordPopover {
+    position: fixed;
+    left: var(--popover-left);
+    top: var(--popover-top);
+    width: 180px;
+    background-color: #e0f7fa;  /* Light blue background */
+    color: #00796b;           /* Dark teal text */
+    border: 1px solid #4db6ac;
+    border-radius: 4px;
+    padding: 0.3rem;
+    font-size: 0.8em;
+    font-weight: bold;
+    z-index: 1000;
+    text-align: center;
+    animation: fadeIn 0.3s ease-in-out forwards;
+  }
+  
+  
   

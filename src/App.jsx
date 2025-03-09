@@ -1,49 +1,151 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Home from "./Components/Home";
-import Login from "./Components/Login"
+import Login from "./Components/Login";
 import SignupSuccess from "./Components/SignupSuccess";
 import CreateProfile from "./Components/CreateProfile";
 import Experience from "./Components/Experience";
 import Subscription from "./Components/Subscription";
 import PaymentSuccess from "./Components/PaymentSuccess";
 import PaymentFailed from "./Components/PaymentFailed";
-import TradeForTalent from "./Components/TradeForTalent";
-import ProfileSelection from "./Components/ProfileSelection";
 import UserInformation from "./Components/UserInformation";
 import Messenger from "./Components/Messenger";
 import MissioinTinder from "./Components/MissionTinder";
 import SearchMission from "./Components/SearchMission";
-import StatsConsultant from "./Components/statsconsultant";
 import PublierMission from "./Components/PublierMission";
 import ProfilePage from "./Components/ProfilePage";
 import LandingEntreprise from "./Components/LandingEntreprise";
-import ProfessionalDetails from "./Components/ProfessionalDetails"
+import ProfessionalDetails from "./Components/ProfessionalDetails";
+import TransactionsHistory from "./Components/TransactionsHistory"; // <-- New Import
+
+import ProtectedRoute from "./Services/ProtectedRoute";
+import { AuthProvider } from "./Services/AuthContext";
+
 const App = () => {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login /> }  />
-        <Route path="/SignupSuccess" element={<SignupSuccess /> }  />
-        <Route path="/CreateProfile" element={<CreateProfile /> }  />
-        <Route path="/Experience" element={<Experience /> }  />
-        <Route path="/Subscription" element={<Subscription /> }  />
-        <Route path="/PaymentSuccess" element={<PaymentSuccess /> }  />
-        <Route path="/PaymentFailed" element={<PaymentFailed /> }  />
-        <Route path="/TradeForTalent" element={<TradeForTalent /> }  />
-        <Route path="/ProfileSelection" element={<ProfileSelection /> }  />
-        <Route path="/UserInformation" element={<UserInformation /> }  />
-        <Route path="/Messenger" element={<Messenger /> }  />
-        <Route path="/MissionTinder" element={<MissioinTinder /> }  />
-        <Route path="/SearchMission" element={<SearchMission /> }  />
-        <Route path="/StatsConsultant" element={<StatsConsultant /> }  />
-        <Route path="/PublierMission" element={<PublierMission /> }  />
-        <Route path="/ProfilePage" element={<ProfilePage /> }  />
-        <Route path="/LandingEntreprise" element={<LandingEntreprise /> }  />
-        <Route path="/ProfessionalDetails" element={<ProfessionalDetails /> }  />
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/UserInformation" element={<UserInformation />} />
 
-      </Routes>
-    </Router>
+          <Route
+            path="/SearchMission"
+            element={
+              <ProtectedRoute allowedRoles={["Consultant"]}>
+                <SearchMission />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/MissionTinder"
+            element={
+              <ProtectedRoute allowedRoles={["Consultant"]}>
+                <MissioinTinder />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/SignupSuccess"
+            element={
+              <ProtectedRoute allowedRoles={["Consultant"]}>
+                <SignupSuccess />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/CreateProfile"
+            element={
+              <ProtectedRoute allowedRoles={["Consultant"]}>
+                <CreateProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/Experience"
+            element={
+              <ProtectedRoute allowedRoles={["Consultant"]}>
+                <Experience />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/Subscription"
+            element={
+              <ProtectedRoute allowedRoles={["Consultant"]}>
+                <Subscription />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/PaymentSuccess"
+            element={
+              <ProtectedRoute allowedRoles={["Consultant"]}>
+                <PaymentSuccess />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/PaymentFailed"
+            element={
+              <ProtectedRoute allowedRoles={["Consultant"]}>
+                <PaymentFailed />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/ProfessionalDetails"
+            element={
+              <ProtectedRoute allowedRoles={["Consultant"]}>
+                <ProfessionalDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/Messenger"
+            element={
+              <ProtectedRoute allowedRoles={["Consultant", "Entreprise"]}>
+                <Messenger />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/ProfilePage"
+            element={
+              <ProtectedRoute allowedRoles={["Consultant"]}>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/PublierMission"
+            element={
+              <ProtectedRoute allowedRoles={["Entreprise"]}>
+                <PublierMission />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/LandingEntreprise"
+            element={
+              <ProtectedRoute allowedRoles={["Entreprise"]}>
+                <LandingEntreprise />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* NEW Protected Route for Transactions */}
+          <Route
+            path="/transactions"
+            element={
+              <ProtectedRoute allowedRoles={["Consultant"]}>
+                <TransactionsHistory />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 };
 

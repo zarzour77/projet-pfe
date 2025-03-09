@@ -7,15 +7,15 @@ import styles from './ProfilePage.module.css';
 import LangueService from '../Services/LangueService';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import ConsultantHeader from "./ConsultantHeader";
 
 const ProfilePage = () => {
-  const storedConsultant = JSON.parse(localStorage.getItem("user"));
-const consultantId=storedConsultant?.id;
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+  const consultantId = storedUser?.id;
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Experience view and update states (if needed)
+  // Experience view and update states
   const [selectedExperience, setSelectedExperience] = useState(null);
   const [updateField, setUpdateField] = useState(null);
   const [updateValue, setUpdateValue] = useState('');
@@ -50,76 +50,77 @@ const consultantId=storedConsultant?.id;
 
   // Ref for file input
   const fileInputRef = useRef(null);
-// Langue modal states
-const [showAddLangueModal, setShowAddLangueModal] = useState(false);
-const [allLangues, setAllLangues] = useState([]);
-const [selectedLangue, setSelectedLangue] = useState('');
-const [customLangue, setCustomLangue] = useState('');
-const [newLangueLevel, setNewLangueLevel] = useState('');
-// Formation modal states
-const [showAddFormationModal, setShowAddFormationModal] = useState(false);
-const [newFormationDiplome, setNewFormationDiplome] = useState('');
-const [newFormationUniversite, setNewFormationUniversite] = useState('');
-const [newFormationDateDebut, setNewFormationDateDebut] = useState('');
-const [newFormationDateFin, setNewFormationDateFin] = useState('');
 
-// Certification modal states
-const [showAddCertificationModal, setShowAddCertificationModal] = useState(false);
-const [newCertificationNom, setNewCertificationNom] = useState('');
-const [newCertificationOrganisme, setNewCertificationOrganisme] = useState('');
-const [newCertificationDateObtention, setNewCertificationDateObtention] = useState('');
-// Formation modal handlers
-const openAddFormationModal = () => setShowAddFormationModal(true);
-const closeAddFormationModal = () => {
-  setShowAddFormationModal(false);
-  setNewFormationDiplome('');
-  setNewFormationUniversite('');
-  setNewFormationDateDebut('');
-  setNewFormationDateFin('');
-};
+  // Langue modal states
+  const [showAddLangueModal, setShowAddLangueModal] = useState(false);
+  const [allLangues, setAllLangues] = useState([]);
+  const [selectedLangue, setSelectedLangue] = useState('');
+  const [customLangue, setCustomLangue] = useState('');
+  const [newLangueLevel, setNewLangueLevel] = useState('');
 
-// Certification modal handlers
-const openAddCertificationModal = () => setShowAddCertificationModal(true);
-const closeAddCertificationModal = () => {
-  setShowAddCertificationModal(false);
-  setNewCertificationNom('');
-  setNewCertificationOrganisme('');
-  setNewCertificationDateObtention('');
-};
-  // Fetch consultant data on mount
+  // Formation modal states
+  const [showAddFormationModal, setShowAddFormationModal] = useState(false);
+  const [newFormationDiplome, setNewFormationDiplome] = useState('');
+  const [newFormationUniversite, setNewFormationUniversite] = useState('');
+  const [newFormationDateDebut, setNewFormationDateDebut] = useState('');
+  const [newFormationDateFin, setNewFormationDateFin] = useState('');
 
-useEffect(() => {
-  const fetchUserData = async () => {
-    try {
-      setLoading(true);
-      const consultantData = await ConsultantService.getConsultantById(consultantId);
-      setUser(consultantData);
-      console.log(consultantData)
-    } catch (error) {
-      console.error("Erreur lors de la récupération:", error);
-      toast.error("Erreur lors du chargement du profil");
-    } finally {
-      setLoading(false);
-    }
+  // Certification modal states
+  const [showAddCertificationModal, setShowAddCertificationModal] = useState(false);
+  const [newCertificationNom, setNewCertificationNom] = useState('');
+  const [newCertificationOrganisme, setNewCertificationOrganisme] = useState('');
+  const [newCertificationDateObtention, setNewCertificationDateObtention] = useState('');
+
+  // Formation modal handlers
+  const openAddFormationModal = () => setShowAddFormationModal(true);
+  const closeAddFormationModal = () => {
+    setShowAddFormationModal(false);
+    setNewFormationDiplome('');
+    setNewFormationUniversite('');
+    setNewFormationDateDebut('');
+    setNewFormationDateFin('');
   };
+
+  // Certification modal handlers
+  const openAddCertificationModal = () => setShowAddCertificationModal(true);
+  const closeAddCertificationModal = () => {
+    setShowAddCertificationModal(false);
+    setNewCertificationNom('');
+    setNewCertificationOrganisme('');
+    setNewCertificationDateObtention('');
+  };
+
+  // Fetch consultant data on mount or when consultantId changes
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setLoading(true);
+        const consultantData = await ConsultantService.getConsultantById(consultantId);
+        console.log("Fetched consultantData:", consultantData); // Log the fetched data
+        setUser(consultantData);
+      } catch (error) {
+        console.error("Erreur lors de la récupération:", error);
+        toast.error("Erreur lors du chargement du profil");
+      } finally {
+        setLoading(false);
+      }
+    };
   
-  fetchUserData();
-}, []);
+    if (consultantId) {
+      fetchUserData();
+    }
+  }, [consultantId]);
+  
 
-// Remove the duplicate useEffect below (the one starting with:
-// "// Fetch options for competences and domaines")
-
-  // Fetch options for competences and domaines
+  // Fetch options for competences, domaines, and langues
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        // Fetch all options in parallel
         const [competences, domaines, langues] = await Promise.all([
           CompetenceService.getAllCompetences(),
           DomaineService.getAllDomaines(),
           LangueService.getAllLangues()
         ]);
-  
         setAllCompetences(competences);
         setAllDomaines(domaines);
         setAllLangues(langues);
@@ -128,7 +129,7 @@ useEffect(() => {
         toast.error("Erreur lors du chargement des options");
       }
     };
-    
+
     fetchOptions();
   }, []);
 
@@ -165,7 +166,7 @@ useEffect(() => {
       const updatedUser = await ConsultantService.updateConsultant(user.id, updatedData);
       setUser(updatedUser);
       await ConsultantService.saveCv(user.id);
-      localStorage.setItem("Consultant", JSON.stringify(updatedUser));
+      localStorage.setItem("user", JSON.stringify(updatedUser));
       toast.success("Profil mis à jour avec succès!");
       closeUpdateModal();
     } catch (error) {
@@ -183,7 +184,7 @@ useEffect(() => {
       await ConsultantService.uploadProfilePicture(user.id, file);
       const updatedUser = await ConsultantService.getConsultantById(user.id);
       setUser(updatedUser);
-      localStorage.setItem("Consultant", JSON.stringify(updatedUser));
+      localStorage.setItem("user", JSON.stringify(updatedUser));
       toast.success("Image de profil mise à jour avec succès!");
     } catch (error) {
       console.error("Erreur lors du téléchargement de l'image de profil:", error);
@@ -215,9 +216,8 @@ useEffect(() => {
       const updatedUser = await ConsultantService.addExperience(user.id, newExperience);
       setUser(updatedUser);
       await ConsultantService.saveCv(user.id);
-      localStorage.setItem("Consultant", JSON.stringify(updatedUser));
+      localStorage.setItem("user", JSON.stringify(updatedUser));
       toast.success("Expérience ajoutée avec succès!");
-      closeAddExperienceModal();
     } catch (error) {
       console.error("Erreur lors de l'ajout de l'expérience:", error);
       toast.error("Erreur lors de l'ajout de l'expérience");
@@ -238,21 +238,7 @@ useEffect(() => {
     setCustomCompetence('');
     setNewCompetenceLevel('');
   };
-  const handleDeleteExperience = async (expId) => {
-    if (window.confirm("Êtes-vous sûr de vouloir supprimer cette expérience ?")) {
-      try {
-        await ConsultantService.deleteExperience(user.id, expId);
-        const updatedUser = await ConsultantService.getConsultantById(user.id);
-        await ConsultantService.saveCv(user.id);
-        setUser(updatedUser);
-        localStorage.setItem("Consultant", JSON.stringify(updatedUser));
-        toast.success("Expérience supprimée avec succès!");
-      } catch (error) {
-        console.error("Erreur lors de la suppression de l'expérience:", error);
-        toast.error("Erreur lors de la suppression de l'expérience");
-      }
-    }
-  };
+
   const handleAddCompetenceSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -261,7 +247,6 @@ useEffect(() => {
         toast.error("Veuillez remplir tous les champs");
         return;
       }
-      // Check if the competence exists (case-insensitive)
       const existing = allCompetences.find(c => c.nom.toLowerCase() === competenceName.toLowerCase());
       let competenceToAdd;
       if (existing) {
@@ -272,7 +257,7 @@ useEffect(() => {
       const updatedUser = await ConsultantService.addCompetence(user.id, competenceToAdd);
       setUser(updatedUser);
       await ConsultantService.saveCv(user.id);
-      localStorage.setItem("Consultant", JSON.stringify(updatedUser));
+      localStorage.setItem("user", JSON.stringify(updatedUser));
       toast.success("Compétence ajoutée avec succès!");
       if (!existing) {
         setAllCompetences([...allCompetences, competenceToAdd]);
@@ -296,19 +281,7 @@ useEffect(() => {
     setSelectedDomaine('');
     setCustomDomaine('');
   };
-  const openAddLangueModal = () => {
-    setShowAddLangueModal(true);
-    setSelectedLangue('');
-    setCustomLangue('');
-    setNewLangueLevel('');
-  };
-  
-  const closeAddLangueModal = () => {
-    setShowAddLangueModal(false);
-    setSelectedLangue('');
-    setCustomLangue('');
-    setNewLangueLevel('');
-  };
+
   const handleAddDomaineSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -327,7 +300,7 @@ useEffect(() => {
       const updatedUser = await ConsultantService.addDomaine(user.id, domaineToAdd);
       setUser(updatedUser);
       await ConsultantService.saveCv(user.id);
-      localStorage.setItem("Consultant", JSON.stringify(updatedUser));
+      localStorage.setItem("user", JSON.stringify(updatedUser));
       toast.success("Domaine ajouté avec succès!");
       if (!existing) {
         setAllDomaines([...allDomaines, domaineToAdd]);
@@ -338,6 +311,22 @@ useEffect(() => {
       toast.error("Erreur lors de l'ajout du domaine");
     }
   };
+
+  // Langue modal handlers
+  const openAddLangueModal = () => {
+    setShowAddLangueModal(true);
+    setSelectedLangue('');
+    setCustomLangue('');
+    setNewLangueLevel('');
+  };
+
+  const closeAddLangueModal = () => {
+    setShowAddLangueModal(false);
+    setSelectedLangue('');
+    setCustomLangue('');
+    setNewLangueLevel('');
+  };
+
   const handleAddLangueSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -346,23 +335,18 @@ useEffect(() => {
         toast.error("Veuillez remplir tous les champs");
         return;
       }
-  
-      // Check if the langue exists (case-insensitive)
       const existing = allLangues.find(l => l.nom.toLowerCase() === langueName.toLowerCase());
       let langueToAdd;
-      
       if (existing) {
         langueToAdd = existing;
       } else {
         langueToAdd = { nom: langueName, niveau: newLangueLevel };
       }
-  
       const updatedUser = await ConsultantService.addLangue(user.id, langueToAdd);
       setUser(updatedUser);
       await ConsultantService.saveCv(user.id);
-      localStorage.setItem("Consultant", JSON.stringify(updatedUser));
+      localStorage.setItem("user", JSON.stringify(updatedUser));
       toast.success("Langue ajoutée avec succès!");
-      
       if (!existing) {
         setAllLangues([...allLangues, langueToAdd]);
       }
@@ -372,7 +356,8 @@ useEffect(() => {
       toast.error("Erreur lors de l'ajout de la langue");
     }
   };
-  // Delete handlers for competence and domaine
+
+  // Delete handlers
   const handleDeleteCompetence = async (competenceId) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer cette compétence ?")) {
       try {
@@ -380,7 +365,7 @@ useEffect(() => {
         const updatedUser = await ConsultantService.getConsultantById(user.id);
         setUser(updatedUser);
         await ConsultantService.saveCv(user.id);
-        localStorage.setItem("Consultant", JSON.stringify(updatedUser));
+        localStorage.setItem("user", JSON.stringify(updatedUser));
         toast.success("Compétence supprimée avec succès!");
       } catch (error) {
         console.error("Erreur lors de la suppression de la compétence:", error);
@@ -396,7 +381,7 @@ useEffect(() => {
         const updatedUser = await ConsultantService.getConsultantById(user.id);
         setUser(updatedUser);
         await ConsultantService.saveCv(user.id);
-        localStorage.setItem("Consultant", JSON.stringify(updatedUser));
+        localStorage.setItem("user", JSON.stringify(updatedUser));
         toast.success("Domaine supprimé avec succès!");
       } catch (error) {
         console.error("Erreur lors de la suppression du domaine:", error);
@@ -404,6 +389,7 @@ useEffect(() => {
       }
     }
   };
+
   const handleDeleteLangue = async (langueId) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer cette langue ?")) {
       try {
@@ -411,7 +397,7 @@ useEffect(() => {
         const updatedUser = await ConsultantService.getConsultantById(user.id);
         setUser(updatedUser);
         await ConsultantService.saveCv(user.id);
-        localStorage.setItem("Consultant", JSON.stringify(updatedUser));
+        localStorage.setItem("user", JSON.stringify(updatedUser));
         toast.success("Langue supprimée avec succès!");
       } catch (error) {
         console.error("Erreur lors de la suppression de la langue:", error);
@@ -419,38 +405,39 @@ useEffect(() => {
       }
     }
   };
-// Add these with the other delete handlers
-const handleDeleteFormation = async (formationId) => {
-  if (window.confirm("Êtes-vous sûr de vouloir supprimer cette formation ?")) {
-    try {
-      await ConsultantService.deleteFormation(user.id, formationId);
-      const updatedUser = await ConsultantService.getConsultantById(user.id);
-      setUser(updatedUser);
-      await ConsultantService.saveCv(user.id);
-      localStorage.setItem("Consultant", JSON.stringify(updatedUser));
-      toast.success("Formation supprimée avec succès!");
-    } catch (error) {
-      console.error("Erreur lors de la suppression de la formation:", error);
-      toast.error("Erreur lors de la suppression de la formation");
-    }
-  }
-};
 
-const handleDeleteCertification = async (certificationId) => {
-  if (window.confirm("Êtes-vous sûr de vouloir supprimer cette certification ?")) {
-    try {
-      await ConsultantService.deleteCertification(user.id, certificationId);
-      const updatedUser = await ConsultantService.getConsultantById(user.id);
-      setUser(updatedUser);
-      await ConsultantService.saveCv(user.id);
-      localStorage.setItem("Consultant", JSON.stringify(updatedUser));
-      toast.success("Certification supprimée avec succès!");
-    } catch (error) {
-      console.error("Erreur lors de la suppression de la certification:", error);
-      toast.error("Erreur lors de la suppression de la certification");
+  const handleDeleteFormation = async (formationId) => {
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer cette formation ?")) {
+      try {
+        await ConsultantService.deleteFormation(user.id, formationId);
+        const updatedUser = await ConsultantService.getConsultantById(user.id);
+        setUser(updatedUser);
+        await ConsultantService.saveCv(user.id);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        toast.success("Formation supprimée avec succès!");
+      } catch (error) {
+        console.error("Erreur lors de la suppression de la formation:", error);
+        toast.error("Erreur lors de la suppression de la formation");
+      }
     }
-  }
-};
+  };
+
+  const handleDeleteCertification = async (certificationId) => {
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer cette certification ?")) {
+      try {
+        await ConsultantService.deleteCertification(user.id, certificationId);
+        const updatedUser = await ConsultantService.getConsultantById(user.id);
+        setUser(updatedUser);
+        await ConsultantService.saveCv(user.id);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        toast.success("Certification supprimée avec succès!");
+      } catch (error) {
+        console.error("Erreur lors de la suppression de la certification:", error);
+        toast.error("Erreur lors de la suppression de la certification");
+      }
+    }
+  };
+
   const handleAddFormationSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -463,7 +450,7 @@ const handleDeleteCertification = async (certificationId) => {
       const updatedUser = await ConsultantService.addFormation(user.id, newFormation);
       setUser(updatedUser);
       await ConsultantService.saveCv(user.id);
-      localStorage.setItem("Consultant", JSON.stringify(updatedUser));
+      localStorage.setItem("user", JSON.stringify(updatedUser));
       toast.success("Formation ajoutée avec succès!");
       closeAddFormationModal();
     } catch (error) {
@@ -471,7 +458,21 @@ const handleDeleteCertification = async (certificationId) => {
       toast.error("Erreur lors de l'ajout de la formation");
     }
   };
-  
+  const handleDeleteExperience = async (expId) => {
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer cette expérience ?")) {
+      try {
+        await ConsultantService.deleteExperience(user.id, expId);
+        const updatedUser = await ConsultantService.getConsultantById(user.id);
+        await ConsultantService.saveCv(user.id);
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        toast.success("Expérience supprimée avec succès!");
+      } catch (error) {
+        console.error("Erreur lors de la suppression de l'expérience:", error);
+        toast.error("Erreur lors de la suppression de l'expérience");
+      }
+    }
+  };
   const handleAddCertificationSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -483,7 +484,7 @@ const handleDeleteCertification = async (certificationId) => {
       const updatedUser = await ConsultantService.addCertification(user.id, newCertification);
       setUser(updatedUser);
       await ConsultantService.saveCv(user.id);
-      localStorage.setItem("Consultant", JSON.stringify(updatedUser));
+      localStorage.setItem("user", JSON.stringify(updatedUser));
       toast.success("Certification ajoutée avec succès!");
       closeAddCertificationModal();
     } catch (error) {
@@ -491,6 +492,7 @@ const handleDeleteCertification = async (certificationId) => {
       toast.error("Erreur lors de l'ajout de la certification");
     }
   };
+
   // CV generation and download functions
   const handleGenerateCV = async () => {
     try {
@@ -517,15 +519,17 @@ const handleDeleteCertification = async (certificationId) => {
   if (loading) return <div className={styles.loading}>Chargement...</div>;
   if (!user) return <div className={styles.error}>Erreur lors du chargement du profil</div>;
 
-  // Create distinct competence options from fetched competences
+  // Create distinct options for competences and langues
   const distinctCompetenceOptions = Array.from(
     new Map(allCompetences.map(c => [c.nom.toLowerCase(), { id: c.id, nom: c.nom }])).values()
   );
-  {/* Add this with other distinct options near the end of the component */}
   const distinctLangueOptions = Array.from(
     new Map(allLangues.map(l => [l.nom.toLowerCase(), { id: l.id, nom: l.nom }])).values()
   );
   return (
+    <div className={styles.pageWrapper}>
+      {/* Add ConsultantHeader here */}
+      <ConsultantHeader />
     <div className={styles.profileContainer}>
       {/* Toast container to show notifications */}
       <ToastContainer position="top-right" />
@@ -567,8 +571,12 @@ const handleDeleteCertification = async (certificationId) => {
 
       {/* Informations de base */}
       <div className={styles.profileSection}>
-        <h2 className={styles.sectionTitle}>Informations de base</h2>
-        <div className={styles.infoGrid}>
+      <h2 className={styles.sectionTitle}>Informations de base</h2>
+
+      {/* Two-column layout */}
+      <div className={styles.infoGridP}>
+        {/* LEFT COLUMN: Basic Info */}
+        <div className={styles.leftColumn}>
           {/* Nom complet */}
           <div className={styles.infoItem}>
             <div className={styles.infoHeader}>
@@ -576,7 +584,10 @@ const handleDeleteCertification = async (certificationId) => {
               <button
                 className={styles.editBtn}
                 onClick={() =>
-                  openUpdateModal("nom complet", { prenom: user.prenom, nom: user.nom })
+                  openUpdateModal("nom complet", {
+                    prenom: user.prenom,
+                    nom: user.nom,
+                  })
                 }
               >
                 <svg
@@ -595,7 +606,9 @@ const handleDeleteCertification = async (certificationId) => {
                 </svg>
               </button>
             </div>
-            <p className={styles.infoValue}>{user.prenom} {user.nom}</p>
+            <p className={styles.infoValue}>
+              {user.prenom} {user.nom}
+            </p>
           </div>
 
           {/* E-mail */}
@@ -649,7 +662,9 @@ const handleDeleteCertification = async (certificationId) => {
                 </svg>
               </button>
             </div>
-            <p className={styles.infoValue}>{user.telephone || "Non fourni"}</p>
+            <p className={styles.infoValue}>
+              {user.telephone || "Non fourni"}
+            </p>
           </div>
 
           {/* Adresse */}
@@ -676,16 +691,12 @@ const handleDeleteCertification = async (certificationId) => {
                 </svg>
               </button>
             </div>
-            <p className={styles.infoValue}>{user.adresse || "Non fourni"}</p>
+            <p className={styles.infoValue}>
+              {user.adresse || "Non fourni"}
+            </p>
           </div>
 
-          {/* Type d'abonnement (no edit button) */}
-          <div className={styles.infoItem}>
-            <label className={styles.infoLabel}>Type d'abonnement</label>
-            <p className={styles.infoValue}>{user.subscriptionType || "Aucun"}</p>
-          </div>
-
-          {/* Évaluation (no edit button) */}
+          {/* Évaluation */}
           <div className={styles.infoItem}>
             <label className={styles.infoLabel}>Évaluation</label>
             <p className={styles.infoValue}>
@@ -693,7 +704,25 @@ const handleDeleteCertification = async (certificationId) => {
             </p>
           </div>
         </div>
+
+        {/* RIGHT COLUMN: Abonnement */}
+        <div className={styles.rightColumn}>
+          <div className={styles.infoItem}>
+            <label className={styles.infoLabel}>Abonnement</label>
+            <p className={styles.infoValue}>
+              {user.subscriptions && user.subscriptions.length > 0
+                ? user.subscriptions.find(
+                    (sub) =>
+                      sub.statut &&
+                      sub.statut.toLowerCase() === "active"
+                  )?.planType || "Aucun"
+                : "Aucun abonnement renseigné"}
+            </p>
+          </div>
+        </div>
       </div>
+    </div>
+
 
       {/* Informations professionnelles */}
       {user.role === 'Consultant' && (
@@ -1359,6 +1388,7 @@ const handleDeleteCertification = async (certificationId) => {
         </div>
       )}
       <ToastContainer />
+    </div>
     </div>
   );
 };

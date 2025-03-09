@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { FaList, FaTh } from 'react-icons/fa';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ConsultantHeader from "./ConsultantHeader"
 
 // Material UI components
 import Button from '@mui/material/Button';
@@ -326,6 +327,9 @@ function SearchMission() {
   };
 
   return (
+    <div className={styles.pageWrapper}>
+      {/* Add ConsultantHeader here */}
+      <ConsultantHeader />
     <ThemeProvider theme={theme}>
       <div className={styles.searchMissionContainer}>
         <ToastContainer />
@@ -638,6 +642,7 @@ function SearchMission() {
     )}
       </div>
     </ThemeProvider>
+    </div>
   );
 }
 
