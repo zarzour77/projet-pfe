@@ -68,5 +68,12 @@ public class PropositionController {
         // Vous pouvez ajouter ici d'autres logiques spécifiques aux invitations
         return propositionService.createProposition(proposition);
     }
+
+    @GetMapping("/consultant/{consultantId}")
+    public ResponseEntity<List<Proposition>> getPropositionsByConsultant(@PathVariable Long consultantId) {
+        List<Proposition> propositions = propositionService.getPropositionsByConsultant(consultantId);
+        return ResponseEntity.ok(propositions);
+    }
+
 }
 

@@ -135,4 +135,23 @@ public class PropositionService {
         return propositionRepository.save(proposition);
     }
 
+    public List<Proposition> getPropositionsByConsultant(Long consultantId) {
+        if (consultantId == null || consultantId <= 0) {
+            throw new IllegalArgumentException("L'ID du consultant est invalide.");
+        }
+
+        // Vérification si le consultant existe
+        Consultant consultant = consultantRepository.findById(consultantId)
+                .orElseThrow(() -> new RuntimeException("Consultant introuvable avec l'ID : " + consultantId));
+
+        List<Proposition> propositions = propositionRepository.findByConsultantId(consultantId);
+
+        if (propositions.isEmpty()) {
+            System.out.println("Aucune proposition trouvée pour le consultant : " + consultant.getNom());
+        }
+
+        return propositions;
+    }
+
+
 }

@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface PropositionRepository extends JpaRepository<Proposition, Long> {
     List<Proposition> findByMissionId(Long missionId);
+    List<Proposition> findByConsultantId(Long consultantId);
+
 }
