@@ -67,9 +67,10 @@ public class MissionController {
             }
     @Transactional
     @GetMapping("/search")
-    public List<Mission> searchMissions() {
-        // Retourne uniquement les missions dont le statut est "en attente"
-        return missionService.getMissionsByStatus("en attente");
+    public List<Mission> searchMissions(@RequestParam("consultantId") Long consultantId) {
+        // Retourne uniquement les missions dont le statut est "en attente" et
+        // exclut celles pour lesquelles le consultant a déjà une proposition "INVITED"
+        return missionService.getAvailableMissionsForConsultant("en attente", consultantId);
     }
 
     @Transactional

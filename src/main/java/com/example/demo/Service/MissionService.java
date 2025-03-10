@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class MissionService {
@@ -100,8 +101,24 @@ public class MissionService {
         mission.setStartdate(new Date()); // Mise à jour de la date de démarrage avec la date actuelle
         return missionRepository.save(mission);
     }
-    public List<Mission> getMissionsByStatus(String status) {
-        return missionRepository.findByStatut(status);
+    public List<Mission> getAvailableMissionsForConsultant(String status, Long consultantId) {
+        // Récupère toutes les missions avec le statut donné (par ex. "en attente")
+        List<Mission> missions = missionRepository.findByStatut(status);
+        // Filtrer pour exclure les missions ayant une proposition "INVITED" pour ce consultant
+        missions = missions.stream().filter(mission -> {
+            if (mission.getPropositions() != null) {
+                return mission.getPropositions().stream()
+                        .noneMatch(prop ->
+                                prop.getConsultant() != null &&
+                                        prop.getConsultant().getId().equals(consultantId) &&
+                                        prop.getOrigine().equalsIgnoreCase("INVITED")
+                        );
+            }
+            return true;
+        }).collect(Collectors.toList());
+        return missions;
     }
-
 }
+
+
+

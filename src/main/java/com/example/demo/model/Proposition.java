@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 import java.util.Date;
@@ -13,7 +14,7 @@ public class Proposition {
     @ManyToOne
     @JoinColumn(name = "consultant_id")
     private Consultant consultant;
-
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "mission_id")
     private Mission mission;
