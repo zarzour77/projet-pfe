@@ -177,4 +177,14 @@ public class ConsultantController {
             return ResponseEntity.notFound().build();
         }
     }
+    @PutMapping("/{id}/decrementWorkload")
+    public ResponseEntity<Consultant> decrementWorkload(@PathVariable Long id) {
+        try {
+            Consultant updatedConsultant = consultantService.decrementWorkload(id);
+            return ResponseEntity.ok(updatedConsultant);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }

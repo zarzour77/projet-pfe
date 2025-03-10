@@ -152,6 +152,10 @@ public class PropositionService {
 
         return propositions;
     }
-
+    public Mission getMissionByPropositionId(Long propositionId) {
+        Proposition proposition = propositionRepository.findById(propositionId)
+                .orElseThrow(() -> new RuntimeException("Proposition not found with id: " + propositionId));
+        return proposition.getMission();
+    }
 
 }

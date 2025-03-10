@@ -2,6 +2,7 @@ package com.example.demo.Controller;
 
 
 import com.example.demo.Service.PropositionService;
+import com.example.demo.model.Mission;
 import com.example.demo.model.Proposition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/propositions")
+@CrossOrigin(origins = "http://localhost:5173")
 public class PropositionController {
     private final PropositionService propositionService;
 
@@ -74,6 +76,14 @@ public class PropositionController {
         List<Proposition> propositions = propositionService.getPropositionsByConsultant(consultantId);
         return ResponseEntity.ok(propositions);
     }
-
+    @GetMapping("/{id}/mission")
+    public ResponseEntity<Mission> getMissionFromProposition(@PathVariable Long id) {
+        try {
+            Mission mission = propositionService.getMissionByPropositionId(id);
+            return ResponseEntity.ok(mission);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }
 

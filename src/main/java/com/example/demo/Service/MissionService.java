@@ -9,6 +9,8 @@ import com.example.demo.model.Avis;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -48,12 +50,10 @@ public class MissionService {
     public Optional<Object> getMissionById(Long missionId) {
         return Optional.of(missionRepository.findById(missionId));
     }
+
     public Optional<Mission> getMissionByIdm(Long missionId) {
         return missionRepository.findById(missionId);
     }
-
-
-
 
     public Mission updateMissionStatus(Long id, String newStatus) {
         Mission mission = missionRepository.findById(id)
@@ -82,6 +82,7 @@ public class MissionService {
     public List<Mission> getMissionsByExperience(String experience) {
         return missionRepository.findDistinctByNiveauExperienceRequisIgnoreCase(experience);
     }
+
     // Filtrage par porte de travail
     public List<Mission> getMissionsByPorteDeTravail(String portetravail) {
         return missionRepository.findDistinctByPortetravailIgnoreCase(portetravail);
@@ -90,10 +91,12 @@ public class MissionService {
     public List<Mission> getMissionsByBudgetRange(Double minBudget, Double maxBudget) {
         return missionRepository.findByBudgetBetween(minBudget, maxBudget);
     }
+
     // Nouveau filtre : Filtrage par durée estimée
     public List<Mission> getMissionsByDureeEstime(String dureeEstime) {
         return missionRepository.findDistinctByDureeEstimeIgnoreCase(dureeEstime);
     }
+
     public Mission acceptMission(Long missionId) {
         Mission mission = missionRepository.findById(missionId)
                 .orElseThrow(() -> new MissionNotFoundException(missionId));
@@ -101,6 +104,7 @@ public class MissionService {
         mission.setStartdate(new Date()); // Mise à jour de la date de démarrage avec la date actuelle
         return missionRepository.save(mission);
     }
+
     public List<Mission> getAvailableMissionsForConsultant(String status, Long consultantId) {
         // Récupère toutes les missions avec le statut donné (par ex. "en attente")
         List<Mission> missions = missionRepository.findByStatut(status);
@@ -118,7 +122,21 @@ public class MissionService {
         }).collect(Collectors.toList());
         return missions;
     }
+
+    // NEW: Terminate a mission by setting its status to "terminée" and filling the end date.
+    public Mission terminateMission(Long missionId, String endDateStr) {
+        Mission mission = missionRepository.findById(missionId)
+                .orElseThrow(() -> new MissionNotFoundException(missionId));
+        mission.setStatut("terminée");
+
+        // Parse the endDateStr and set it as the mission's end date.
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+        try {
+            Date endDate = sdf.parse(endDateStr);
+            mission.setEnddate(endDate);  // Ensure your Mission entity has a field 'enddate'
+        } catch (ParseException e) {
+            throw new RuntimeException("Invalid date format for endDate", e);
+        }
+        return missionRepository.save(mission);
+    }
 }
-
-
-

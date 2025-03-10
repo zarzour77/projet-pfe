@@ -43,7 +43,6 @@ public class ConsultantService {
         this.certificationRepository = certificationRepository;
     }
 
-
     public List<Consultant> getAllConsultants() {
         return consultantRepository.findAll();
     }
@@ -334,12 +333,22 @@ public class ConsultantService {
                 .orElseThrow(() -> new RuntimeException("Consultant non trouvé"));
         return consultant.getSavedMissions();
     }
+
     // Méthode pour incrémenter le workload de 1
     public Consultant incrementWorkload(Long consultantId) {
         Consultant consultant = consultantRepository.findById(consultantId)
                 .orElseThrow(() -> new RuntimeException("Consultant not found with id " + consultantId));
         Integer currentWorkload = consultant.getWorkload() == null ? 0 : consultant.getWorkload();
         consultant.setWorkload(currentWorkload + 1);
+        return consultantRepository.save(consultant);
+    }
+
+    // NEW: Méthode for decreasing the consultant's workload by 1
+    public Consultant decrementWorkload(Long consultantId) {
+        Consultant consultant = consultantRepository.findById(consultantId)
+                .orElseThrow(() -> new RuntimeException("Consultant not found with id " + consultantId));
+        Integer currentWorkload = consultant.getWorkload() == null ? 0 : consultant.getWorkload();
+        consultant.setWorkload(Math.max(currentWorkload - 1, 0));
         return consultantRepository.save(consultant);
     }
 }

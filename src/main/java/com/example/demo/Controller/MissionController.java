@@ -1,6 +1,5 @@
 package com.example.demo.Controller;
 
-
 import com.example.demo.Service.MissionService;
 import com.example.demo.model.Consultant;
 import com.example.demo.model.Mission;
@@ -11,8 +10,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
 @CrossOrigin(origins = "http://localhost:5173") // Autorise les requêtes venant du front-end
 @RestController
 @RequestMapping("/api/missions")
@@ -34,37 +35,36 @@ public class MissionController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
     @PutMapping("/{id}")
     public ResponseEntity<Mission> updateMission(@PathVariable Long id, @RequestBody Mission mission) {
         try {
             Mission updatedMission = missionService.updateMission(id, mission);
             return ResponseEntity.ok(updatedMission);
         } catch (RuntimeException e) {
-
-        return ResponseEntity.notFound().build();}
+            return ResponseEntity.notFound().build();
+        }
     }
 
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Mission> updateMissionStatus (@PathVariable Long id, @RequestParam String newStatus){
+        try {
+            return ResponseEntity.ok(missionService.updateMissionStatus(id, newStatus));
+        } catch (MissionNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 
+    @PostMapping("/add")
+    public ResponseEntity<?> ajouterMission (@RequestBody Mission mission){
+        try {
+            Mission nouvelleMission = missionService.ajoutermission(mission);
+            return ResponseEntity.ok(nouvelleMission);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
-            @PatchMapping("/{id}/status")
-            public ResponseEntity<Mission> updateMissionStatus (@PathVariable Long id, @RequestParam String newStatus){
-                try {
-                    return ResponseEntity.ok(missionService.updateMissionStatus(id, newStatus));
-                } catch (MissionNotFoundException e) {
-                    return ResponseEntity.notFound().build();
-                }
-            }
-
-
-            @PostMapping("/add")
-            public ResponseEntity<?> ajouterMission (@RequestBody Mission mission){
-                try {
-                    Mission nouvelleMission = missionService.ajoutermission(mission);
-                    return ResponseEntity.ok(nouvelleMission);
-                } catch (IllegalArgumentException e) {
-                    return ResponseEntity.badRequest().body(e.getMessage());
-                }
-            }
     @Transactional
     @GetMapping("/search")
     public List<Mission> searchMissions(@RequestParam("consultantId") Long consultantId) {
@@ -85,6 +85,7 @@ public class MissionController {
         List<Mission> missions = missionService.getMissionsByDomainIds(domainIds);
         return ResponseEntity.ok(missions);
     }
+
     @GetMapping("/searchByExperience")
     public ResponseEntity<List<Mission>> searchMissionsByExperience(@RequestParam("experience") String experience) {
         List<Mission> missions = missionService.getMissionsByExperience(experience);
@@ -111,6 +112,7 @@ public class MissionController {
         List<Mission> missions = missionService.getMissionsByDureeEstime(dureeEstime);
         return ResponseEntity.ok(missions);
     }
+
     @GetMapping("/{id}/consultants")
     public ResponseEntity<List<Consultant>> getConsultantsForMission(@PathVariable Long id) {
         Optional<Mission> missionOpt = missionService.getMissionByIdm(id);
@@ -126,6 +128,7 @@ public class MissionController {
                 .collect(Collectors.toList());
         return ResponseEntity.ok(consultants);
     }
+
     @PutMapping("/{id}/accept")
     public ResponseEntity<Mission> acceptMission(@PathVariable Long id) {
         try {
@@ -136,7 +139,15 @@ public class MissionController {
         }
     }
 
-
+    // NEW: Terminate Mission Endpoint
+    @PutMapping("/{missionId}/terminate")
+    public ResponseEntity<Mission> terminateMission(@PathVariable Long missionId, @RequestBody Map<String, String> request) {
+        String endDateStr = request.get("endDate");
+        try {
+            Mission terminatedMission = missionService.terminateMission(missionId, endDateStr);
+            return ResponseEntity.ok(terminatedMission);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 }
-
-
