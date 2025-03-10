@@ -20,11 +20,11 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 // Importation du CSS
 import styles from './SearchMission.module.css';
 
-// Services API
+// Services API et navigation
 import { useNavigate } from 'react-router-dom';
 import DomaineService from '../Services/DomaineService';
 import {
-  applyToMission, // nouvelle fonction pour appliquer à une mission
+  applyToMission,
   getMissions,
   getMissionsByBudgetRange,
   getMissionsByDomaine,
@@ -100,13 +100,14 @@ function SearchMission() {
 
   // Chargement des missions selon filtres ou missions sauvegardées
   useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    const consultantId = storedUser?.user?.id || storedUser?.id;
+    if (!consultantId) {
+      toast.error("Consultant introuvable");
+      return;
+    }
+    
     if (showSaved) {
-      const storedUser = JSON.parse(localStorage.getItem("user"));
-      const consultantId = storedUser?.user?.id || storedUser?.id;
-      if (!consultantId) {
-        toast.error("Consultant introuvable");
-        return;
-      }
       setIsLoading(true);
       getSavedMissions(consultantId)
         .then(data => {
@@ -197,10 +198,9 @@ function SearchMission() {
   const filteredMissionsList = missions.filter(mission => {
     if (!searchKeyword) return true;
     const lowerKeyword = searchKeyword.toLowerCase();
-    const inTitleOrDescription = (
+    const inTitleOrDescription =
       mission.titre.toLowerCase().includes(lowerKeyword) ||
-      mission.description.toLowerCase().includes(lowerKeyword)
-    );
+      mission.description.toLowerCase().includes(lowerKeyword);
     const inDomaines = mission.domaines && mission.domaines.some(d =>
       d.nom && d.nom.toLowerCase().includes(lowerKeyword)
     );
@@ -249,7 +249,7 @@ function SearchMission() {
       });
   };
 
-  // Bascule entre missions normales et sauvegardées
+  // Bascule entre missions normales et missions sauvegardées
   const handleShowSavedMissions = () => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const consultantId = storedUser?.user?.id || storedUser?.id;
@@ -272,14 +272,11 @@ function SearchMission() {
     }
   };
 
-  const handleChat = (mission) => {
-    toast.info(`Discussion initiée pour "${mission.titre}" !`);
-    navigate('/Messenger', { state: { mission } });
-  };
-
-  // Ouvrir le modal d'application et sauvegarder la mission sélectionnée
+  // Ouvrir le modal d'application en pré-remplissant le montant et la durée avec les valeurs de la mission (lecture seule)
   const handleApplyClick = (mission) => {
     setSelectedMission(mission);
+    setPropositionMontant(mission.budget);
+    setPropositionDuree(mission.dureeEstime);
     setShowApplyModal(true);
   };
 
@@ -289,6 +286,7 @@ function SearchMission() {
     setSelectedMission(null);
     setPropositionMontant('');
     setPropositionDuree('');
+    setPropositionMessage('');
   };
 
   // Envoyer la proposition via l'API
@@ -505,7 +503,6 @@ function SearchMission() {
                         ? formatDistanceToNow(new Date(mission.publishedAt), { addSuffix: true })
                         : "N/A"}
                     </span>
-                    {/* Affichage du nombre de propositions */}
                     <span className={styles.propositionsCount}>
                       {mission.propositionsCount} proposition{mission.propositionsCount !== 1 ? "s" : ""}
                     </span>
@@ -553,15 +550,6 @@ function SearchMission() {
                         Share
                       </Button>
                     </MUITooltip>
-                    <MUITooltip title="Start a chat about this mission" arrow>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={() => handleChat(mission)}
-                      >
-                        Chat
-                      </Button>
-                    </MUITooltip>
                   </div>
                 </motion.div>
               ))
@@ -602,7 +590,7 @@ function SearchMission() {
                 type="number"
                 fullWidth
                 value={propositionMontant}
-                onChange={(e) => setPropositionMontant(e.target.value)}
+                InputProps={{ readOnly: true }}
               />
               <TextField
                 margin="dense"
@@ -610,7 +598,7 @@ function SearchMission() {
                 type="text"
                 fullWidth
                 value={propositionDuree}
-                onChange={(e) => setPropositionDuree(e.target.value)}
+                InputProps={{ readOnly: true }}
                 helperText="Ex: 3 mois"
               />
               <TextField

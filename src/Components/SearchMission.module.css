@@ -4,8 +4,10 @@
   color: #001A6E;
   min-height: 100vh;
   padding: 1rem;
+  padding-top: 70px; /* Ajoutez cette ligne pour laisser de l'espace sous le header */
   background-color: #f1f2ee; /* Utilisation de la palette */
 }
+
 
 /* Global search bar */
 .globalSearchBar {

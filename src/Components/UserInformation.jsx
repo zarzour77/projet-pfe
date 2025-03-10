@@ -547,6 +547,7 @@ const UserInformation = () => {
       const updatedEntreprise = await EntrepriseService.updateEntreprise(userId, entrepriseData);
       localStorage.setItem("user", JSON.stringify(updatedEntreprise));
       toast.success("Entreprise mise à jour avec succès!", { icon: "✅" });
+      navigate("/LandingEntreprise")
     } catch (error) {
       console.error("Error updating entreprise:", error);
       toast.error("Erreur lors de la mise à jour de l'entreprise");

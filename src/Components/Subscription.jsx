@@ -4,10 +4,11 @@ import PaymentService from "../services/PaymentService";
 import UserService from "../Services/UserService";
 import { useNavigate } from "react-router-dom";
 
-const storedConsultant = JSON.parse(localStorage.getItem("user"));
+
+const Subscription = () => {
+  const storedConsultant = JSON.parse(localStorage.getItem("user"));
 const consultantId = storedConsultant?.id;
 console.log(storedConsultant.token)
-const Subscription = () => {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);

@@ -93,7 +93,7 @@ const Login = () => {
       if (fullUser.role === "ROLE_USER") {
         navigate("/UserInformation");
       } else if (fullUser.role === "Consultant") {
-        navigate("/ProfilePage");
+        navigate("/SearchMission");
       } else {
         navigate("/LandingEntreprise");
       }

@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import styles from "./ConsultantHeader.module.css";
-import { useNavigate } from "react-router-dom";
 
 const ConsultantHeader = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -9,11 +8,18 @@ const ConsultantHeader = () => {
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
+  const handleLogout = () => {
+    // Supprimez les données de l'utilisateur (par exemple, pour la déconnexion)
+    localStorage.removeItem("user");
+    // Redirigez vers la page de login (ajustez la route si nécessaire)
+    navigate("/login");
+  };
+
   return (
     <>
       <header className={styles.header}>
         <nav className={styles.navbar}>
-          {/* Left section: Sidebar Toggle */}
+          {/* Section gauche : Toggle de la sidebar */}
           <div className={styles.leftSection}>
             <button className={styles.sidebarToggle} onClick={toggleSidebar}>
               <div className={styles.hamburger}>
@@ -24,12 +30,12 @@ const ConsultantHeader = () => {
             </button>
           </div>
 
-          {/* Logo - nudged a bit to the left */}
+          {/* Logo */}
           <div className={styles.logo}>
             <Link to="/SearchMission">Trade for talent</Link>
           </div>
 
-          {/* Center section: Search bar */}
+          {/* Section centre : Barre de recherche */}
           <div className={styles.centerSection}>
             <div className={styles.searchContainer}>
               <input type="text" placeholder="Search missions..." />
@@ -37,29 +43,52 @@ const ConsultantHeader = () => {
             </div>
           </div>
 
-          {/* Right section: Chat, Notifications, Profile */}
+          {/* Section droite : Chat, Notification, Profil et Déconnexion */}
           <div className={styles.rightSection}>
-            <button className={styles.iconButton} onClick={() => navigate("/Messenger")}>
+            <button
+              className={styles.iconButton}
+              onClick={() => navigate("/Messenger")}
+            >
               <i className="fa fa-comment"></i>
             </button>
 
-            <button className={styles.iconButton}>
+            <button
+              className={styles.iconButton}
+              onClick={() => navigate("/notification")}
+            >
               <i className="fa fa-bell"></i>
             </button>
 
-            <button className={styles.profileButton}>
-              <img 
-                src={JSON.parse(localStorage.getItem("user"))?.photoprofile || "default-avatar.png"} 
-                alt="Profile" 
+            <button
+              className={styles.profileButton}
+              onClick={() => navigate("/profilePage")}
+            >
+              <img
+                src={
+                  JSON.parse(localStorage.getItem("user"))?.photoprofile ||
+                  "default-avatar.png"
+                }
+                alt="Profile"
                 className={styles.profileIcon}
               />
+            </button>
+
+            <button
+              className={styles.deconnecterButton}
+              onClick={handleLogout}
+            >
+              Déconnecter
             </button>
           </div>
         </nav>
       </header>
 
       {/* Sidebar */}
-      <div className={`${styles.sidebar} ${isSidebarOpen ? styles.active : ""}`}>
+      <div
+        className={`${styles.sidebar} ${
+          isSidebarOpen ? styles.active : ""
+        }`}
+      >
         <div className={styles.sidebarHeader}>
           <button className={styles.closeBtn} onClick={toggleSidebar}>
             &times;
@@ -87,7 +116,7 @@ const ConsultantHeader = () => {
                 <span className={styles.icon}>⚙️</span> Settings
               </Link>
             </li>
-            {/* NEW LINK: Historique des transactions */}
+            {/* Historique des transactions */}
             <li>
               <Link to="/transactions" onClick={toggleSidebar}>
                 <span className={styles.icon}>🗃️</span> Transactions
@@ -98,7 +127,9 @@ const ConsultantHeader = () => {
       </div>
 
       {/* Overlay */}
-      {isSidebarOpen && <div className={styles.overlay} onClick={toggleSidebar} />}
+      {isSidebarOpen && (
+        <div className={styles.overlay} onClick={toggleSidebar} />
+      )}
     </>
   );
 };

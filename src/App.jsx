@@ -19,7 +19,7 @@ import TransactionsHistory from "./components/TransactionsHistory"; // <-- New I
 import EntrepriseMission from "./components/EntrepriseMission";
 import Notification from "./components/Notification";
 import VoirProfileConsultant from "./components/VoirProfileConsultant";
-
+import ConsultantHeader from "./components/ConsultantHeader";
 import ProtectedRoute from "./Services/ProtectedRoute";
 import { AuthProvider } from "./Services/AuthContext";
 
@@ -44,6 +44,7 @@ const App = () => {
             path="/SearchMission"
             element={
               <ProtectedRoute allowedRoles={["Consultant"]}>
+                <ConsultantHeader />
                 <SearchMission />
               </ProtectedRoute>
             }

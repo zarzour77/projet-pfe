@@ -19,14 +19,18 @@ import { FaGraduationCap } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import styles from './EntrepriseMission.module.css';
 
+// Fonctions liées aux missions de l'entreprise
 import {
   getPublishedMissions,
   getConsultantsForMission,
   getPropositionsForMission,
   updatePropositionStatus,
   acceptMission,
-  incrementConsultantWorkload  // Assurez-vous que cette fonction est exportée depuis votre service
+  incrementConsultantWorkload
 } from '../services/EntrepriseMissionService';
+
+// Import de la fonction de création de conversation depuis le service Messenger
+import { createConversation } from "../services/MessengerService";
 
 const EntrepriseMission = () => {
   const navigate = useNavigate();
@@ -195,19 +199,14 @@ const EntrepriseMission = () => {
   // Gestionnaire pour accepter un consultant
   const handleAcceptConsultant = async (acceptedConsultant) => {
     try {
-      // 1. Met à jour la proposition du consultant accepté en "accepted"
       await updateStatusForConsultant(acceptedConsultant, "accepted");
-
-      // 2. Incrémente le workload du consultant accepté
       await incrementConsultantWorkload(acceptedConsultant.id);
 
-      // 3. Marque automatiquement tous les autres consultants comme "refused"
       const otherConsultants = consultants.filter(c => c.id !== acceptedConsultant.id);
       for (const otherConsultant of otherConsultants) {
         await updateStatusForConsultant(otherConsultant, "refused");
       }
 
-      // 4. Met à jour la mission pour passer son statut à "en cours" et fixer la date de démarrage
       if (selectedMission) {
         const updatedMission = await acceptMission(selectedMission.id);
         console.log("Mission acceptée :", updatedMission);
@@ -220,6 +219,24 @@ const EntrepriseMission = () => {
 
   const handleRefuseConsultant = (consultant) => {
     updateStatusForConsultant(consultant, "refused");
+  };
+
+  // Nouvelle fonction pour initialiser une conversation avec un consultant
+  const handleContacter = async (consultant) => {
+    try {
+      // Récupère l'utilisateur courant depuis le localStorage
+      const userWithToken = JSON.parse(localStorage.getItem("user")) || {};
+      const currentUser = userWithToken.email || "me@domain.com";
+      
+      // Crée une nouvelle conversation entre l'utilisateur courant et le consultant
+      let conversation = await createConversation(currentUser, consultant.email);
+      
+      // On peut transformer la conversation si besoin (par exemple avec une fonction transformConversation)
+      // Ici, on navigue vers Messenger en passant la conversation dans l'état
+      navigate("/messenger", { state: { conversation } });
+    } catch (error) {
+      console.error("Erreur lors de la création de la conversation :", error);
+    }
   };
 
   return (
@@ -329,6 +346,9 @@ const EntrepriseMission = () => {
                     );
                     const isRefused = propositionForConsultant?.statut === 'refused';
                     const isAccepted = propositionForConsultant?.statut === 'accepted';
+                    // Comparaison case-insensitive pour l'origine
+                    const isInvited = propositionForConsultant?.origine?.toLowerCase() === 'invited';
+                    console.log(propositionForConsultant);
 
                     const ratingValue = consultant.rating || 0;
                     const jobSuccessValue = Math.round(ratingValue * 20);
@@ -416,13 +436,7 @@ const EntrepriseMission = () => {
                                 <Button
                                   variant="outlined"
                                   size="small"
-                                  onClick={() => navigate("/messenger", {
-                                    state: {
-                                      consultantEmail: consultant.email,
-                                      consultantNom: consultant.nom,
-                                      consultantPrenom: consultant.prenom
-                                    }
-                                  })}
+                                  onClick={() => handleContacter(consultant)}
                                 >
                                   Contacter
                                 </Button>
@@ -437,28 +451,30 @@ const EntrepriseMission = () => {
                                 </Button>
                               </MUITooltip>
                             </div>
-                            <div className={styles.rightActions}>
-                              <MUITooltip title="Accepter" arrow>
-                                <Button 
-                                  variant="contained" 
-                                  size="small"
-                                  color="success"
-                                  onClick={() => handleAcceptConsultant(consultant)}
-                                >
-                                  Accepter
-                                </Button>
-                              </MUITooltip>
-                              <MUITooltip title="Refuser" arrow>
-                                <Button 
-                                  variant="outlined" 
-                                  size="small"
-                                  color="error"
-                                  onClick={() => handleRefuseConsultant(consultant)}
-                                >
-                                  Refuser
-                                </Button>
-                              </MUITooltip>
-                            </div>
+                            {!(propositionForConsultant && propositionForConsultant.origine?.toLowerCase() === 'invited') && (
+                              <div className={styles.rightActions}>
+                                <MUITooltip title="Accepter" arrow>
+                                  <Button 
+                                    variant="contained" 
+                                    size="small"
+                                    color="success"
+                                    onClick={() => handleAcceptConsultant(consultant)}
+                                  >
+                                    Accepter
+                                  </Button>
+                                </MUITooltip>
+                                <MUITooltip title="Refuser" arrow>
+                                  <Button 
+                                    variant="outlined" 
+                                    size="small"
+                                    color="error"
+                                    onClick={() => handleRefuseConsultant(consultant)}
+                                  >
+                                    Refuser
+                                  </Button>
+                                </MUITooltip>
+                              </div>
+                            )}
                           </div>
                         )}
                       </motion.div>
