@@ -1,0 +1,233 @@
+:root {
+    --primary-color: #009990;
+    --primary-bg: #009990;
+    --secondary-color: #001A6E;
+    --secondary-bg: #00999010;
+    --card-border: #00999030;
+    --card-shadow: rgba(0, 0, 0, 0.05);
+    --font-family: 'Arial, sans-serif';
+    --spacing: 1rem;
+  }
+  
+  .mainContainer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing);
+    padding: var(--spacing);
+    background-color: #f1f2ee;
+    min-height: 100vh;
+    font-family: var(--font-family);
+    color: var(--secondary-color);
+  }
+  
+  /* Barre de recherche en haut */
+  .searchBar {
+    width: 100%;
+  }
+  
+  /* Conteneur pour les deux colonnes */
+  .contentContainer {
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing);
+    flex: 1;
+  }
+  
+  .leftPane,
+  .rightPane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing);
+    overflow-y: auto;
+  }
+  
+  .title {
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: var(--spacing);
+  }
+  
+  .searchField {
+    margin-bottom: var(--spacing);
+  }
+  
+  .loadingContainer {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+  }
+  
+  .noResult {
+    text-align: center;
+    font-size: 1.1rem;
+    color: #555;
+    margin-top: 2rem;
+  }
+  
+  .missionGrid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing);
+  }
+  
+  .cardContainer {
+    background-color: #fff;
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: var(--spacing);
+    box-shadow: 0 2px 6px var(--card-shadow);
+  }
+  
+  .missionCard {
+    cursor: pointer;
+  }
+  
+  .cardHeader {
+    background-color: var(--primary-bg);
+    padding: var(--spacing);
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+  }
+  
+  .cardBody {
+    padding: var(--spacing);
+  }
+  
+  .description {
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.5;
+  }
+  
+  .infoRow {
+    display: grid;
+    grid-template-columns: 150px auto;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .label {
+    font-weight: bold;
+    color: #555;
+  }
+  
+  .tagsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+  
+  .modalTags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+  }
+  
+  .tag {
+    font-size: 0.8rem;
+  }
+  
+  .talentItem {
+    background-color: #fff;
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: var(--spacing);
+    margin-bottom: var(--spacing);
+    box-shadow: 0 2px 6px var(--card-shadow);
+  }
+  
+  .talentHeader {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing);
+  }
+  
+  .talentInfo {
+    display: flex;
+    gap: var(--spacing);
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+  }
+  
+  .talentSkills {
+    margin: 0.5rem 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .skillTag {
+    display: inline-block;
+    background-color: #eee;
+    border-radius: 3px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+    color: black;
+  }
+  
+  .actionButtons {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+  
+  .placeholder {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #555;
+    margin-top: 2rem;
+  }
+  .actionButtons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.75rem;
+  }
+  
+  .leftActions, .rightActions {
+    display: flex;
+    gap: 0.5rem;
+  }
+  /*.refused {
+    filter: blur(2px);
+    opacity: 0.5;
+  }
+  
+  
+  .accepted {
+    border: 2px solid #28a745;
+  }*/
+  
+  /* Position et style générique du label */
+  .statusLabel {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    text-transform: uppercase;
+    background-color: #fff;
+    border: 2px solid;
+    /* Pour éviter que le label soit trop collé : */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  
+  /* Label pour "Accepté" en vert */
+  .acceptedLabel {
+    color: #28a745;       /* texte vert */
+    border-color: #28a745;
+  }
+  
+  /* Label pour "Refusé" en rouge */
+  .refusedLabel {
+    color: #dc3545;       /* texte rouge */
+    border-color: #dc3545;
+  }

@@ -43,11 +43,11 @@ const ConsultantHeader = () => {
               <i className="fa fa-comment"></i>
             </button>
 
-            <button className={styles.iconButton}>
+            <button className={styles.iconButton} onClick={() => navigate("/Notification")}>
               <i className="fa fa-bell"></i>
             </button>
 
-            <button className={styles.profileButton}>
+            <button className={styles.profileButton} onClick={() => navigate("/ProfilePage")}>
               <img 
                 src={JSON.parse(localStorage.getItem("user"))?.photoprofile || "default-avatar.png"} 
                 alt="Profile" 
@@ -73,7 +73,7 @@ const ConsultantHeader = () => {
               </Link>
             </li>
             <li>
-              <Link to="/missions" onClick={toggleSidebar}>
+              <Link to="/SearchMission" onClick={toggleSidebar}>
                 <span className={styles.icon}>📋</span> Missions
               </Link>
             </li>
@@ -82,15 +82,15 @@ const ConsultantHeader = () => {
                 <span className={styles.icon}>👤</span> Profile
               </Link>
             </li>
-            <li>
-              <Link to="/settings" onClick={toggleSidebar}>
-                <span className={styles.icon}>⚙️</span> Settings
-              </Link>
-            </li>
             {/* NEW LINK: Historique des transactions */}
             <li>
               <Link to="/transactions" onClick={toggleSidebar}>
                 <span className={styles.icon}>🗃️</span> Transactions
+              </Link>
+            </li>
+            <li>
+              <Link to="/ConsultantPropositions" onClick={toggleSidebar}>
+                <span className={styles.icon}>📝</span> Mes Propositions
               </Link>
             </li>
           </ul>

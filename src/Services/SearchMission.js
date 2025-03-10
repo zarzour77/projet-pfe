@@ -34,13 +34,19 @@ export const applyToMission = async (consultantId, missionId, propositionData) =
     throw error;
   }
 };
-// Récupération de toutes les missions
 export const getMissions = () => {
-  
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+  const consultantId = storedUser?.user?.id || storedUser?.id;
+  console.log("consultantId", consultantId);
   if (!token) {
     return Promise.reject(new Error("JWT Token is missing"));
   }
-  return fetch(API_URL, {
+  if (!consultantId) {
+    return Promise.reject(new Error("Consultant ID is missing"));
+  }
+  
+  const url = `${API_URL}?consultantId=${consultantId}`;
+  return fetch(url, {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
@@ -57,6 +63,7 @@ export const getMissions = () => {
       throw error;
     });
 };
+
 
 // Récupération des missions par domaine
 export const getMissionsByDomaine = (domainIds = []) => {
@@ -204,7 +211,7 @@ export const saveMissionForConsultant = async (consultantId, missionId) => {
   }
   try {
     const response = await axios.post(
-      `http://localhost:8181/api/consultants/${consultantId}/savedMissions`,
+      `http://localhost:8081/api/consultants/${consultantId}/savedMissions`,
       null,
       {
         params: { missionId },
@@ -229,7 +236,7 @@ export const getSavedMissions = async (consultantId) => {
   }
   try {
     const response = await axios.get(
-      `http://localhost:8181/api/consultants/${consultantId}/savedMissions`,
+      `http://localhost:8081/api/consultants/${consultantId}/savedMissions`,
       {
         headers: {
           "Content-Type": "application/json",

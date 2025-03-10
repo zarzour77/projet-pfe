@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
-import  { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaList, FaTh, FaHeart, FaRegHeart } from 'react-icons/fa';
@@ -25,7 +25,6 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 
-// Import du CSS (personnalisé)
 import styles from './LandingEntreprise.module.css';
 
 // Import des services API
@@ -33,9 +32,9 @@ import {
   getAllConsultants,
   getAllDomaines,
   getAllCompetences,
-  getPublishedMissionsForEntreprise, // fonction pour récupérer les missions publiées par l'entreprise
-  inviteConsultantToJob             // fonction pour envoyer une invitation
-} from '../Services/LandingEntreprise';
+  getPublishedMissionsForEntreprise,
+  inviteConsultantToJob
+} from '../services/LandingEntreprise';
 import { createConversation } from '../services/MessengerService';
 
 // Création du thème Material‑UI
@@ -131,7 +130,6 @@ function LandingEntreprise() {
   // Charger les missions publiées par l'entreprise connectée
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
-    console.log("entttt",storedUser)
     const entrepriseId = storedUser?.user?.id || storedUser?.id;
     if (!entrepriseId) {
       toast.error("Entreprise introuvable");
@@ -220,31 +218,7 @@ function LandingEntreprise() {
     });
   };
 
-  const handleContact = (consultant) => {
-    toast.info(`Contact en cours avec ${consultant.nom}...`);
-  };
-
-  const clearFilters = () => {
-    setSearchKeyword('');
-    setSelectedCategory('');
-    setSelectedDomain('');
-    setSelectedCompetence('');
-    setLocation('');
-    setHourlyRateRange([0, 100]);
-    setSortOption('');
-    setShowOnlyFavorites(false);
-    setCurrentPage(1);
-  };
-
-  const handlePrevPage = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 1));
-  };
-
-  const handleNextPage = (totalPages) => {
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-  };
-
-  const handleChat = async (consultant) => {
+  const handleContact = async (consultant) => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
       const senderEmail = user?.email;
@@ -277,6 +251,17 @@ function LandingEntreprise() {
     setInviteDuree('');
   };
 
+  // Lorsque la mission pour l'invitation est sélectionnée, on pré-remplit les champs montant et durée avec les valeurs de la mission (en lecture seule)
+  useEffect(() => {
+    if (selectedMissionForInvite) {
+      setInviteMontant(selectedMissionForInvite.budget);
+      setInviteDuree(selectedMissionForInvite.dureeEstime);
+    } else {
+      setInviteMontant('');
+      setInviteDuree('');
+    }
+  }, [selectedMissionForInvite]);
+
   const handleSubmitInvite = () => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const entrepriseId = storedUser?.user?.id || storedUser?.id;
@@ -295,16 +280,37 @@ function LandingEntreprise() {
       dureeEstime: inviteDuree,
       message: inviteMessage,
       statut: "PENDING",
-      origine: "INVITED"
+      origine: "INVITED" // Cette origine déclenchera l'envoi d'un email et d'une notification côté backend
     };
     inviteConsultantToJob(entrepriseId, selectedConsultantForInvite.id, propositionData)
       .then(() => {
-        toast.success("Invitation envoyée !");
+        toast.success("Invitation envoyée ! Un email et une notification ont été envoyés au consultant.");
         handleCloseInviteModal();
       })
       .catch(error => {
         toast.error("Erreur lors de l'envoi de l'invitation.");
+        console.error("Erreur dans handleSubmitInvite:", error);
       });
+  };
+
+  const clearFilters = () => {
+    setSearchKeyword('');
+    setSelectedCategory('');
+    setSelectedDomain('');
+    setSelectedCompetence('');
+    setLocation('');
+    setHourlyRateRange([0, 100]);
+    setSortOption('');
+    setShowOnlyFavorites(false);
+    setCurrentPage(1);
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleNextPage = (totalPages) => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
 
   return (
@@ -688,27 +694,32 @@ function LandingEntreprise() {
               Inviter {selectedConsultantForInvite && `${selectedConsultantForInvite.nom} ${selectedConsultantForInvite.prenom}`} à une mission
             </DialogTitle>
             <DialogContent>
-              <Select
-                fullWidth
-                value={selectedMissionForInvite ? selectedMissionForInvite.id : ''}
-                onChange={(e) => {
-                  const mission = missionsEntreprise.find(m => m.id === e.target.value);
-                  setSelectedMissionForInvite(mission);
-                }}
-              >
-                {missionsEntreprise.map((mission) => (
-                  <MenuItem key={mission.id} value={mission.id}>
-                    {mission.titre}
-                  </MenuItem>
-                ))}
-              </Select>
+            <Select
+  fullWidth
+  value={selectedMissionForInvite ? selectedMissionForInvite.id : ''}
+  onChange={(e) => {
+    const mission = missionsEntreprise
+      .filter(m => m.statut?.toLowerCase() === 'en attente')
+      .find(m => m.id === e.target.value);
+    setSelectedMissionForInvite(mission);
+  }}
+>
+  {missionsEntreprise
+    .filter(mission => mission.statut?.toLowerCase() === 'en attente')
+    .map((mission) => (
+      <MenuItem key={mission.id} value={mission.id}>
+        {mission.titre}
+      </MenuItem>
+    ))}
+</Select>
+
               <TextField
                 margin="dense"
                 label="Montant proposé"
                 type="number"
                 fullWidth
                 value={inviteMontant}
-                onChange={(e) => setInviteMontant(e.target.value)}
+                InputProps={{ readOnly: true }}
               />
               <TextField
                 margin="dense"
@@ -716,7 +727,7 @@ function LandingEntreprise() {
                 type="text"
                 fullWidth
                 value={inviteDuree}
-                onChange={(e) => setInviteDuree(e.target.value)}
+                InputProps={{ readOnly: true }}
                 helperText="Ex: 3 mois"
               />
               <TextField
@@ -730,6 +741,9 @@ function LandingEntreprise() {
                 onChange={(e) => setInviteMessage(e.target.value)}
                 helperText="Expliquez brièvement votre proposition"
               />
+              <Typography variant="body2" color="textSecondary" style={{ marginTop: '0.5rem' }}>
+                Une fois l'invitation envoyée, un email et une notification seront automatiquement envoyés au consultant.
+              </Typography>
             </DialogContent>
             <DialogActions>
               <Button onClick={handleCloseInviteModal} color="primary">
@@ -741,6 +755,7 @@ function LandingEntreprise() {
             </DialogActions>
           </Dialog>
         )}
+        <ToastContainer />
       </div>
     </ThemeProvider>
   );

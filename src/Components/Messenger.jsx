@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import styles from "./Messenger.module.css";
+import ConsultantHeader from "./ConsultantHeader";
 
 /** Icônes Lucide (ou tout autre set d'icônes) **/
 import { 
@@ -22,7 +23,7 @@ import {
   createConversation, 
   sendMessage as apiSendMessage,
   uploadFileMessage
-} from "../Services/MessengerService";
+} from "../services/MessengerService";
 import EmojiPicker from "emoji-picker-react";
 
 export default function Messenger() {
@@ -330,6 +331,8 @@ export default function Messenger() {
 
   return (
     <div className={styles.container}>
+            <ConsultantHeader />
+
       {/* --- COLONNE GAUCHE --- */}
       <div className={styles.leftColumn}>
         <div className={styles.searchBar}>

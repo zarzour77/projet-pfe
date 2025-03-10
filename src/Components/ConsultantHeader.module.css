@@ -43,7 +43,7 @@
     flex: 0 0 auto;
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 2rem;
     margin-left: 2rem; /* pushes this section to the far right */
   }
   
@@ -110,6 +110,7 @@
     background: none;
     border: none;
     cursor: pointer;
+    margin-right: -140px;
   }
   
   .profileIcon {
@@ -166,6 +167,7 @@
   .sidebarNav {
     padding: 1rem;
     flex-grow: 1;
+    margin-top: -40px;
   }
   
   .sidebarNav ul {

@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { FaList, FaTh } from 'react-icons/fa';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import ConsultantHeader from "./ConsultantHeader"
 
 // Material UI components
 import Button from '@mui/material/Button';
@@ -21,15 +20,11 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 // Importation du CSS
 import styles from './SearchMission.module.css';
 
-// Services API
+// Services API et navigation
 import { useNavigate } from 'react-router-dom';
 import DomaineService from '../Services/DomaineService';
 import {
-  applyToMission // nouvelle fonction pour appliquer à une mission
-  ,
-
-
-
+  applyToMission,
   getMissions,
   getMissionsByBudgetRange,
   getMissionsByDomaine,
@@ -90,7 +85,6 @@ function SearchMission() {
   const [propositionDuree, setPropositionDuree] = useState('');
   const [propositionMessage, setPropositionMessage] = useState('');
 
-
   // Chargement des domaines depuis le backend
   useEffect(() => {
     const fetchDomaines = async () => {
@@ -106,13 +100,14 @@ function SearchMission() {
 
   // Chargement des missions selon filtres ou missions sauvegardées
   useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    const consultantId = storedUser?.user?.id || storedUser?.id;
+    if (!consultantId) {
+      toast.error("Consultant introuvable");
+      return;
+    }
+    
     if (showSaved) {
-      const storedUser = JSON.parse(localStorage.getItem("user"));
-      const consultantId = storedUser?.user?.id || storedUser?.id;
-      if (!consultantId) {
-        toast.error("Consultant introuvable");
-        return;
-      }
       setIsLoading(true);
       getSavedMissions(consultantId)
         .then(data => {
@@ -200,13 +195,12 @@ function SearchMission() {
   /**
    * Filtrage client sur le mot-clé : Titre, Description, Domaines, Compétences
    */
-  const filteredMissions = missions.filter(mission => {
+  const filteredMissionsList = missions.filter(mission => {
     if (!searchKeyword) return true;
     const lowerKeyword = searchKeyword.toLowerCase();
-    const inTitleOrDescription = (
+    const inTitleOrDescription =
       mission.titre.toLowerCase().includes(lowerKeyword) ||
-      mission.description.toLowerCase().includes(lowerKeyword)
-    );
+      mission.description.toLowerCase().includes(lowerKeyword);
     const inDomaines = mission.domaines && mission.domaines.some(d =>
       d.nom && d.nom.toLowerCase().includes(lowerKeyword)
     );
@@ -217,7 +211,7 @@ function SearchMission() {
   });
 
   // Tri basé sur publishedAt
-  const sortedMissions = [...filteredMissions].sort((a, b) => {
+  const sortedMissions = [...filteredMissionsList].sort((a, b) => {
     const dateA = new Date(a.publishedAt);
     const dateB = new Date(b.publishedAt);
     return sortOption === "newest" ? dateB - dateA : dateA - dateB;
@@ -255,7 +249,7 @@ function SearchMission() {
       });
   };
 
-  // Bascule entre missions normales et sauvegardées
+  // Bascule entre missions normales et missions sauvegardées
   const handleShowSavedMissions = () => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const consultantId = storedUser?.user?.id || storedUser?.id;
@@ -278,14 +272,11 @@ function SearchMission() {
     }
   };
 
-  const handleChat = (mission) => {
-    toast.info(`Discussion initiée pour "${mission.titre}" !`);
-    navigate('/Messenger', { state: { mission } });
-  };
-
-  // Ouvrir le modal d'application et sauvegarder la mission sélectionnée
+  // Ouvrir le modal d'application en pré-remplissant le montant et la durée avec les valeurs de la mission (lecture seule)
   const handleApplyClick = (mission) => {
     setSelectedMission(mission);
+    setPropositionMontant(mission.budget);
+    setPropositionDuree(mission.dureeEstime);
     setShowApplyModal(true);
   };
 
@@ -295,6 +286,7 @@ function SearchMission() {
     setSelectedMission(null);
     setPropositionMontant('');
     setPropositionDuree('');
+    setPropositionMessage('');
   };
 
   // Envoyer la proposition via l'API
@@ -309,12 +301,11 @@ function SearchMission() {
       consultant: { id: consultantId },
       mission: { id: selectedMission.id },
       montant: parseFloat(propositionMontant),
-      dureeEstime: propositionDuree, // pas d'accents, même nom que dans l'entité
-      message: propositionMessage,    // ajouter le champ message
+      dureeEstime: propositionDuree,
+      message: propositionMessage,
       statut: "PENDING",
-      origine:"APPLIED"
+      origine: "APPLIED"
     };
-    
 
     applyToMission(consultantId, selectedMission.id, propositionData)
       .then(() => {
@@ -327,9 +318,6 @@ function SearchMission() {
   };
 
   return (
-    <div className={styles.pageWrapper}>
-      {/* Add ConsultantHeader here */}
-      <ConsultantHeader />
     <ThemeProvider theme={theme}>
       <div className={styles.searchMissionContainer}>
         <ToastContainer />
@@ -515,6 +503,9 @@ function SearchMission() {
                         ? formatDistanceToNow(new Date(mission.publishedAt), { addSuffix: true })
                         : "N/A"}
                     </span>
+                    <span className={styles.propositionsCount}>
+                      {mission.propositionsCount} proposition{mission.propositionsCount !== 1 ? "s" : ""}
+                    </span>
                   </div>
                   <div className={styles.jobTags}>
                     {mission.domaines &&
@@ -559,15 +550,6 @@ function SearchMission() {
                         Share
                       </Button>
                     </MUITooltip>
-                    <MUITooltip title="Start a chat about this mission" arrow>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={() => handleChat(mission)}
-                      >
-                        Chat
-                      </Button>
-                    </MUITooltip>
                   </div>
                 </motion.div>
               ))
@@ -596,53 +578,53 @@ function SearchMission() {
             </Button>
           </div>
         )}
-    {showApplyModal && selectedMission && (
-      <Dialog open={true} onClose={handleCloseApplyModal}>
-        <DialogTitle>Postuler à la mission : {selectedMission.titre}</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Montant proposé"
-            type="number"
-            fullWidth
-            value={propositionMontant}
-            onChange={(e) => setPropositionMontant(e.target.value)}
-          />
-          <TextField
-            margin="dense"
-            label="Durée estimée"
-            type="text"
-            fullWidth
-            value={propositionDuree}
-            onChange={(e) => setPropositionDuree(e.target.value)}
-            helperText="Ex: 3 mois"
-          />
-          <TextField
-            margin="dense"
-            label="Votre message"
-            type="text"
-            fullWidth
-            multiline
-            rows={3}
-            value={propositionMessage}
-            onChange={(e) => setPropositionMessage(e.target.value)}
-            helperText="Expliquez brièvement votre proposition"
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseApplyModal} color="primary">
-            Annuler
-          </Button>
-          <Button onClick={handleSubmitProposition} color="primary">
-            Envoyer la proposition
-          </Button>
-        </DialogActions>
-      </Dialog>
-    )}
+
+        {showApplyModal && selectedMission && (
+          <Dialog open={true} onClose={handleCloseApplyModal}>
+            <DialogTitle>Postuler à la mission : {selectedMission.titre}</DialogTitle>
+            <DialogContent>
+              <TextField
+                autoFocus
+                margin="dense"
+                label="Montant proposé"
+                type="number"
+                fullWidth
+                value={propositionMontant}
+                InputProps={{ readOnly: true }}
+              />
+              <TextField
+                margin="dense"
+                label="Durée estimée"
+                type="text"
+                fullWidth
+                value={propositionDuree}
+                InputProps={{ readOnly: true }}
+                helperText="Ex: 3 mois"
+              />
+              <TextField
+                margin="dense"
+                label="Votre message"
+                type="text"
+                fullWidth
+                multiline
+                rows={3}
+                value={propositionMessage}
+                onChange={(e) => setPropositionMessage(e.target.value)}
+                helperText="Expliquez brièvement votre proposition"
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCloseApplyModal} color="primary">
+                Annuler
+              </Button>
+              <Button onClick={handleSubmitProposition} color="primary">
+                Envoyer la proposition
+              </Button>
+            </DialogActions>
+          </Dialog>
+        )}
       </div>
     </ThemeProvider>
-    </div>
   );
 }
 

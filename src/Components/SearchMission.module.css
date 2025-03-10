@@ -4,8 +4,10 @@
   color: #001A6E;
   min-height: 100vh;
   padding: 1rem;
+  padding-top: 70px; /* Ajoutez cette ligne pour laisser de l'espace sous le header */
   background-color: #f1f2ee; /* Utilisation de la palette */
 }
+
 
 /* Global search bar */
 .globalSearchBar {
@@ -242,4 +244,9 @@
   align-items: center;     /* Aligne verticalement */
   gap: 20px;      
   margin-top: 20px;        /* Espace entre les éléments (boutons + texte) */
+}
+.propositionsCount {
+  font-size: 0.9rem;
+  color: #444;
+  margin-left: 1rem;
 }
