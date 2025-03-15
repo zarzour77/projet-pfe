@@ -1,7 +1,9 @@
 package com.example.demo.model;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -10,6 +12,8 @@ import java.util.List;
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
 @DiscriminatorColumn(name = "user_type", discriminatorType = DiscriminatorType.STRING)
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,9 +26,10 @@ public class User {
     private String adresse;
     private String password;
     private String role;
-
+    @JsonIgnore
     @Lob
     private String photoprofile;
+    @JsonIgnore
 
     private String statut;
 
@@ -32,14 +37,18 @@ public class User {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Notification> notifications;
 
-
+    @JsonIgnore
     private Double rating;
+    @JsonIgnore
+
     private boolean emailVerified = false; // par défaut à false
 
     // Champ pour stocker le code de vérification (vous pouvez également l'expirer avec une date si besoin)
+    @JsonIgnore
     private String verificationCode;
 
-    @OneToMany(mappedBy = "expediteur", cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @JsonIgnore  // Ignore transactions pour éviter LazyInitializationException
+    @OneToMany(mappedBy = "expediteur", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Transaction> transactions = new ArrayList<>();
     public User() {}
 

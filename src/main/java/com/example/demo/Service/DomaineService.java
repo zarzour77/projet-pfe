@@ -3,6 +3,7 @@ package com.example.demo.Service;
 
 import com.example.demo.model.Domaine;
 import com.example.demo.repository.DomaineRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,11 +18,11 @@ public class DomaineService {
     public DomaineService(DomaineRepository domaineRepository) {
         this.domaineRepository = domaineRepository;
     }
-
+    @Transactional
     public List<Domaine> getAlldomaines() {
         return domaineRepository.findAll();
     }
-
+    @Transactional
     public Optional<Domaine> getdomaineById(Long id) {
         return domaineRepository.findById(id);
     }

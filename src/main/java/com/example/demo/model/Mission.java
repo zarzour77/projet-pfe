@@ -9,6 +9,7 @@ import jakarta.persistence.*;
 
 import java.util.Date;
 import java.util.List;
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 
 @Entity
 public class Mission {
@@ -32,7 +33,6 @@ public class Mission {
 
     @ManyToOne
     @JoinColumn(name = "entreprise_id")
-    @JsonIgnoreProperties({"missions"})
     private Entreprise entreprise;
 
     @ManyToMany(fetch = FetchType.EAGER)

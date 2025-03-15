@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class EntrepriseService {
@@ -20,17 +19,20 @@ public class EntrepriseService {
         this.entrepriseRepository = entrepriseRepository;
     }
 
+
+    @Transactional
     public List<Entreprise> getAllEntreprises() {
         return entrepriseRepository.findAll();
     }
-
+    @Transactional
     public Optional<Entreprise> getEntrepriseById(Long id) {
         return entrepriseRepository.findById(id);
     }
-
+    @Transactional
     public Entreprise createEntreprise(Entreprise entreprise) {
         return entrepriseRepository.save(entreprise);
     }
+    @Transactional
     public List<Mission> getPublishedMissionsForEntreprise(Long entrepriseId) {
         Optional<Entreprise> entrepriseOpt = entrepriseRepository.findById(entrepriseId);
         if (entrepriseOpt.isPresent()) {
@@ -85,6 +87,9 @@ public class EntrepriseService {
             }
             if (updatedEntreprise.getLongitude() != null) {
                 entreprise.setLongitude(updatedEntreprise.getLongitude());
+            }
+            if (updatedEntreprise.getTypeEntreprise() != null) {
+                entreprise.setTypeEntreprise(updatedEntreprise.getTypeEntreprise());
             }
             return entrepriseRepository.save(entreprise);
         }).orElseThrow(() -> new RuntimeException("Entreprise not found with id " + id));

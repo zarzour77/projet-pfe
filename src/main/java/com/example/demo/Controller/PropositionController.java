@@ -26,6 +26,12 @@ public class PropositionController {
         List<Proposition> propositions = propositionService.getPropositionsByMission(missionId);
         return ResponseEntity.ok(propositions);
     }
+    // Endpoint pour accepter une proposition de recrutement
+    @PutMapping("/{propositionId}/accept")
+    public ResponseEntity<Proposition> acceptRecruitment(@PathVariable Long propositionId) {
+        Proposition acceptedProposition = propositionService.acceptRecruitmentProposition(propositionId);
+        return ResponseEntity.ok(acceptedProposition);
+    }
 
     @GetMapping
     public List<Proposition> getAllPropositions() {
@@ -39,9 +45,13 @@ public class PropositionController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public Proposition createProposition(@RequestBody Proposition proposition) {
-        return propositionService.createProposition(proposition);
+    @PostMapping("/entreprises/{entrepriseId}/consultants/{consultantId}")
+    public Proposition createProposition(
+            @PathVariable Long entrepriseId,
+            @PathVariable Long consultantId,
+            @RequestBody Proposition proposition
+    ) {
+        return propositionService.createProposition(entrepriseId, consultantId, proposition);
     }
 
     // Endpoint PUT pour mettre à jour le statut d'une proposition
@@ -63,13 +73,13 @@ public class PropositionController {
         propositionService.deleteProposition(id);
         return ResponseEntity.noContent().build();
     }
-    @PostMapping("/invite")
+  /*  @PostMapping("/invite")
     public Proposition inviteConsultant(@RequestBody Proposition proposition) {
         // On force l'origine à INVITED dans le cas d'une invitation
         proposition.setOrigine("INVITED");
         // Vous pouvez ajouter ici d'autres logiques spécifiques aux invitations
         return propositionService.createProposition(proposition);
-    }
+    }*/
 
     @GetMapping("/consultant/{consultantId}")
     public ResponseEntity<List<Proposition>> getPropositionsByConsultant(@PathVariable Long consultantId) {
@@ -85,5 +95,14 @@ public class PropositionController {
             return ResponseEntity.notFound().build();
         }
     }
+    @GetMapping("/stats/consultant/{consultantId}")
+    public ResponseEntity<Map<String, Object>> getAggregatedStats(
+            @PathVariable Long consultantId,
+            @RequestParam(defaultValue = "7") int periodDays) {
+        Map<String, Object> aggregatedStats = propositionService.getAggregatedConsultantStats(consultantId, periodDays);
+        return ResponseEntity.ok(aggregatedStats);
+    }
+
+
 }
 

@@ -1,9 +1,10 @@
 package com.example.demo.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-
 import java.util.Date;
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 
 @Entity
 public class Proposition {
@@ -14,27 +15,38 @@ public class Proposition {
     @ManyToOne
     @JoinColumn(name = "consultant_id")
     private Consultant consultant;
+
+    // Nouveau champ pour l'entreprise (celle qui recrute)
+    @ManyToOne
+    @JoinColumn(name = "entreprise_id")
+    private Entreprise entreprise;
+
     @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "mission_id")
     private Mission mission;
 
     private Double montant;
+
     @Column(name = "duree_estime")
     private String dureeEstime;
-    private String statut;
+
+    private String statut; // PENDING, refused, terminée, accepted
+
     @Column(length = 2048)
     private String message;
 
-    // Nouveau champ pour la date de proposition
+    // Date de proposition
     private Date dateProposition;
-    private String origine; // "APPLIED" ou "INVITED"
 
+    private String origine; // "APPLIED", "INVITED" ou "RECRUTEMENT"
 
     public Proposition() {}
 
-    public Proposition(Consultant consultant, Date dateProposition, String dureeEstime, Long id, String message, Mission mission, Double montant, String origine, String statut) {
+    // Constructeur mis à jour incluant l'entreprise
+    public Proposition(Consultant consultant, Entreprise entreprise, Date dateProposition, String dureeEstime, Long id, String message, Mission mission, Double montant, String origine, String statut) {
         this.consultant = consultant;
+        this.entreprise = entreprise;
         this.dateProposition = dateProposition;
         this.dureeEstime = dureeEstime;
         this.id = id;
@@ -52,58 +64,32 @@ public class Proposition {
         }
     }
 
-    public String getOrigine() {
-        return origine;
-    }
+    // Getters et Setters
 
-    public void setOrigine(String origine) {
-        this.origine = origine;
+    public Long getId() {
+        return id;
     }
-
-    public Date getDateProposition() {
-        return dateProposition;
-    }
-
-    public void setDateProposition(Date dateProposition) {
-        this.dateProposition = dateProposition;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public Consultant getConsultant() {
         return consultant;
     }
-
     public void setConsultant(Consultant consultant) {
         this.consultant = consultant;
     }
 
-    public String getDureeEstime() {
-        return dureeEstime;
+    public Entreprise getEntreprise() {
+        return entreprise;
     }
-
-    public void setDureeEstime(String dureeEstime) {
-        this.dureeEstime = dureeEstime;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
+    public void setEntreprise(Entreprise entreprise) {
+        this.entreprise = entreprise;
     }
 
     public Mission getMission() {
         return mission;
     }
-
     public void setMission(Mission mission) {
         this.mission = mission;
     }
@@ -111,16 +97,42 @@ public class Proposition {
     public Double getMontant() {
         return montant;
     }
-
     public void setMontant(Double montant) {
         this.montant = montant;
+    }
+
+    public String getDureeEstime() {
+        return dureeEstime;
+    }
+    public void setDureeEstime(String dureeEstime) {
+        this.dureeEstime = dureeEstime;
     }
 
     public String getStatut() {
         return statut;
     }
-
     public void setStatut(String statut) {
         this.statut = statut;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public Date getDateProposition() {
+        return dateProposition;
+    }
+    public void setDateProposition(Date dateProposition) {
+        this.dateProposition = dateProposition;
+    }
+
+    public String getOrigine() {
+        return origine;
+    }
+    public void setOrigine(String origine) {
+        this.origine = origine;
     }
 }

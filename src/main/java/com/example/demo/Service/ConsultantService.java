@@ -42,11 +42,11 @@ public class ConsultantService {
         this.langueRepository = langueRepository;
         this.certificationRepository = certificationRepository;
     }
-
+    @Transactional
     public List<Consultant> getAllConsultants() {
         return consultantRepository.findAll();
     }
-
+    @Transactional
     public Optional<Consultant> getConsultantById(Long id) {
         return consultantRepository.findById(id);
     }
@@ -54,6 +54,14 @@ public class ConsultantService {
     public Consultant createConsultant(Consultant consultant) {
         return consultantRepository.save(consultant);
     }
+    @Transactional
+    public Consultant updateBadge(Long consultantId, String badge) {
+        return consultantRepository.findById(consultantId).map(consultant -> {
+            consultant.setBadge(badge);
+            return consultantRepository.save(consultant);
+        }).orElseThrow(() -> new RuntimeException("Consultant not found with id " + consultantId));
+    }
+
 
     @Transactional
     public Consultant updateConsultant(Long id, Consultant updatedConsultant) {
@@ -310,7 +318,7 @@ public class ConsultantService {
         consultantRepository.save(consultant);
         return "Certification deleted successfully!";
     }
-
+    @Transactional
     public Consultant saveMissionForConsultant(Long consultantId, Long missionId) {
         Consultant consultant = consultantRepository.findById(consultantId)
                 .orElseThrow(() -> new RuntimeException("Consultant non trouvé"));
@@ -327,13 +335,13 @@ public class ConsultantService {
         consultant.setSavedMissions(savedMissions);
         return consultantRepository.save(consultant);
     }
-
+    @Transactional
     public List<Mission> getSavedMissionsForConsultant(Long consultantId) {
         Consultant consultant = consultantRepository.findById(consultantId)
                 .orElseThrow(() -> new RuntimeException("Consultant non trouvé"));
         return consultant.getSavedMissions();
     }
-
+    @Transactional
     // Méthode pour incrémenter le workload de 1
     public Consultant incrementWorkload(Long consultantId) {
         Consultant consultant = consultantRepository.findById(consultantId)
@@ -342,7 +350,7 @@ public class ConsultantService {
         consultant.setWorkload(currentWorkload + 1);
         return consultantRepository.save(consultant);
     }
-
+    @Transactional
     // NEW: Méthode for decreasing the consultant's workload by 1
     public Consultant decrementWorkload(Long consultantId) {
         Consultant consultant = consultantRepository.findById(consultantId)

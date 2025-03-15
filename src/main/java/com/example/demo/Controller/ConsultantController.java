@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/consultants")
@@ -31,6 +32,20 @@ public class ConsultantController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+    @PutMapping("/{id}/badge")
+    public ResponseEntity<Consultant> updateBadge(@PathVariable Long id, @RequestBody Map<String, String> payload) {
+        String badge = payload.get("badge");
+        if (badge == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        try {
+            Consultant updatedConsultant = consultantService.updateBadge(id, badge);
+            return ResponseEntity.ok(updatedConsultant);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 
     @PostMapping
     public Consultant createConsultant(@RequestBody Consultant consultant) {
