@@ -214,6 +214,8 @@ const UserInformation = () => {
     portfolio: '',
     experienceYears: '',
     taux_horaire: '',
+    nomentreprise: '',
+    typeEntreprise: 'CLIENTE' // Valeur par défaut
   };
 
   const [userRole, setUserRole] = useState('');
@@ -292,7 +294,7 @@ const UserInformation = () => {
       if (values.photoprofile) {
         await UserService.uploadProfilePicture(userId, values.photoprofile);
       }
-            
+      
       // Modifier la partie transformedCompetences dans handleFinalSubmit
       const transformedCompetences = values.competences.map(comp => {
         const existing = fetchedCompetences.find(c => c.nom.toLowerCase() === comp.nom.toLowerCase());
@@ -335,6 +337,36 @@ const UserInformation = () => {
     }
     setLoading(false);
     setShowModal(false);
+  };
+
+  const handleFinalSubmitEntreprise = async (values) => {
+    setLoading(true);
+    try {
+      if (values.photoprofile) {
+        await UserService.uploadProfilePicture(userId, values.photoprofile);
+      }
+      const entrepriseData = {
+        nom: values.nom,
+        prenom: values.prenom,
+        email: values.email,
+        telephone: values.telephone,
+        adresse: values.adresse,
+        nomEntreprise: values.nomentreprise,
+        role: userRole,
+        longitude: values.longitude,
+        latitude: values.latitude,
+        typeEntreprise: values.typeEntreprise  // Nouveau champ envoyé vers le backend
+      };
+      const updatedEntreprise = await EntrepriseService.updateEntreprise(userId, entrepriseData);
+      console.log("Réponse du backend:", updatedEntreprise);
+      localStorage.setItem("user", JSON.stringify(updatedEntreprise));
+      toast.success("Entreprise mise à jour avec succès!", { icon: "✅" });
+      navigate("/LandingEntreprise");
+    } catch (error) {
+      console.error("Error updating entreprise:", error);
+      toast.error("Erreur lors de la mise à jour de l'entreprise");
+    }
+    setLoading(false);
   };
 
   // Step 1 for Consultants: personal info and interactive map
@@ -527,33 +559,6 @@ const UserInformation = () => {
     );
   };
 
-  const handleFinalSubmitEntreprise = async (values) => {
-    setLoading(true);
-    try {
-      if (values.photoprofile) {
-        await UserService.uploadProfilePicture(userId, values.photoprofile);
-      }
-      const entrepriseData = {
-        nom: values.nom,
-        prenom: values.prenom,
-        email: values.email,
-        telephone: values.telephone,
-        adresse: values.adresse,
-        nomEntreprise: values.nomentreprise,
-        role: userRole,
-        longitude: values.longitude,
-        latitude: values.latitude    
-      };
-      const updatedEntreprise = await EntrepriseService.updateEntreprise(userId, entrepriseData);
-      localStorage.setItem("user", JSON.stringify(updatedEntreprise));
-      toast.success("Entreprise mise à jour avec succès!", { icon: "✅" });
-    } catch (error) {
-      console.error("Error updating entreprise:", error);
-      toast.error("Erreur lors de la mise à jour de l'entreprise");
-    }
-    setLoading(false);
-  };
-
   const renderEntrepriseForm = (values, setFieldValue, isSubmitting) => (
     <>
       <div className="mb-3">
@@ -615,6 +620,15 @@ const UserInformation = () => {
       <div className="mb-3">
         <Field type="text" name="nomentreprise" placeholder="Nom de l'entreprise" className="form-control" required />
         <ErrorMessage name="nomentreprise" component="div" className="text-danger" />
+      </div>
+      <div className="mb-3">
+        <label htmlFor="typeEntreprise" className="form-label">Type d'Entreprise</label>
+        <Field as="select" name="typeEntreprise" className="form-select" required>
+          <option value="">Sélectionnez un type d'entreprise</option>
+          <option value="CLIENTE">Entreprise Cliente</option>
+          <option value="SSI">Entreprise SSI</option>
+        </Field>
+        <ErrorMessage name="typeEntreprise" component="div" className="text-danger" />
       </div>
       <Button
         variant="primary"

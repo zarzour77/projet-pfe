@@ -269,12 +269,7 @@
 .form-container h1 {
     font-size: 24px; /* Adjust this value as needed */
 }
-.formHero {
-    position: absolute;
-    top: 135px;       /* Adjust vertical position */
-    left: 296px;      /* Adjust horizontal position */
-    z-index: 2;       /* Make sure it appears above the background */
-  }
+
   .user{
 width: 100px;
   }
@@ -311,6 +306,25 @@ width: 100px;
     text-align: center;
     animation: fadeIn 0.3s ease-in-out forwards;
   }
+  /* Messages d’erreur et de succès */
+.errorMessage {
+    color: #fff;
+    background-color: #e74c3c; /* Rouge */
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+  }
+  
+  .successMessage {
+    color: #fff;
+    background-color: #2ecc71; /* Vert */
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+  }
+  
   
   
   

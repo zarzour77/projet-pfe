@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
-import React, { useState, useEffect, useMemo } from 'react';
+import  { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   Autocomplete,
@@ -32,6 +32,8 @@ import {
 
 // Import de la fonction de création de conversation depuis le service Messenger
 import { createConversation } from "../services/MessengerService";
+import ProfileViewService from '../Services/ProfileViewService';
+
 
 const EntrepriseMission = () => {
   const navigate = useNavigate();
@@ -119,7 +121,16 @@ const EntrepriseMission = () => {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
   };
-
+  const handleViewProfile = async (consultant) => {
+    try {
+      await ProfileViewService.createProfileView(consultant.id);
+    } catch (error) {
+      console.error("Erreur lors de la création de la vue de profil :", error);
+      // Vous pouvez gérer l'erreur (ex: notifier l'utilisateur) si nécessaire
+    }
+    // Puis naviguer vers le profil du consultant
+    navigate(`/consultant/${consultant.id}`);
+  };
   // Lorsqu'une mission est sélectionnée, on charge les consultants et leurs propositions
   const handleSelectMission = async (mission) => {
     setSelectedMission(mission);
@@ -156,8 +167,9 @@ const EntrepriseMission = () => {
     setLoadingProposition(true);
 
     const propositionForConsultant = missionPropositions.find(
-      (prop) => prop.consultant && prop.consultant.id === consultant.id
+      (prop) => prop && prop.consultant && prop.consultant.id === consultant.id
     );
+    
 
     setConsultantProposition(propositionForConsultant || null);
     setLoadingProposition(false);
@@ -425,13 +437,13 @@ const EntrepriseMission = () => {
                           <div className={styles.actionButtons}>
                             <div className={styles.leftActions}>
                               <MUITooltip title="Voir le profil" arrow>
-                                <Button 
-                                  variant="contained" 
-                                  size="small"
-                                  onClick={() => navigate(`/consultant/${consultant.id}`)}
-                                >
-                                  Profil
-                                </Button>
+                              <Button 
+                              variant="contained" 
+                              size="small"
+                              onClick={() => handleViewProfile(consultant)}
+                            >
+                              Profil
+                            </Button>
                               </MUITooltip>
                               <MUITooltip title="Contacter" arrow>
                                 <Button

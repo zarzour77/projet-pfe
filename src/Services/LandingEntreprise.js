@@ -3,8 +3,21 @@ import axios from 'axios';
 const BASE_URL = 'http://localhost:8181/api';
 
 // Retrieve all consultants
+export async function getById(entrepriseId) {
+  const token = localStorage.getItem("token");
+  console.log(token);
+  const response = await axios.get(`${BASE_URL}/entreprises/${entrepriseId}`, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+}
+// Retrieve all consultants
 export async function getAllConsultants() {
   const token = localStorage.getItem("token");
+  console.log(token);
   const response = await axios.get(`${BASE_URL}/consultants`, {
     headers: {
       "Content-Type": "application/json",
@@ -52,12 +65,15 @@ export async function getPublishedMissionsForEntreprise(entrepriseId) {
   return response.data;
 }
 
-// Invite a consultant to a job (using the 'Proposition' entity)
+// Invite a consultant or send a recruitment invitation
 export async function inviteConsultantToJob(entrepriseId, consultantId, propositionData) {
   const token = localStorage.getItem("token");
-
+  console.log(propositionData);
+  console.log(entrepriseId);
+  console.log(consultantId);
+  console.log(token);
   const response = await axios.post(
-    `${BASE_URL}/propositions`,
+    `${BASE_URL}/propositions/entreprises/${entrepriseId}/consultants/${consultantId}`,
     propositionData,
     {
       headers: {

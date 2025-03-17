@@ -7,7 +7,7 @@ import styles from './ProfilePage.module.css';
 import LangueService from '../Services/LangueService';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import ConsultantHeader from "./ConsultantHeader";
+import Header from "./Header";
 
 const ProfilePage = () => {
   const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -528,8 +528,8 @@ const ProfilePage = () => {
   );
   return (
     <div className={styles.pageWrapper}>
-      {/* Add ConsultantHeader here */}
-      <ConsultantHeader />
+      {/* Add Header here */}
+      <Header />
     <div className={styles.profileContainer}>
       {/* Toast container to show notifications */}
       <ToastContainer position="top-right" />

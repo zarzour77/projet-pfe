@@ -1,0 +1,458 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+.statsContainer {
+  font-family: 'Roboto', sans-serif;
+  color: #333;
+  margin: 20px;
+  background: #f7f9fc;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.title {
+  font-size: 32px;
+  margin-bottom: 5px;
+  text-align: center;
+  color: #0c68ff;
+  font-weight: 700;
+}
+
+.subTitle {
+  text-align: center;
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.note {
+  text-align: center;
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 20px;
+}
+
+/* Conteneur principal divisé en deux colonnes */
+.mainColumns {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+/* Colonnes gauche et droite */
+.leftColumn,
+.rightColumn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Cartes avec effet d'ombre et hover */
+.card {
+  background: #fff;
+  border: 1px solid #e1e8ed;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Proposals Card */
+.proposalsCard {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.proposalsCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.cardTitle {
+  font-size: 20px;
+  margin: 0 0 8px;
+  color: #333;
+  font-weight: 500;
+}
+
+.cardDescription {
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.link {
+  color: #0c68ff;
+  text-decoration: none;
+  font-size: 14px;
+  cursor: pointer;
+}
+.link:hover {
+  text-decoration: underline;
+}
+
+.earningsAmount {
+  font-size: 28px;
+  margin-top: 10px;
+  color: #0c68ff;
+  font-weight: 700;
+}
+
+.btn {
+  background: linear-gradient(135deg, #0c68ff, #094fbf);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+  transition: background 0.3s ease;
+}
+.btn:hover {
+  background: linear-gradient(135deg, #094fbf, #0c68ff);
+}
+
+.scoreContainer {
+  display: flex;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.scoreCircle {
+  width: 60px;
+  height: 60px;
+  border: 3px solid #e1e8ed;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  background: #f0f4f8;
+}
+
+.scoreValue {
+  font-size: 24px;
+  color: #0c68ff;
+  font-weight: 700;
+}
+
+.noScoreText {
+  font-size: 14px;
+  color: #555;
+}
+
+/* Proposals */
+.proposalsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.select {
+  border: 1px solid #e1e8ed;
+  border-radius: 4px;
+  padding: 6px;
+  font-size: 14px;
+  background: #fff;
+}
+.proposalsChart {
+  margin-top: 15px;
+}
+.statsNumbers {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.5;
+  margin-top: 15px;
+}
+
+/* Stat Item with Icon */
+.statItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+/* Ajout d'icônes */
+.statusIcon {
+  font-size: 20px;
+  margin-right: 8px;
+  color: #0c68ff;
+  transition: transform 0.3s ease;
+}
+.spin {
+  animation: spin 2s linear infinite;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.searchJobs {
+  font-size: 12px;
+  color: #888;
+  margin-top: 20px;
+}
+
+/* Profile metrics */
+.profileMetrics {
+  background: #fff;
+  border: 1px solid #e1e8ed;
+  border-radius: 8px;
+  padding: 20px;
+}
+.profileMetricsTitle {
+  margin-top: 0;
+  font-size: 18px;
+  color: #333;
+  font-weight: 500;
+}
+.metricsNav {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.metricsTab {
+  background: transparent;
+  border: none;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #555;
+  border-bottom: 2px solid transparent;
+  transition: color 0.3s ease, border-bottom 0.3s ease;
+}
+.metricsTab:hover {
+  color: #0c68ff;
+}
+.active {
+  color: #0c68ff;
+  border-bottom-color: #0c68ff;
+}
+.profileChart {
+  width: 100%;
+  height: auto;
+  min-height: 200px;
+}
+.profileChartLegend {
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+  color: #555;
+  margin-top: 10px;
+}
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.legendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Client relationships */
+.clientRelTitle {
+  margin-top: 0;
+  font-size: 18px;
+  color: #333;
+  font-weight: 500;
+}
+.clientRelDescription {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 20px;
+}
+.clientRelCircle {
+  width: 60px;
+  height: 60px;
+  border: 3px solid #e1e8ed;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
+  background: #f0f4f8;
+}
+.clientRelValue {
+  font-size: 24px;
+  color: #0c68ff;
+  font-weight: 700;
+}
+.clientRelLegend {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 10px;
+}
+
+/* Rising talent */
+.risingTalentBox {
+  background: #fff;
+  border: 1px solid #e1e8ed;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+}
+.risingTalentIcon {
+  font-size: 28px;
+  color: #0c68ff;
+  margin-bottom: 8px;
+}
+.risingTalentLabel {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: #555;
+}
+
+/* -- AJOUT DES CLASSES POUR LA MODAL -- */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modalContent {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 850px;
+  position: relative;
+  text-align: center;
+}
+
+.modalTitle {
+  margin-bottom: 20px;
+  font-size: 20px;
+  color: #333;
+  font-weight: 600;
+}
+
+.badgeList {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+}
+
+.badgeItem {
+  width: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.badgeIcon {
+  margin-bottom: 8px;
+}
+
+.badgeName {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #333;
+}
+
+.badgeDesc {
+  font-size: 12px;
+  color: #555;
+}
+
+.closeButton {
+  margin-top: 20px;
+  padding: 8px 16px;
+  background: #ff5a5f;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.closeButton:hover {
+  background: #e74c3c;
+}
+/* ... Ton CSS existant ... */
+
+/* Corps de la modal divisé en deux colonnes */
+.modalBody {
+  display: flex;
+  gap: 20px;
+  min-height: 200px;
+}
+
+/* Colonne gauche : liste des badges */
+.badgesColumn {
+  width: 40%;
+  border-right: 1px solid #e1e8ed;
+  padding-right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+/* Un badge dans la liste */
+.badgeListItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  width: 100%;
+  transition: background 0.2s;
+}
+.badgeListItem:hover {
+  background: #f5f8fa;
+}
+.badgeListItem span {
+  font-weight: 500;
+  color: #333;
+}
+
+/* Badge actif */
+.activeBadge {
+  border-color: #0c68ff;
+  background: #eef5ff;
+}
+
+/* Colonne de droite : requirements */
+.requirementsColumn {
+  width: 60%;
+  padding-left: 10px;
+}
+.requirementsList {
+  margin-top: 10px;
+}
+.requirementItem {
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #333;
+}
+.earnButton {
+  background-color: #28a745;
+  color: #fff;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s ease;
+}
+
+.earnButton:hover {
+  background-color: #218838;
+}

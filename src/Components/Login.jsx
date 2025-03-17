@@ -1,36 +1,47 @@
 /* eslint-disable react/no-unescaped-entities */
-import { useState, useEffect, useRef } from "react";
-import AuthService from "../Services/AuthService";
-import styles from "./Login.module.css";
-import "@fortawesome/fontawesome-free/css/all.min.css";
+import { useState, useEffect, useRef, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import user1 from "../assets/hidingUser.png";
+import AuthService from "../Services/AuthService";
 import UserService from "../Services/UserService";
 import { AuthContext } from "../Services/AuthContext";
-import { useContext } from "react";
+import styles from "./Login.module.css";
+
+import "@fortawesome/fontawesome-free/css/all.min.css";
 
 const Login = () => {
   const { setCurrentUser } = useContext(AuthContext);
+
+  // État pour basculer entre Sign In / Sign Up
   const [isActive, setIsActive] = useState(false);
-  // States for Sign Up
+
+  // States pour Sign Up
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // States for Sign In
+
+  // Messages d'erreur/succès spécifiques à Sign Up
+  const [signUpError, setSignUpError] = useState("");
+  const [signUpSuccess, setSignUpSuccess] = useState("");
+
+  // States pour Sign In
   const [signinEmail, setSigninEmail] = useState("");
   const [signinPassword, setSigninPassword] = useState("");
-  // State for verification code
+
+  // Messages d'erreur/succès spécifiques à Sign In
+  const [signInError, setSignInError] = useState("");
+  const [signInSuccess, setSignInSuccess] = useState("");
+
+  // States pour la vérification d'email
   const [showVerify, setShowVerify] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
-  // State to control the popover for password validation
+
+  // Pour le popover de validation de mot de passe
   const [showPopover, setShowPopover] = useState(false);
-  // Ref for the password input
   const passwordInputRef = useRef(null);
 
   const navigate = useNavigate();
 
-  // Clear localStorage when component mounts so no old user remains.
   useEffect(() => {
     localStorage.clear();
   }, []);
@@ -40,43 +51,16 @@ const Login = () => {
     return regex.test(pwd);
   };
 
-  // Compute popover position and update CSS variables
   useEffect(() => {
     if (showPopover && passwordInputRef.current) {
       const rect = passwordInputRef.current.getBoundingClientRect();
-      // Set CSS custom properties for left and top positioning.
-      document.documentElement.style.setProperty(
-        "--popover-left",
-        `${rect.right + 10}px`
-      );
-      document.documentElement.style.setProperty(
-        "--popover-top",
-        `${rect.top + rect.height / 2 - 23}px`
-      );
+      document.documentElement.style.setProperty("--popover-left", `${rect.right + 10}px`);
+      document.documentElement.style.setProperty("--popover-top", `${rect.top + rect.height / 2 - 23}px`);
     }
   }, [showPopover, password]);
 
-  const handleSignup = async (e) => {
-    e.preventDefault();
-    if (!validatePassword(password)) {
-      return;
-    }
-    try {
-      const userData = { nom, prenom, email, password };
-      await AuthService.signup(userData);
-      alert("Signup successful!");
-    } catch (err) {
-      alert("Signup failed! Please check your information.");
-      console.error(err);
-    }
-  };
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    if (showVerify) {
-      handleVerifySubmit(e);
-      return;
-    }
+  // Fonction de connexion commune
+  const performLogin = async () => {
     try {
       const loginResponse = await AuthService.login(signinEmail, signinPassword);
       localStorage.clear();
@@ -87,50 +71,124 @@ const Login = () => {
       if (!fullUser.token) {
         fullUser.token = loginResponse.token;
       }
-      // Store the complete user object under "user"
       localStorage.setItem("user", JSON.stringify(fullUser));
-      setCurrentUser(fullUser); // Mise à jour du context
+      setCurrentUser(fullUser);
+
       if (fullUser.role === "ROLE_USER") {
         navigate("/UserInformation");
       } else if (fullUser.role === "Consultant") {
-        navigate("/ProfilePage");
+        navigate("/SearchMission");
       } else {
         navigate("/LandingEntreprise");
       }
     } catch (error) {
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.message &&
-        error.response.data.message.includes("n'est pas vérifié")
-      ) {
-        alert("Votre email n'est pas vérifié. Veuillez saisir le code de vérification.");
-        setShowVerify(true);
-      } else {
-        alert("Login failed! Please check your credentials.");
-      }
+      setSignInError("Échec de la connexion. Veuillez vérifier vos identifiants.");
       console.error(error);
     }
   };
 
+  // Gestion de l'inscription
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    setSignUpError("");
+    setSignUpSuccess("");
+
+    if (!validatePassword(password)) {
+      setSignUpError("Le mot de passe ne respecte pas les critères.");
+      return;
+    }
+
+    try {
+      const userData = { nom, prenom, email, password };
+      await AuthService.signup(userData);
+      setSignUpSuccess("Inscription réussie !");
+      setNom("");
+      setPrenom("");
+      setEmail("");
+      setPassword("");
+      setShowPopover(false);
+
+      setTimeout(() => {
+        setIsActive(false);
+        setSignInSuccess("Votre compte a été créé. Vous pouvez maintenant vous connecter.");
+        setSignUpSuccess("");
+      }, 1000);
+    } catch (err) {
+      setSignUpError("Échec de l'inscription. Veuillez vérifier vos informations.");
+      console.error(err);
+    }
+  };
+
+  // Gestion de la connexion
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setSignInError("");
+    setSignInSuccess("");
+
+    if (!showVerify) {
+      try {
+        const loginResponse = await AuthService.login(signinEmail, signinPassword);
+        localStorage.clear();
+        localStorage.setItem("user", JSON.stringify(loginResponse));
+        localStorage.setItem("token", loginResponse.token);
+
+        const fullUser = await UserService.getById(loginResponse.id);
+        if (!fullUser.token) {
+          fullUser.token = loginResponse.token;
+        }
+        localStorage.setItem("user", JSON.stringify(fullUser));
+        setCurrentUser(fullUser);
+
+        if (fullUser.role === "ROLE_USER") {
+          navigate("/UserInformation");
+        } else if (fullUser.role === "Consultant") {
+          navigate("/SearchMission");
+        } else {
+          navigate("/LandingEntreprise");
+        }
+      } catch (error) {
+        if (
+          error.response &&
+          error.response.data &&
+          error.response.data.message &&
+          error.response.data.message.includes("n'est pas vérifié")
+        ) {
+          setSignInError("Votre email n'est pas vérifié. Veuillez saisir le code de vérification.");
+          setShowVerify(true);
+        } else {
+          setSignInError("Échec de la connexion. Veuillez vérifier vos identifiants.");
+        }
+        console.error(error);
+      }
+    } else {
+      await handleVerifySubmit(e);
+    }
+  };
+
+  // Gestion de la vérification du code
   const handleVerifySubmit = async (e) => {
     e.preventDefault();
+    setSignInError("");
+    setSignInSuccess("");
+
     try {
       const result = await AuthService.verifyEmail(signinEmail, verificationCode);
-      alert(result.message);
+      setSignInSuccess(result.message || "Votre compte est désormais vérifié. Connexion en cours...");
       setShowVerify(false);
-      alert("Votre compte est désormais vérifié. Veuillez vous reconnecter.");
+      setTimeout(() => {
+        performLogin();
+      }, 2000);
     } catch (error) {
-      alert("Code de vérification invalide. Veuillez réessayer.");
+      setSignInError("Code de vérification invalide. Veuillez réessayer.");
       console.error(error);
     }
   };
 
   return (
     <>
-      <div className={`${styles.customBackground}`}>
+      <div className={styles.customBackground}>
         <div className={`${styles.container} ${isActive ? styles.active : ""}`} id="container">
-          {/* Sign Up Form */}
+          {/* Formulaire Sign Up */}
           <div className={`${styles["form-container"]} ${styles["sign-up"]}`}>
             <form onSubmit={handleSignup}>
               <h1>S'inscrire</h1>
@@ -148,10 +206,14 @@ const Login = () => {
                   <i className="fa-brands fa-linkedin-in"></i>
                 </a>
               </div>
+
+              {signUpError && <div className={styles.errorMessage}>{signUpError}</div>}
+              {signUpSuccess && <div className={styles.successMessage}>{signUpSuccess}</div>}
+
               <input type="text" placeholder="Nom" required value={nom} onChange={(e) => setNom(e.target.value)} />
               <input type="text" placeholder="Prénom" required value={prenom} onChange={(e) => setPrenom(e.target.value)} />
               <input type="email" placeholder="Email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-              {/* Password input wrapped in a container */}
+
               <div className={styles.popoverContainer}>
                 <input
                   ref={passwordInputRef}
@@ -174,13 +236,14 @@ const Login = () => {
                   }}
                 />
               </div>
+
               <button type="submit" className={styles.loginButton}>
                 S'inscrire
               </button>
             </form>
           </div>
 
-          {/* Sign In Form */}
+          {/* Formulaire Sign In */}
           <div className={`${styles["form-container"]} ${styles["sign-in"]}`}>
             <form onSubmit={handleLogin}>
               <h1>Se connecter</h1>
@@ -198,6 +261,10 @@ const Login = () => {
                   <i className="fa-brands fa-linkedin-in"></i>
                 </a>
               </div>
+
+              {signInError && <div className={styles.errorMessage}>{signInError}</div>}
+              {signInSuccess && <div className={styles.successMessage}>{signInSuccess}</div>}
+
               <input
                 type="text"
                 placeholder="Email"
@@ -212,6 +279,8 @@ const Login = () => {
                 value={signinPassword}
                 onChange={(e) => setSigninPassword(e.target.value)}
               />
+
+              {/* Champ pour saisir le code de vérification */}
               {showVerify && (
                 <input
                   type="text"
@@ -221,9 +290,10 @@ const Login = () => {
                   required
                 />
               )}
+
               <a href="#">Mot de passe oublié ?</a>
               <button type="submit" className={styles.loginButton}>
-                Se connecter
+                {showVerify ? "Vérifier" : "Se connecter"}
               </button>
             </form>
           </div>
@@ -233,26 +303,44 @@ const Login = () => {
             <div className={styles.toggle}>
               <div className={`${styles["toggle-panel"]} ${styles["toggle-left"]}`}>
                 <h1>Bienvenue !</h1>
-                <p>Entrez vos informations personnelles pour utiliser toutes les fonctionnalités du site</p>
-                <button className={styles.hidden} onClick={() => {setIsActive(false);setShowPopover(false)}}>
+                <p>
+                  Entrez vos informations personnelles pour utiliser toutes les fonctionnalités du site
+                </p>
+                <button
+                  className={styles.hidden}
+                  onClick={() => {
+                    setIsActive(false);
+                    setShowPopover(false);
+                    setSignUpError("");
+                    setSignUpSuccess("");
+                  }}
+                >
                   Se connecter
                 </button>
               </div>
               <div className={`${styles["toggle-panel"]} ${styles["toggle-right"]}`}>
                 <h1>Bonjour !</h1>
-                <p>Inscrivez-vous avec vos informations personnelles pour utiliser toutes les fonctionnalités du site</p>
-                <button className={styles.hidden} onClick={() => setIsActive(true)}>
+                <p>
+                  Inscrivez-vous avec vos informations personnelles pour utiliser toutes les fonctionnalités du site
+                </p>
+                <button
+                  className={styles.hidden}
+                  onClick={() => {
+                    setIsActive(true);
+                    setSignInError("");
+                    setSignInSuccess("");
+                  }}
+                >
                   S'inscrire
                 </button>
               </div>
             </div>
           </div>
         </div>
-        <div className={styles.formHero}>
-          <img className={styles.user} src={user1} alt="Decorative Icon" />
-        </div>
+
+        
       </div>
-      {/* Render the popover using a CSS class */}
+
       {showPopover && !validatePassword(password) && (
         <div className={styles.passwordPopover}>
           Au moins 8 caractères, 1 majuscule et 1 numéro.

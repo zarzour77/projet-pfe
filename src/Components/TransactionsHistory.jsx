@@ -2,7 +2,7 @@
 import { useEffect, useState, useMemo } from "react";
 import TransactionService from "../Services/TransactionService";
 import styles from "./TransactionsHistory.module.css";
-import ConsultantHeader from "./ConsultantHeader";
+import ConsultantHeader from "./Header";
 
 const TransactionsHistory = () => {
   const [transactions, setTransactions] = useState([]);

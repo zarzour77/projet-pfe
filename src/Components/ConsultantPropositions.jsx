@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import ConsultantHeader from "./ConsultantHeader";
+import Header from "./Header";
 
 // MUI
 import {
@@ -15,43 +15,45 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
-// Import your service functions (including deleteProposition and updatePropositionStatus)
-// After: import updatePropositionStatus, acceptMission, and incrementConsultantWorkload from EntrepriseMissionService
+// Import des services depuis PropositionService.js
 import { 
   getPropositionsByConsultant, 
   getMissionFromProposition, 
-  deleteProposition
+  deleteProposition,
+  updatePropositionStatus,
+  acceptRecruitmentProposition  // Fonction dédiée pour le recrutement
 } from '../Services/PropositionService';
 
+// Import des services pour les missions classiques
 import { 
-  updatePropositionStatus, 
   acceptMission, 
   incrementConsultantWorkload,
-  terminateMission,          // New function to terminate a mission
-  decrementConsultantWorkload  // New function to decrement workload
+  terminateMission,
+  decrementConsultantWorkload
 } from '../Services/EntrepriseMissionService';
 
+// Import du service Entreprise pour récupérer les détails
+import EntrepriseService from '../Services/EntrepriseService';
 
-
-// Import your CSS module
 import styles from './ConsultantPropositions.module.css';
 
 const ConsultantPropositions = () => {
   const [isLoading, setIsLoading] = useState(false);
-  // We'll store the full list as well as filtered categories:
+  // États pour stocker les propositions par catégorie
   const [allPropositions, setAllPropositions] = useState([]);
-  const [soumises, setSoumises] = useState([]);     // origine: APPLIED and statut: PENDING
-  const [invitations, setInvitations] = useState([]); // origine: INVITED and statut: PENDING
-  const [actives, setActives] = useState([]);         // statut: ACCEPTED
-  const [refusees, setRefusees] = useState([]);       // statut: REFUSED
+  const [soumises, setSoumises] = useState([]);     // APPLIED et PENDING
+  const [invitations, setInvitations] = useState([]); // INVITED et PENDING
+  const [recruitments, setRecruitments] = useState([]); // RECRUTEMENT et PENDING
+  const [actives, setActives] = useState([]);         // ACCEPTED
+  const [refusees, setRefusees] = useState([]);         // REFUSED
 
-  // Accordion control state
+  // Contrôle de l'Accordion
   const [expanded, setExpanded] = useState(null);
   const handleChangeAccordion = (panel) => (event, isExpanded) => {
     setExpanded(isExpanded ? panel : null);
   };
 
-  // Define a reusable function to fetch propositions:
+  // Fonction de récupération des propositions
   const fetchPropositions = async () => {
     try {
       setIsLoading(true);
@@ -63,34 +65,37 @@ const ConsultantPropositions = () => {
         return;
       }
       const propositions = await getPropositionsByConsultant(consultantId);
-      console.log(propositions);
+      console.log('Propositions récupérées:', propositions);
       setAllPropositions(propositions);
 
-      // Filter propositions into categories based on the new logic
-      setSoumises(
-        propositions.filter(
-          (p) =>
-            p.origine?.toUpperCase() === 'APPLIED' &&
-            p.statut?.toUpperCase() === 'PENDING'
-        )
+      // Filtrer les propositions par catégorie
+      const filteredSoumises = propositions.filter(
+        (p) =>
+          p.origine?.toUpperCase() === 'APPLIED' &&
+          p.statut?.toUpperCase() === 'PENDING'
       );
-      setInvitations(
-        propositions.filter(
-          (p) =>
-            p.origine?.toUpperCase() === 'INVITED' &&
-            p.statut?.toUpperCase() === 'PENDING'
-        )
+      const filteredInvitations = propositions.filter(
+        (p) =>
+          p.origine?.toUpperCase() === 'INVITED' &&
+          p.statut?.toUpperCase() === 'PENDING'
       );
-      setActives(
-        propositions.filter(
-          (p) => p.statut?.toUpperCase() === 'ACCEPTED'
-        )
+      const filteredRecruitments = propositions.filter(
+        (p) =>
+          p.origine?.toUpperCase() === 'RECRUTEMENT' &&
+          p.statut?.toUpperCase() === 'PENDING'
       );
-      setRefusees(
-        propositions.filter(
-          (p) => p.statut?.toUpperCase() === 'REFUSED'
-        )
+      const filteredActives = propositions.filter(
+        (p) => p.statut?.toUpperCase() === 'ACCEPTED'
       );
+      const filteredRefusees = propositions.filter(
+        (p) => p.statut?.toUpperCase() === 'REFUSED'
+      );
+      console.log('Recruitments filtrés:', filteredRecruitments);
+      setSoumises(filteredSoumises);
+      setInvitations(filteredInvitations);
+      setRecruitments(filteredRecruitments);
+      setActives(filteredActives);
+      setRefusees(filteredRefusees);
     } catch (error) {
       toast.error("Erreur lors de la récupération des propositions");
       console.error(error);
@@ -99,83 +104,68 @@ const ConsultantPropositions = () => {
     }
   };
 
-  // Fetch propositions on component mount
   useEffect(() => {
     fetchPropositions();
   }, []);
 
-  // Handler for accepting an invitation
-  // Handler for accepting an invitation
-const handleAccepterInvitation = async (proposition) => {
-  try {
-    // Retrieve the consultant's id from localStorage
-    const storedUser = JSON.parse(localStorage.getItem('user'));
-    const consultantId = storedUser?.user?.id || storedUser?.id;
-    if (!consultantId) {
-      toast.error('Impossible de récupérer le consultant');
-      return;
+  // Handler pour accepter une invitation (ou un recrutement)
+  const handleAccepterInvitation = async (proposition) => {
+    try {
+      const storedUser = JSON.parse(localStorage.getItem('user'));
+      const consultantId = storedUser?.user?.id || storedUser?.id;
+      if (!consultantId) {
+        toast.error('Impossible de récupérer le consultant');
+        return;
+      }
+      if (proposition.origine?.toUpperCase() === 'RECRUTEMENT') {
+        const response = await acceptRecruitmentProposition(proposition.id);
+        console.log('Réponse de acceptRecruitmentProposition:', response);
+      } else {
+        await updatePropositionStatus(proposition.id, "accepted");
+        const mission = await getMissionFromProposition(proposition.id);
+        console.log('Mission récupérée:', mission);
+        if (mission && mission.id) {
+          await acceptMission(mission.id);
+        } else {
+          toast.error("Mission non trouvée pour la proposition");
+          return;
+        }
+        await incrementConsultantWorkload(consultantId);
+      }
+      toast.success("Invitation acceptée et charge de travail mise à jour");
+      fetchPropositions();
+    } catch (error) {
+      toast.error("Erreur lors de l'acceptation de l'invitation");
+      console.error(error);
     }
+  };
 
-    // 1. Update the proposition status to "accepted"
-    await updatePropositionStatus(proposition.id, "accepted");
-
-    // 2. Fetch the mission details linked to this proposition
-    const mission = await getMissionFromProposition(proposition.id);
-    if (mission && mission.id) {
-      // Call the endpoint to accept the mission
-      await acceptMission(mission.id);
-    } else {
-      toast.error("Mission non trouvée pour la proposition");
-      return;
+  const handleTerminee = async (proposition) => {
+    try {
+      const storedUser = JSON.parse(localStorage.getItem('user'));
+      const consultantId = storedUser?.user?.id || storedUser?.id;
+      if (!consultantId) {
+        toast.error('Impossible de récupérer le consultant');
+        return;
+      }
+      await updatePropositionStatus(proposition.id, "terminée");
+      const mission = await getMissionFromProposition(proposition.id);
+      console.log('Mission pour terminer:', mission);
+      if (!mission || !mission.id) {
+        toast.error("Mission non trouvée pour la proposition");
+        return;
+      }
+      const currentDate = new Date().toISOString();
+      await terminateMission(mission.id, currentDate);
+      await decrementConsultantWorkload(consultantId);
+      toast.success("Mission terminée, proposition mise à jour, et charge de travail ajustée");
+      fetchPropositions();
+    } catch (error) {
+      toast.error("Erreur lors de la finalisation de la mission");
+      console.error(error);
     }
+  };
 
-    // 3. Increment the consultant's workload
-    await incrementConsultantWorkload(consultantId);
-
-    toast.success("Invitation acceptée, mission confirmée et charge de travail mise à jour");
-    fetchPropositions();
-  } catch (error) {
-    toast.error("Erreur lors de l'acceptation de l'invitation");
-    console.error(error);
-  }
-};
-const handleTerminee = async (proposition) => {
-  try {
-    // Retrieve the consultant's id from localStorage
-    const storedUser = JSON.parse(localStorage.getItem('user'));
-    const consultantId = storedUser?.user?.id || storedUser?.id;
-    if (!consultantId) {
-      toast.error('Impossible de récupérer le consultant');
-      return;
-    }
-
-    // 1. Update the proposition status to "terminée"
-    await updatePropositionStatus(proposition.id, "terminée");
-
-    // 2. Fetch the mission details linked to this proposition
-    const mission = await getMissionFromProposition(proposition.id);
-    if (!mission || !mission.id) {
-      toast.error("Mission non trouvée pour la proposition");
-      return;
-    }
-
-    // 3. Update the mission status to "terminée" and set the end date to the current date
-    const currentDate = new Date().toISOString();
-    await terminateMission(mission.id, currentDate);
-
-    // 4. Decrement the consultant's workload by 1
-    await decrementConsultantWorkload(consultantId);
-
-    toast.success("Mission terminée, proposition mise à jour, et charge de travail ajustée");
-    fetchPropositions();
-  } catch (error) {
-    toast.error("Erreur lors de la finalisation de la mission");
-    console.error(error);
-  }
-};
-
-
-  // Handler for refusing an invitation
   const handleRefuserInvitation = async (proposition) => {
     try {
       await updatePropositionStatus(proposition.id, "refused");
@@ -187,39 +177,87 @@ const handleTerminee = async (proposition) => {
     }
   };
 
-  // Sub-component to render a single proposition
-  // Receives the proposition, its category and a callback to refresh propositions after deletion.
+  // Sous-composant pour afficher une proposition
   const PropositionItem = ({ proposition, category, refreshPropositions }) => {
     const [mission, setMission] = useState(null);
-    const [loadingMission, setLoadingMission] = useState(true);
+    const [loadingMission, setLoadingMission] = useState(category === "recruitments" ? false : true);
+    const [entrepriseDetails, setEntrepriseDetails] = useState(null);
+    const isRecruitment = proposition.origine?.toUpperCase() === 'RECRUTEMENT';
 
+    // Si c'est une proposition de recrutement et que l'entreprise est un identifiant (nombre),
+    // on récupère les détails complets depuis l'API Entreprise.
     useEffect(() => {
-      const fetchMission = async () => {
-        try {
-          // Fetch mission details using proposition.id
-          const fetchedMission = await getMissionFromProposition(proposition.id);
-          setMission(fetchedMission);
-        } catch (error) {
-          console.error("Erreur lors de la récupération de la mission", error);
-          toast.error("Erreur lors de la récupération des informations de la mission");
-        } finally {
-          setLoadingMission(false);
-        }
-      };
-      fetchMission();
-    }, [proposition.id]);
+      if (isRecruitment && typeof proposition.entreprise === 'number') {
+        const fetchEntreprise = async () => {
+          try {
+            const result = await EntrepriseService.getEntrepriseById(proposition.entreprise);
+            console.log(`Entreprise pour la proposition ${proposition.id}:`, result);
+            setEntrepriseDetails(result);
+          } catch (error) {
+            console.error("Erreur lors de la récupération de l'entreprise", error);
+            toast.error("Erreur lors de la récupération de l'entreprise");
+          }
+        };
+        fetchEntreprise();
+      }
+    }, [proposition.entreprise, isRecruitment, proposition.id]);
 
-    // Format the date to display only the date (without time)
+    // Pour les propositions non recrutements, on récupère la mission associée.
+    useEffect(() => {
+      if (!isRecruitment) {
+        const fetchMission = async () => {
+          try {
+            const fetchedMission = await getMissionFromProposition(proposition.id);
+            console.log(`Mission pour la proposition ${proposition.id}:`, fetchedMission);
+            setMission(fetchedMission);
+          } catch (error) {
+            console.error("Erreur lors de la récupération de la mission", error);
+            toast.error("Erreur lors de la récupération des informations de la mission");
+          } finally {
+            setLoadingMission(false);
+          }
+        };
+        fetchMission();
+      }
+    }, [proposition.id, isRecruitment]);
+
     const dateProposition = proposition.dateProposition
       ? new Date(proposition.dateProposition).toLocaleDateString()
       : 'Date inconnue';
 
-    const missionTitle = loadingMission ? "Chargement..." : mission?.titre || 'Mission inconnue';
-    const entrepriseName = loadingMission
-      ? "Chargement..."
-      : mission?.entreprise?.nomEntreprise || 'Entreprise inconnue';
+    // Mise à jour de l'affichage du titre en fonction de si c'est un recrutement
+    const displayTitle = isRecruitment
+      ? (entrepriseDetails
+          ? `Recrutement de ${entrepriseDetails.nomEntreprise}`
+          : 'Chargement entreprise...')
+      : (loadingMission ? "Chargement..." : mission?.titre || 'Mission inconnue');
 
-    // Handler for the "Annuler" button (for propositions soumises)
+    const displayDetails = isRecruitment ? (
+      <>
+        <p>
+          <strong>Entreprise : </strong>
+          {entrepriseDetails
+            ? entrepriseDetails.nomEntreprise
+            : 'Chargement entreprise...'}
+        </p>
+      </>
+    ) : (
+      <>
+        <p>
+          <strong>Montant proposé : </strong>
+          {proposition.montant ? `${proposition.montant} €` : 'N/A'}
+        </p>
+        <p>
+          <strong>Durée estimée : </strong>
+          {proposition.dureeEstime || 'N/A'}
+        </p>
+        <p>
+          <strong>Entreprise : </strong>
+          {loadingMission ? "Chargement..." : mission?.entreprise?.nomEntreprise || 'Entreprise inconnue'}
+        </p>
+      </>
+    );
+
     const handleAnnuler = async () => {
       if (window.confirm("Voulez-vous annuler cette proposition ?")) {
         try {
@@ -243,22 +281,11 @@ const handleTerminee = async (proposition) => {
         whileHover={{ scale: 1.01 }}
       >
         <div className={styles.propositionHeader}>
-          <h4>{missionTitle}</h4>
+          <h4>{displayTitle}</h4>
           <span className={styles.statusBadge}>{proposition.statut}</span>
         </div>
         <div className={styles.propositionDetails}>
-          <p>
-            <strong>Entreprise : </strong>
-            {entrepriseName}
-          </p>
-          <p>
-            <strong>Montant proposé : </strong>
-            {proposition.montant ? `${proposition.montant} €` : 'N/A'}
-          </p>
-          <p>
-            <strong>Durée estimée : </strong>
-            {proposition.dureeEstime || 'N/A'}
-          </p>
+          {displayDetails}
           <p>
             <strong>Date de proposition : </strong>
             {dateProposition}
@@ -272,79 +299,52 @@ const handleTerminee = async (proposition) => {
           <strong>Message : </strong>
           <span>{proposition.message || 'Aucun message'}</span>
         </div>
-        {/* Render buttons based on the category */}
-        {category === "invitations" && (
+        {/* Boutons d'action selon la catégorie */}
+        {(category === "invitations" || category === "recruitments") && (
           <div className={styles.actionButtons}>
-            <Button
-              variant="contained"
-              color="success"
-              size="small"
-              onClick={() => handleAccepterInvitation(proposition)}
-            >
+            <Button variant="contained" color="success" size="small" onClick={() => handleAccepterInvitation(proposition)}>
               Accepter
             </Button>
-            <Button
-              variant="outlined"
-              color="error"
-              size="small"
-              onClick={() => handleRefuserInvitation(proposition)}
-            >
+            <Button variant="outlined" color="error" size="small" onClick={() => handleRefuserInvitation(proposition)}>
               Refuser
             </Button>
           </div>
         )}
         {category === "soumises" && (
           <div className={styles.actionButtons}>
-            <Button
-              variant="contained"
-              color="error"
-              size="small"
-              onClick={handleAnnuler}
-            >
+            <Button variant="contained" color="error" size="small" onClick={handleAnnuler}>
               Annuler
             </Button>
           </div>
         )}
         {category === "actives" && (
-  <div className={styles.actionButtons}>
-    <Button
-      variant="contained"
-      color="primary"
-      size="small"
-      onClick={() => handleTerminee(proposition)}
-    >
-      Terminée
-    </Button>
-  </div>
-)}
-
+          <div className={styles.actionButtons}>
+            <Button variant="contained" color="primary" size="small" onClick={() => handleTerminee(proposition)}>
+              Terminée
+            </Button>
+          </div>
+        )}
         {category === "refusees" && (
           <div className={styles.actionButtons}>
-            {/* No buttons for propositions refusées */}
+            {/* Aucun bouton pour les propositions refusées */}
           </div>
         )}
       </motion.div>
     );
   };
 
-  // Helper to render a list of propositions for a given category
   const renderPropositionsList = (list, category) => {
     if (!list || list.length === 0) {
       return <p className={styles.emptyMessage}>Aucune proposition ici.</p>;
     }
     return list.map((prop) => (
-      <PropositionItem
-        key={prop.id}
-        proposition={prop}
-        category={category}
-        refreshPropositions={fetchPropositions}
-      />
+      <PropositionItem key={prop.id} proposition={prop} category={category} refreshPropositions={fetchPropositions} />
     ));
   };
 
   return (
     <div className={styles.mesPropositionsContainer}>
-      <ConsultantHeader />
+      <Header />
       <ToastContainer />
       <h3>Mes Propositions</h3>
       {isLoading ? (
@@ -354,56 +354,39 @@ const handleTerminee = async (proposition) => {
         </div>
       ) : (
         <>
-          {/* Propositions soumises */}
-          <Accordion
-            expanded={expanded === 'panel1'}
-            onChange={handleChangeAccordion('panel1')}
-          >
+          <Accordion expanded={expanded === 'panel1'} onChange={handleChangeAccordion('panel1')}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography>Propositions soumises ({soumises.length})</Typography>
             </AccordionSummary>
-            <AccordionDetails>
-              {renderPropositionsList(soumises, "soumises")}
-            </AccordionDetails>
+            <AccordionDetails>{renderPropositionsList(soumises, "soumises")}</AccordionDetails>
           </Accordion>
 
-          {/* Invitations */}
-          <Accordion
-            expanded={expanded === 'panel2'}
-            onChange={handleChangeAccordion('panel2')}
-          >
+          <Accordion expanded={expanded === 'panel2'} onChange={handleChangeAccordion('panel2')}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography>Invitations ({invitations.length})</Typography>
             </AccordionSummary>
-            <AccordionDetails>
-              {renderPropositionsList(invitations, "invitations")}
-            </AccordionDetails>
+            <AccordionDetails>{renderPropositionsList(invitations, "invitations")}</AccordionDetails>
           </Accordion>
 
-          {/* Propositions actives */}
-          <Accordion
-            expanded={expanded === 'panel3'}
-            onChange={handleChangeAccordion('panel3')}
-          >
+          <Accordion expanded={expanded === 'panel5'} onChange={handleChangeAccordion('panel5')}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography>Recrutments ({recruitments.length})</Typography>
+            </AccordionSummary>
+            <AccordionDetails>{renderPropositionsList(recruitments, "recruitments")}</AccordionDetails>
+          </Accordion>
+
+          <Accordion expanded={expanded === 'panel3'} onChange={handleChangeAccordion('panel3')}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography>Propositions actives ({actives.length})</Typography>
             </AccordionSummary>
-            <AccordionDetails>
-              {renderPropositionsList(actives, "actives")}
-            </AccordionDetails>
+            <AccordionDetails>{renderPropositionsList(actives, "actives")}</AccordionDetails>
           </Accordion>
 
-          {/* Propositions refusées */}
-          <Accordion
-            expanded={expanded === 'panel4'}
-            onChange={handleChangeAccordion('panel4')}
-          >
+          <Accordion expanded={expanded === 'panel4'} onChange={handleChangeAccordion('panel4')}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography>Propositions refusées ({refusees.length})</Typography>
             </AccordionSummary>
-            <AccordionDetails>
-              {renderPropositionsList(refusees, "refusees")}
-            </AccordionDetails>
+            <AccordionDetails>{renderPropositionsList(refusees, "refusees")}</AccordionDetails>
           </Accordion>
         </>
       )}

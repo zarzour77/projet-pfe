@@ -144,7 +144,6 @@ const ConsultantService = {
   // Competence methods
   addCompetence: async (consultantId, competenceData) => {
     const token = localStorage.getItem("token");
-
     try {
       const response = await axios.post(
         `${API_URL}/${consultantId}/addCompetence`,
@@ -157,6 +156,7 @@ const ConsultantService = {
       throw error;
     }
   },
+  
 
   deleteCompetence: async (consultantId, competenceId) => {
     const token = localStorage.getItem("token");
@@ -208,9 +208,8 @@ try {
   // New methods for Langue, Formation, Certification
 
   addLangue: async (consultantId, langueData) => {
-    
     const token = localStorage.getItem("token");
-try {
+    try {
       const response = await axios.post(
         `${API_URL}/${consultantId}/addLangue`,
         langueData,
@@ -222,6 +221,7 @@ try {
       throw error;
     }
   },
+  
 
   addFormation: async (consultantId, formationData) => {
     

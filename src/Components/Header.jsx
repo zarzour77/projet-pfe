@@ -1,160 +1,399 @@
-// components/Header.jsx
-import { useState, useEffect } from 'react';
-import { FaBell } from 'react-icons/fa';
-import { fetchNotifications } from '../Services/HeaderService'; // Import du service
-import styles from './Header.module.css';
+import { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import styles from "./Header.module.css";
+import notificationService from "../Services/NotificationService";
 
-function Header() {
-  const [searchType, setSearchType] = useState('Talent');
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [showMega, setShowMega] = useState(false);
+const Header = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [visibleCount, setVisibleCount] = useState(5);
+  const [filter, setFilter] = useState("all"); // "all" or "unread"
+  const [openMenuId, setOpenMenuId] = useState(null); // track which notification menu is open
+  const [showMarkAllMenu, setShowMarkAllMenu] = useState(false);
 
-  const categories = [
-    { name: 'Development & IT', icon: '👨‍💻', subcats: ['Web Dev', 'Mobile Dev'] },
-    { name: 'AI Services',       icon: '🤖',   subcats: ['Machine Learning', 'Data Science'] },
-    { name: 'Design & Creative', icon: '🎨',   subcats: ['Graphic Design', 'UI/UX'] },
-    { name: 'Sales & Marketing', icon: '📈',   subcats: ['SEO', 'Social Media'] },
-    { name: 'Admin & Customer Support', icon: '🖇️', subcats: ['Virtual Assistance', 'Data Entry'] },
-    { name: 'More',              icon: '⚙️',   subcats: ['Consulting', 'Writing'] },
-  ];
+  const navigate = useNavigate();
 
-  // Récupération de l'ID de l'entreprise connectée depuis le localStorage
-  const storedUser = JSON.parse(localStorage.getItem('userWithToken'));
-  const entrepriseId = storedUser?.user?.id || storedUser?.id;
-  const token = storedUser?.token;
+  // Extract user info from localStorage
+  const storedUser = localStorage.getItem("user");
+  const user = storedUser ? JSON.parse(storedUser) : null;
+  const userId = user ? user.id : null;
+  const role = user?.role; // e.g., "CONSULTANT" or "Entreprise"
 
-
-
-  // Gère l'effet "sticky + shrink" lors du défilement
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrolled = window.scrollY > 50;
-      setIsScrolled(scrolled);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Toggle pour “Find Talent” / “Find Job”
-  const handleToggle = (type) => {
-    setSearchType(type);
-  };
-
-  // Récupération des notifications via le service
-  useEffect(() => {
-    if (!entrepriseId || !token) {
-      return;
+  // Fetch notifications for the user
+  const fetchNotifications = async () => {
+    if (userId) {
+      try {
+        const data = await notificationService.getNotifications(userId);
+        // Sort notifications in descending order by date
+        const sortedData = data.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setNotifications(sortedData);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des notifications", error);
+      }
     }
-    fetchNotifications(entrepriseId, token)
-      .then((res) => {
-        setNotifications(res.data);
-      })
-      .catch((err) => {
-      });
-  }, [entrepriseId, token]);
+  };
+  const handleMarkAllAsRead = async () => {
+    try {
+      const unreadNotifications = notifications.filter(n => !n.readStatus);
+      await Promise.all(
+        unreadNotifications.map(n => notificationService.markAsRead(n.id))
+      );
+      fetchNotifications();
+      setShowMarkAllMenu(false);
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour des notifications", error);
+    }
+  };
+  useEffect(() => {
+    // Fetch notifications only when the dropdown is shown
+    if (showNotifications && userId) {
+      fetchNotifications();
+    }
+  }, [showNotifications, userId]);
 
-  const handleNotificationsClick = () => {
-    const newState = !showNotifications;
-    setShowNotifications(newState);
+
+
+  // Mark individual notification as read
+  const handleMarkAsRead = async (id) => {
+    try {
+      await notificationService.markAsRead(id);
+      fetchNotifications();
+      setOpenMenuId(null); // close the menu
+    } catch (error) {
+      console.error("Erreur lors du marquage comme lu", error);
+    }
   };
 
+  // Delete a notification
+  const handleDeleteNotification = async (id) => {
+    try {
+      await notificationService.deleteNotification(id);
+      fetchNotifications();
+      setOpenMenuId(null); // close the menu
+    } catch (error) {
+      console.error("Erreur lors de la suppression de la notification", error);
+    }
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    const options = {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    };
+    return new Date(dateString).toLocaleDateString("fr-FR", options);
+  };
+
+  // Filter notifications (all vs. unread)
+  const filteredNotifications =
+    filter === "all"
+      ? notifications
+      : notifications.filter((n) => !n.readStatus);
+
+  // Paginate
+  const visibleNotifications = filteredNotifications.slice(0, visibleCount);
+
+  // Toggle sidebar
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+  // Toggle notifications
+  const toggleNotifications = () => {
+    setShowNotifications((prev) => !prev);
+    // Reset open menu if we close the panel
+    if (showNotifications) {
+      setOpenMenuId(null);
+    }
+  };
+  useEffect(() => {
+    if (userId) {
+      fetchNotifications();
+    }
+  }, [userId]); 
+  // Close notifications when clicking outside
+  const notificationsRef = useRef(null);
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        notificationsRef.current &&
+        !notificationsRef.current.contains(e.target) &&
+        !e.target.closest(`.${styles.iconButton}`)
+      ) {
+        setShowNotifications(false);
+        setOpenMenuId(null); // This remains to close menu when dropdown closes
+      }
+    };
+  
+    if (showNotifications) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showNotifications]);
+  
+  useEffect(() => {
+    const handleMenuClickOutside = (e) => {
+      if (
+        (openMenuId !== null && 
+        !e.target.closest(`.${styles.notificationOptionsMenu}`) && 
+        !e.target.closest(`.${styles.optionsButton}`)) ||
+        (showMarkAllMenu && 
+        !e.target.closest(`.${styles.markAllOptionsMenu}`) && 
+        !e.target.closest(`.${styles.optionsButton}`))
+      ) {
+        setOpenMenuId(null);
+        setShowMarkAllMenu(false);
+      }
+    };
+  
+    document.addEventListener('mousedown', handleMenuClickOutside);
+    return () => document.removeEventListener('mousedown', handleMenuClickOutside);
+  }, [openMenuId, showMarkAllMenu, styles]);
   return (
-    <div>
-      {/* HEADER PRINCIPAL */}
-      <header className={`${styles.mainHeader} ${isScrolled ? styles.shrink : ''}`}>
-        <div className={styles.logoSection}>
-          <h1 className={styles.brandTitle}>Trade for Talent</h1>
-          <p className={styles.tagline}>Connecting Businesses & Freelancers Worldwide</p>
-        </div>
-        <div className={styles.searchContainer}>
-          <div className={styles.toggleButtons}>
-            <button
-              onClick={() => handleToggle('Talent')}
-              className={`${styles.toggleBtn} ${searchType === 'Talent' ? styles.active : ''}`}
-            >
-              Find Talent
-            </button>
-            <button
-              onClick={() => handleToggle('Jobs')}
-              className={`${styles.toggleBtn} ${searchType === 'Jobs' ? styles.active : ''}`}
-            >
-              Find Job
+    <>
+      <header className={styles.header}>
+        <nav className={styles.navbar}>
+          {/* Left Section: Sidebar Toggle */}
+          <div className={styles.leftSection}>
+            <button className={styles.sidebarToggle} onClick={toggleSidebar}>
+              <div className={styles.hamburger}>
+                <span className={styles.bar}></span>
+                <span className={styles.bar}></span>
+                <span className={styles.bar}></span>
+              </div>
             </button>
           </div>
-          <div className={styles.searchWrapper}>
-            <input
-              type="text"
-              className={styles.searchInput}
-              placeholder={`Search for ${searchType}`}
-            />
-            <span className={styles.searchIcon}>🔍</span>
+
+          {/* Logo */}
+          <div className={styles.logo}>
+            <Link to="/SearchMission">Trade for talent</Link>
           </div>
-        </div>
-        <div className={styles.authButtons}>
-          {/* Bouton de notifications */}
-          <div className={styles.notificationWrapper} onClick={handleNotificationsClick}>
-            <FaBell className={styles.bellIcon} />
-            {notifications.length > 0 && (
-              <span className={styles.notifCount}>{notifications.length}</span>
-            )}
+
+          {/* Center Section: Search Bar */}
+          <div className={styles.centerSection}>
+            <div className={styles.searchContainer}>
+              <input type="text" placeholder="Search missions..." />
+              <button className={styles.searchButton}>Search</button>
+            </div>
           </div>
-          {/* Dropdown affichant les notifications */}
-          {showNotifications && (
-            <div className={styles.notificationsDropdown}>
-              {notifications.length === 0 ? (
-                <p className={styles.noNotif}>Aucune notification</p>
+
+          {/* Right Section: Chat, Notifications, Profile */}
+          <div className={styles.rightSection}>
+            <button
+              className={styles.iconButton}
+              onClick={() => navigate("/Messenger")}
+            >
+              <i className="fa fa-comment"></i>
+            </button>
+
+            {/* Clicking the bell toggles the notifications dropdown */}
+            <button className={styles.iconButton} onClick={toggleNotifications}>
+  <div className={styles.notificationIconContainer}>
+    <i className="fa fa-bell"></i>
+    {notifications.filter(n => !n.readStatus).length > 0 && (
+      <span className={styles.notificationBadge}>
+        {Math.min(notifications.filter(n => !n.readStatus).length, 9)}
+        {notifications.filter(n => !n.readStatus).length > 9 && "+"}
+      </span>
+    )}
+  </div>
+</button>
+
+            <button
+              className={styles.profileButton}
+              onClick={() =>
+                navigate(
+                  role === "Entreprise" ? "/EntrepriseProfilePage" : "/ProfilePage"
+                )
+              }
+            >
+              <img
+                src={user?.photoprofile || "default-avatar.png"}
+                alt="Profile"
+                className={styles.profileIcon}
+              />
+            </button>
+          </div>
+        </nav>
+
+        {/* Notifications Dropdown Panel */}
+        {showNotifications && (
+          <div className={styles.notificationsDropdown} ref={notificationsRef}>
+            <div className={styles.notificationsHeader}>
+  <h4>Notifications</h4>
+  <div className={styles.headerRight}>
+    <button 
+      className={styles.optionsButton} 
+      onClick={() => setShowMarkAllMenu(!showMarkAllMenu)}
+    >
+      <i className="fa fa-ellipsis-h"></i>
+    </button>
+    {showMarkAllMenu && (
+  <div className={styles.markAllOptionsMenu}>
+    <button onClick={handleMarkAllAsRead}>
+      <i className="fas fa-check me-2"></i>
+      Mark all as read
+    </button>
+    <button onClick={() => {
+      navigate('/notification');
+      setShowMarkAllMenu(false);
+    }}>
+      <i className="fas fa-list me-2"></i>
+      See notifications
+    </button>
+  </div>
+)}
+  </div>
+</div>
+
+            {/* Filter Buttons */}
+            <div className={styles.notificationsFilter}>
+              <button
+                className={`${styles.filterButton} ${
+                  filter === "all" ? styles.activeFilter : ""
+                }`}
+                onClick={() => setFilter("all")}
+              >
+                Tout
+              </button>
+              <button
+                className={`${styles.filterButton} ${
+                  filter === "unread" ? styles.activeFilter : ""
+                }`}
+                onClick={() => setFilter("unread")}
+              >
+                Non lus
+              </button>
+            </div>
+
+            <div className={styles.notificationsContent}>
+              {visibleNotifications.length === 0 ? (
+                <div className={styles.noNotifications}>
+                  Aucune notification.
+                </div>
               ) : (
-                notifications.map((notif) => (
-                  <div key={notif.id} className={styles.notificationItem}>
-                    <div className={styles.notifMessage}>{notif.message}</div>
-                    <div className={styles.notifDate}>
-                      {new Date(notif.createdAt).toLocaleString()}
+                visibleNotifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    className={`${styles.notificationCard} ${
+                      notification.readStatus ? styles.read : styles.unread
+                    }`}
+                    style={{ position: "relative" }}
+                  >
+                    <div className={styles.notificationBody}>
+                    <i className={`fa-solid ${notification.readStatus ? "fa-bell" : "fa-circle-exclamation"} fa-lg`}></i>                      <div className={styles.notificationText}>
+                        <h6>{notification.message}</h6>
+                        <small>
+                          <i className="fa-regular fa-clock me-1"></i>
+                          {formatDate(notification.createdAt)}
+                        </small>
+                      </div>
+                      {/* Ellipsis button */}
+                      <button
+                        className={styles.optionsButton}
+                        onClick={() =>
+                          setOpenMenuId(
+                            openMenuId === notification.id ? null : notification.id
+                          )
+                        }
+                      >
+                        <i className="fa fa-ellipsis-h"></i>
+                      </button>
+
+                      {/* Options menu */}
+                      {openMenuId === notification.id && (
+  <div className={styles.notificationOptionsMenu}>
+    {!notification.readStatus && (
+      <button
+        onClick={() => handleMarkAsRead(notification.id)}
+      >
+        <i className="fas fa-check me-2"></i>
+        Marquer comme lu
+      </button>
+    )}
+    <button
+      onClick={() => handleDeleteNotification(notification.id)}
+    >
+      <i className="fas fa-trash me-2"></i>
+      Supprimer
+    </button>
+  </div>
+)}
                     </div>
                   </div>
                 ))
               )}
             </div>
-          )}
-          <button className={styles.loginBtn}>Log In</button>
-          <button className={styles.signupBtn}>Sign Up</button>
-        </div>
+            {filteredNotifications.length > visibleCount && (
+              <div className={styles.loadMoreContainer}>
+                <button
+                  className={styles.loadMoreButton}
+                  onClick={() => setVisibleCount(visibleCount + 5)}
+                >
+                  Voir plus
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </header>
-      <nav className={`${styles.subHeader} ${isScrolled ? styles.stickySubHeader : ''}`}>
-        <ul className={styles.navList}>
-          {categories.map((cat) => (
-            <li
-              key={cat.name}
-              className={styles.navItem}
-              onMouseEnter={() => {
-                if (cat.name === 'More') {
-                  setShowMega(true);
-                }
-              }}
-              onMouseLeave={() => {
-                if (cat.name === 'More') {
-                  setShowMega(false);
-                }
-              }}
-            >
-              <span className={styles.navIcon}>{cat.icon}</span>
-              {cat.name}
-              {cat.name === 'More' && showMega && (
-                <div className={styles.megaMenu}>
-                  <ul>
-                    {cat.subcats.map((sub) => (
-                      <li key={sub}>{sub}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+
+      {/* Sidebar */}
+      <div className={`${styles.sidebar} ${isSidebarOpen ? styles.active : ""}`}>
+        <div className={styles.sidebarHeader}>
+          <button className={styles.closeBtn} onClick={toggleSidebar}>
+            &times;
+          </button>
+        </div>
+        <nav className={styles.sidebarNav}>
+          <ul>
+            <li>
+              <Link to="/StatConsultant" onClick={toggleSidebar}>
+                <span className={styles.icon}>📊</span> Dashboard
+              </Link>
             </li>
-          ))}
-        </ul>
-      </nav>
-    </div>
+            <li>
+              <Link to="/SearchMission" onClick={toggleSidebar}>
+                <span className={styles.icon}>📋</span> Missions
+              </Link>
+            </li>
+            <li>
+              <Link
+                to={role === "Entreprise" ? "/EntrepriseProfilePage" : "/ProfilePage"}
+                onClick={toggleSidebar}
+              >
+                <span className={styles.icon}>👤</span> Profile
+              </Link>
+            </li>
+            <li>
+              <Link to="/transactions" onClick={toggleSidebar}>
+                <span className={styles.icon}>🗃️</span> Transactions
+              </Link>
+            </li>
+            {role === "Consultant" ? (
+              <li>
+                <Link to="/ConsultantPropositions" onClick={toggleSidebar}>
+                  <span className={styles.icon}>📝</span> Mes Propositions
+                </Link>
+              </li>
+            ) : (
+              <li>
+                <Link to="/EnterpriseMissions" onClick={toggleSidebar}>
+                  <span className={styles.icon}>📝</span> Mes Missions
+                </Link>
+              </li>
+            )}
+          </ul>
+        </nav>
+      </div>
+      {/* Sidebar Overlay */}
+      {isSidebarOpen && <div className={styles.overlay} onClick={toggleSidebar} />}
+    </>
   );
-}
+};
 
 export default Header;

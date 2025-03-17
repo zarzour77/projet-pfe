@@ -1,0 +1,24 @@
+<svg
+        width="80"
+        height="80"
+        viewBox="0 0 80 80"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle cx="40" cy="40" r="35" fill="#FFD700" />
+        <path
+          fill="#ffffff"
+          d="
+            M20 45
+            L25 25
+            L30 35
+            L35 25
+            L40 35
+            L45 25
+            L50 35
+            L55 25
+            L60 45
+            Z
+          "
+        />
+      </svg>

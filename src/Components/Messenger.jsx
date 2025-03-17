@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import styles from "./Messenger.module.css";
-import ConsultantHeader from "./ConsultantHeader";
+import Header from "./Header";
 
 /** Icônes Lucide (ou tout autre set d'icônes) **/
 import { 
@@ -331,7 +331,7 @@ export default function Messenger() {
 
   return (
     <div className={styles.container}>
-            <ConsultantHeader />
+            <Header />
 
       {/* --- COLONNE GAUCHE --- */}
       <div className={styles.leftColumn}>

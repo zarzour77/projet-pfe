@@ -4,6 +4,31 @@ import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8181/api/propositions';
 
+// Fonction qui appelle l'endpoint pour accepter une proposition de recrutement
+export const acceptRecruitmentProposition = async (propositionId) => {
+  const token = localStorage.getItem('token');
+  console.log(token);
+  if (!token) {
+    throw new Error("JWT Token is missing");
+  }
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/${propositionId}/accept`,
+      {}, // pas de body spécifique
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Erreur lors de l'acceptation du recrutement :", error);
+    throw error;
+  }
+};
+
 export const getPropositionsByConsultant = async (consultantId) => {
   const token = localStorage.getItem('token');
   if (!token) {
@@ -62,7 +87,7 @@ export const updatePropositionStatus = async (propositionId, newStatus) => {
   }
   try {
     const response = await axios.put(
-      `${API_BASE_URL}/${propositionId}/status`,
+      `${API_BASE_URL}/${propositionId}`,
       { statut: newStatus },
       {
         headers: {
