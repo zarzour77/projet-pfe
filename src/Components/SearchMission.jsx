@@ -1,11 +1,11 @@
+import React, { useEffect, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
 import { FaList, FaTh } from 'react-icons/fa';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// Material UI components
+// Material‑UI components
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -17,10 +17,7 @@ import TextField from '@mui/material/TextField';
 import MUITooltip from '@mui/material/Tooltip';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
-// Importation du CSS
-import styles from './SearchMission.module.css';
-
-// Services API et navigation
+// Services et navigation
 import { useNavigate } from 'react-router-dom';
 import DomaineService from '../Services/DomaineService';
 import {
@@ -32,28 +29,22 @@ import {
   getMissionsByExperience,
   getMissionsByPorteDeTravail,
   getSavedMissions,
-  saveMissionForConsultant
-} from '../Services/SearchMission';
+  saveMissionForConsultant,
+  applyWithConsultant // nouvelle fonction pour l'API entreprise SSI
+} from '../services/SearchMission';
+import ConsultantService from '../Services/ConsultantService';
+import EntrepriseService from '../services/EntrepriseService';
 
-// Création du thème Material‑UI
+import styles from './SearchMission.module.css';
+
 const theme = createTheme({
   palette: {
-    primary: {
-      main: "#009990",
-    },
-    secondary: {
-      main: "#074799",
-    },
-    background: {
-      default: "#E1FFBB",
-    },
-    text: {
-      primary: "#001A6E",
-    }
+    primary: { main: "#009990" },
+    secondary: { main: "#074799" },
+    background: { default: "#E1FFBB" },
+    text: { primary: "#001A6E" }
   },
-  typography: {
-    fontFamily: "Arial, sans-serif",
-  },
+  typography: { fontFamily: "Arial, sans-serif" },
 });
 
 function SearchMission() {
@@ -85,20 +76,58 @@ function SearchMission() {
   const [propositionDuree, setPropositionDuree] = useState('');
   const [propositionMessage, setPropositionMessage] = useState('');
 
-  // Chargement des domaines depuis le backend
+  // Stockage d'informations supplémentaires
+  const [consultant, setConsultant] = useState(null);
+  const [enterpriseConsultants, setEnterpriseConsultants] = useState([]);
+  const [selectedConsultantId, setSelectedConsultantId] = useState("");
+
+  // Récupération de l'utilisateur lors du montage
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    if (!storedUser) {
+      toast.error("Utilisateur non trouvé");
+      return;
+    }
+    // Si l'utilisateur est CONSULTANT, charger ses infos
+    if (storedUser.role === "Consultant") {
+      const consultantId = storedUser.user?.id || storedUser.id;
+      if (!consultantId) {
+        toast.error("Consultant introuvable");
+        return;
+      }
+      ConsultantService.getConsultantById(consultantId)
+        .then(data => setConsultant(data))
+        .catch(error => {
+          console.error("[ERROR] Erreur lors de la récupération du consultant :", error);
+          toast.error("Erreur lors de la récupération du consultant");
+        });
+    }
+    // Si l'utilisateur est une Entreprise SSI, charger la liste de ses consultants disponibles
+    else if (storedUser.role === "Entreprise") {
+      const entrepriseId = storedUser.user?.id || storedUser.id;
+      EntrepriseService.getConsultantsForEntreprise(entrepriseId)
+        .then(data => setEnterpriseConsultants(data))
+        .catch(error => {
+          console.error("[ERROR] Erreur lors de la récupération des consultants :", error);
+          toast.error("Erreur lors de la récupération des consultants");
+        });
+    }
+  }, []);
+
+  // Chargement des domaines
   useEffect(() => {
     const fetchDomaines = async () => {
       try {
         const data = await DomaineService.getAllDomaines();
         setDomainesOptions(data);
       } catch (error) {
-        console.error("Erreur lors du chargement des domaines", error);
+        console.error("[ERROR] Erreur lors du chargement des domaines", error);
       }
     };
     fetchDomaines();
   }, []);
 
-  // Chargement des missions selon filtres ou missions sauvegardées
+  // Chargement des missions (filtres ou sauvegardées)
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const consultantId = storedUser?.user?.id || storedUser?.id;
@@ -116,6 +145,7 @@ function SearchMission() {
           setCurrentPage(1);
         })
         .catch(error => {
+          console.error("[ERROR] Erreur lors de la récupération des missions sauvegardées :", error);
           toast.error("Erreur lors de la récupération des missions sauvegardées");
           setIsLoading(false);
         });
@@ -127,7 +157,6 @@ function SearchMission() {
     const computeBudgetRange = (range) => {
       let minBudget = 0, maxBudget = 0;
       if (range === "LessThan1000") {
-        minBudget = 0;
         maxBudget = 1000;
       } else if (range === "1000To2500") {
         minBudget = 1000;
@@ -165,7 +194,8 @@ function SearchMission() {
         let filtered = data;
         if (experience && !selectedDomaine) {
           filtered = filtered.filter(m =>
-            m.niveauExperienceRequis && m.niveauExperienceRequis.toLowerCase() === experience.toLowerCase()
+            m.niveauExperienceRequis &&
+            m.niveauExperienceRequis.toLowerCase() === experience.toLowerCase()
           );
         }
         if (portetravail && !selectedDomaine && !experience) {
@@ -187,30 +217,25 @@ function SearchMission() {
         setCurrentPage(1);
       })
       .catch((error) => {
+        console.error("[ERROR] Erreur lors du chargement des missions :", error);
         toast.error("Erreur lors du chargement des missions");
         setIsLoading(false);
       });
   }, [selectedDomaine, experience, portetravail, budgetRange, dureeEstime, showSaved]);
 
-  /**
-   * Filtrage client sur le mot-clé : Titre, Description, Domaines, Compétences
-   */
+  // Filtrage par mot-clé
   const filteredMissionsList = missions.filter(mission => {
     if (!searchKeyword) return true;
     const lowerKeyword = searchKeyword.toLowerCase();
-    const inTitleOrDescription =
+    return (
       mission.titre.toLowerCase().includes(lowerKeyword) ||
-      mission.description.toLowerCase().includes(lowerKeyword);
-    const inDomaines = mission.domaines && mission.domaines.some(d =>
-      d.nom && d.nom.toLowerCase().includes(lowerKeyword)
+      mission.description.toLowerCase().includes(lowerKeyword) ||
+      (mission.domaines && mission.domaines.some(d => d.nom.toLowerCase().includes(lowerKeyword))) ||
+      (mission.competencesRequises && mission.competencesRequises.some(c => c.nom.toLowerCase().includes(lowerKeyword)))
     );
-    const inCompetences = mission.competencesRequises && mission.competencesRequises.some(c =>
-      c.nom && c.nom.toLowerCase().includes(lowerKeyword)
-    );
-    return inTitleOrDescription || inDomaines || inCompetences;
   });
 
-  // Tri basé sur publishedAt
+  // Tri par date de publication
   const sortedMissions = [...filteredMissionsList].sort((a, b) => {
     const dateA = new Date(a.publishedAt);
     const dateB = new Date(b.publishedAt);
@@ -232,7 +257,7 @@ function SearchMission() {
     setSearchKeyword('');
   };
 
-  // Fonction pour sauvegarder une mission
+  // Sauvegarde d'une mission
   const handleSaveJob = (missionId) => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const consultantId = storedUser?.user?.id || storedUser?.id;
@@ -241,15 +266,14 @@ function SearchMission() {
       return;
     }
     saveMissionForConsultant(consultantId, missionId)
-      .then(() => {
-        toast.success("Mission sauvegardée !");
-      })
-      .catch((error) => {
+      .then(() => toast.success("Mission sauvegardée !"))
+      .catch(error => {
+        console.error("[ERROR] Erreur lors de la sauvegarde de la mission :", error);
         toast.error("Erreur lors de la sauvegarde de la mission");
       });
   };
 
-  // Bascule entre missions normales et missions sauvegardées
+  // Bascule entre missions normales et sauvegardées
   const handleShowSavedMissions = () => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const consultantId = storedUser?.user?.id || storedUser?.id;
@@ -261,18 +285,24 @@ function SearchMission() {
       setShowSaved(false);
       getMissions()
         .then(data => setMissions(data))
-        .catch(error => toast.error("Erreur lors de la récupération des missions"));
+        .catch(error => {
+          console.error("[ERROR] Erreur lors de la récupération des missions :", error);
+          toast.error("Erreur lors de la récupération des missions");
+        });
     } else {
       getSavedMissions(consultantId)
         .then(data => {
           setMissions(data);
           setShowSaved(true);
         })
-        .catch(error => toast.error("Erreur lors de la récupération des missions sauvegardées"));
+        .catch(error => {
+          console.error("[ERROR] Erreur lors de la récupération des missions sauvegardées :", error);
+          toast.error("Erreur lors de la récupération des missions sauvegardées");
+        });
     }
   };
 
-  // Ouvrir le modal d'application en pré-remplissant le montant et la durée avec les valeurs de la mission (lecture seule)
+  // Ouvre le modal d'application
   const handleApplyClick = (mission) => {
     setSelectedMission(mission);
     setPropositionMontant(mission.budget);
@@ -280,41 +310,68 @@ function SearchMission() {
     setShowApplyModal(true);
   };
 
-  // Fermer le modal et réinitialiser les champs
+  // Ferme le modal d'application
   const handleCloseApplyModal = () => {
     setShowApplyModal(false);
     setSelectedMission(null);
     setPropositionMontant('');
     setPropositionDuree('');
     setPropositionMessage('');
+    setSelectedConsultantId('');
   };
 
-  // Envoyer la proposition via l'API
+  // Envoi de la proposition via l'API
   const handleSubmitProposition = () => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
-    const consultantId = storedUser?.user?.id || storedUser?.id;
-    if (!consultantId) {
-      toast.error("Consultant introuvable");
+    if (!storedUser) {
+      toast.error("Utilisateur non trouvé");
       return;
     }
-    const propositionData = {
-      consultant: { id: consultantId },
-      mission: { id: selectedMission.id },
-      montant: parseFloat(propositionMontant),
-      dureeEstime: propositionDuree,
-      message: propositionMessage,
-      statut: "PENDING",
-      origine: "APPLIED"
-    };
-
-    applyToMission(consultantId, selectedMission.id, propositionData)
-      .then(() => {
-        toast.success("Proposition envoyée !");
-        handleCloseApplyModal();
-      })
-      .catch(error => {
-        toast.error("Erreur lors de l'envoi de la proposition.");
-      });
+    const isConsultant = (storedUser.user?.role || storedUser.role) === "Consultant";
+    const isEntreprise = (storedUser.user?.role || storedUser.role) === "Entreprise";
+    const proposerId = storedUser.user?.id || storedUser.id;
+    if (!proposerId) {
+      toast.error("ID utilisateur introuvable");
+      return;
+    }
+    
+    if (isConsultant) {
+      // Cas classique pour consultant
+      const propositionData = {
+        consultant: { id: proposerId },
+        mission: { id: selectedMission.id },
+        montant: parseFloat(propositionMontant),
+        dureeEstime: propositionDuree,
+        message: propositionMessage,
+        statut: "PENDING",
+        origine: "APPLIED",
+      };
+      applyToMission(proposerId, null, propositionData)
+        .then(() => {
+          toast.success("Proposition envoyée !");
+          handleCloseApplyModal();
+        })
+        .catch(error => {
+          console.error("[ERROR] Erreur lors de l'envoi de la proposition :", error);
+          toast.error("Erreur lors de l'envoi de la proposition.");
+        });
+    } else if (isEntreprise) {
+      // Vérifier qu'un consultant est sélectionné
+      if (!selectedConsultantId) {
+        toast.error("Veuillez sélectionner un consultant");
+        return;
+      }
+      // Appel de la nouvelle API pour entreprise SSI
+      applyWithConsultant(proposerId, selectedMission.id, selectedConsultantId, parseFloat(propositionMontant), propositionDuree, propositionMessage)
+        .then(() => {
+          toast.success("Proposition envoyée !");
+          handleCloseApplyModal();
+        })
+        .catch(error => {
+          console.error("[ERROR] Erreur lors de l'envoi de la proposition :", error);
+          toast.error("Erreur lors de l'envoi de la proposition.");
+        });
+    }
   };
 
   return (
@@ -322,7 +379,7 @@ function SearchMission() {
       <div className={styles.searchMissionContainer}>
         <ToastContainer />
 
-        {/* Barre de recherche globale */}
+        {/* Barre de recherche */}
         <motion.div
           className={styles.globalSearchBar}
           initial={{ opacity: 0 }}
@@ -377,7 +434,7 @@ function SearchMission() {
           </div>
         </motion.div>
 
-        {/* Main content: Filtres et liste des missions */}
+        {/* Contenu principal */}
         <div className={styles.mainContent}>
           {showFilters && (
             <motion.aside
@@ -396,10 +453,8 @@ function SearchMission() {
                   onChange={(e) => setSelectedDomaine(e.target.value)}
                 >
                   <MenuItem value="">Tous les domaines</MenuItem>
-                  {domainesOptions.map((dom) => (
-                    <MenuItem key={dom.id} value={dom.id}>
-                      {dom.nom}
-                    </MenuItem>
+                  {domainesOptions.map(dom => (
+                    <MenuItem key={dom.id} value={dom.id}>{dom.nom}</MenuItem>
                   ))}
                 </Select>
               </div>
@@ -474,10 +529,7 @@ function SearchMission() {
               </div>
             ) : sortedMissions.length === 0 ? (
               <div className={styles.noJobs}>
-                <img
-                  src="https://undraw.co/api/illustrations/searching.svg"
-                  alt="No missions found"
-                />
+                <img src="https://undraw.co/api/illustrations/searching.svg" alt="No missions found" />
                 <p>No missions found. Try adjusting your filters.</p>
               </div>
             ) : (
@@ -495,7 +547,7 @@ function SearchMission() {
                     <span className={styles.paymentVerified}>Payment verified</span>
                     <span className={styles.spent}>{"$" + mission.budget + "+"}</span>
                     <span className={styles.location}>
-                      {mission.entreprise ? mission.entreprise.nom : "Unknown"}
+                      {mission.entreprise ? (mission.entreprise.nom || mission.entreprise) : "Unknown"}
                     </span>
                     <span className={styles.published}>
                       Published{" "}
@@ -508,36 +560,24 @@ function SearchMission() {
                     </span>
                   </div>
                   <div className={styles.jobTags}>
-                    {mission.domaines &&
-                      mission.domaines.map((d, i) => (
-                        <span key={i} className={styles.tag}>
-                          {d.nom}
-                        </span>
-                      ))}
-                    {mission.competencesRequises &&
-                      mission.competencesRequises.map((c, i) => (
-                        <span key={i} className={styles.tag}>
-                          {c.nom}
-                        </span>
-                      ))}
+                    {mission.domaines && mission.domaines.map((d, i) => (
+                      <span key={i} className={styles.tag}>{d.nom}</span>
+                    ))}
+                    {mission.competencesRequises && mission.competencesRequises.map((c, i) => (
+                      <span key={i} className={styles.tag}>{c.nom}</span>
+                    ))}
                   </div>
                   <p className={styles.jobDescription}>{mission.description}</p>
                   <div className={styles.actionButtons}>
-                    <MUITooltip title="Apply for this mission" arrow>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        onClick={() => handleApplyClick(mission)}
-                      >
-                        Apply
-                      </Button>
-                    </MUITooltip>
+                    {consultant?.typeConsultant !== 'ENTREPRISE_SSI' && (
+                      <MUITooltip title="Apply for this mission" arrow>
+                        <Button variant="contained" size="small" onClick={() => handleApplyClick(mission)}>
+                          Apply
+                        </Button>
+                      </MUITooltip>
+                    )}
                     <MUITooltip title="Save this mission for later" arrow>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={() => handleSaveJob(mission.id)}
-                      >
+                      <Button variant="outlined" size="small" onClick={() => handleSaveJob(mission.id)}>
                         Save
                       </Button>
                     </MUITooltip>
@@ -545,7 +585,10 @@ function SearchMission() {
                       <Button
                         variant="outlined"
                         size="small"
-                        onClick={() => toast.info("Link copied!")}
+                        onClick={() => {
+                          console.log("[INFO] Copie du lien de la mission :", mission.id);
+                          toast.info("Link copied!");
+                        }}
                       >
                         Share
                       </Button>
@@ -566,9 +609,7 @@ function SearchMission() {
             >
               Previous
             </Button>
-            <span>
-              Page {currentPage} of {totalPages}
-            </span>
+            <span>Page {currentPage} of {totalPages}</span>
             <Button
               variant="outlined"
               onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
@@ -601,6 +642,24 @@ function SearchMission() {
                 InputProps={{ readOnly: true }}
                 helperText="Ex: 3 mois"
               />
+              {/* Affichage du select des consultants si l'utilisateur est une entreprise SSI */}
+              {JSON.parse(localStorage.getItem("user")).role === "Entreprise" && (
+                <Select
+                  fullWidth
+                  value={selectedConsultantId}
+                  onChange={(e) => setSelectedConsultantId(e.target.value)}
+                  displayEmpty
+                >
+                  <MenuItem value="" disabled>
+                    Sélectionnez un consultant
+                  </MenuItem>
+                  {enterpriseConsultants.map(consult => (
+                    <MenuItem key={consult.id} value={consult.id}>
+                      {consult.nom} {consult.prenom}
+                    </MenuItem>
+                  ))}
+                </Select>
+              )}
               <TextField
                 margin="dense"
                 label="Votre message"

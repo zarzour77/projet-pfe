@@ -14,7 +14,7 @@
   justify-content: center;
 }
 
-/* Navbar container avec trois sections */
+/* Navbar container with three sections */
 .navbar {
   width: 100%;
   max-width: 1200px;
@@ -24,25 +24,25 @@
   position: relative;
 }
 
-/* Section gauche (sidebar toggle) */
+/* Left section (sidebar toggle) */
 .leftSection {
   flex: 0 0 auto;
   margin-left: -10px;
 }
 
-/* Section centre (barre de recherche) */
+/* Center section (search bar) */
 .centerSection {
   flex: 1;
   display: flex;
   justify-content: center;
 }
 
-/* Section droite (icônes et boutons) */
+/* Right section (icons) */
 .rightSection {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 2rem;
   margin-left: 2rem;
 }
 
@@ -65,7 +65,7 @@
   transition: all 0.3s;
 }
 
-/* Conteneur de recherche */
+/* Search container */
 .searchContainer {
   display: flex;
   align-items: center;
@@ -95,7 +95,7 @@
   font-weight: bold;
 }
 
-/* Boutons d'icônes */
+/* Right section icons */
 .iconButton {
   background: none;
   border: none;
@@ -104,12 +104,14 @@
   color: #00796b !important;
 }
 
+/* Profile button */
 .profileButton {
   background: none;
   border: none;
   cursor: pointer;
 }
 
+/* Profile image */
 .profileIcon {
   width: 35px;
   height: 35px;
@@ -117,20 +119,22 @@
   object-fit: cover;
 }
 
-/* Bouton de déconnexion */
-.deconnecterButton {
-  background: none;
-  border: 1px solid #00796b;
-  color: #00796b;
+/* Bouton Sign Out (même design et taille que le bouton search) */
+.signOutButton {
   padding: 0.3rem 0.8rem;
+  border: 1px solid #00796b;
+  background-color: #00796b;
+  color: #fff;
   border-radius: 18px;
   cursor: pointer;
+  transition: background-color 0.3s;
   font-size: 1rem;
 }
 
-.deconnecterButton:hover {
-  background-color: #00796b;
-  color: #fff;
+.signOutButton:hover {
+  background-color: #fff;
+  color: #00796b;
+  font-weight: bold;
 }
 
 /* Sidebar styles */
@@ -141,7 +145,7 @@
   width: 250px;
   height: 100vh;
   background: #fff;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
   transition: left 0.3s ease-in-out;
   z-index: 1000;
 }
@@ -180,6 +184,7 @@
 .sidebarNav {
   padding: 1rem;
   flex-grow: 1;
+  margin-top: -40px;
 }
 
 .sidebarNav ul {
@@ -217,12 +222,11 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0,0,0,0.3);
   z-index: 999;
   backdrop-filter: blur(2px);
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .navbar {
     flex-direction: row;

@@ -52,8 +52,19 @@ export const incrementConsultantWorkload = async (consultantId) => {
   const response = await axios.put(`${CONSULTANT_API_URL}/${consultantId}/incrementWorkload`, {}, config);
   return response.data;
 };
+// NEW FUNCTION: Terminates a mission by updating its status and end date
+export const terminateMission = async (missionId, endDate) => {
+  const config = getTokenConfig();
+  const response = await axios.put(`${MISSION_API_URL}/${missionId}/terminate`, { endDate }, config);
+  return response.data;
+};
 
-
+// NEW FUNCTION: Decrements the consultant's workload by 1
+export const decrementConsultantWorkload = async (consultantId) => {
+  const config = getTokenConfig();
+  const response = await axios.put(`${CONSULTANT_API_URL}/${consultantId}/decrementWorkload`, {}, config);
+  return response.data;
+};
 
 export default { 
   getPublishedMissions, 
@@ -61,6 +72,8 @@ export default {
   getPropositionsForMission, 
   updatePropositionStatus,
   acceptMission,
-  incrementConsultantWorkload
+  incrementConsultantWorkload,
+  terminateMission,
+  decrementConsultantWorkload
 };
 

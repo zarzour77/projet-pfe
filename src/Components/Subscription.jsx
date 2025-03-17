@@ -1,19 +1,18 @@
 import { useState } from "react";
 import styles from "./Subscription.module.css";
-import PaymentService from "../services/PaymentService";
+import PaymentService from "../Services/PaymentService";
 import UserService from "../Services/UserService";
 import { useNavigate } from "react-router-dom";
 
 
+
 const Subscription = () => {
-  const storedConsultant = JSON.parse(localStorage.getItem("user"));
-const consultantId = storedConsultant?.id;
-console.log(storedConsultant.token)
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
+  const storedConsultant = JSON.parse(localStorage.getItem("user"));
+  const consultantId = storedConsultant?.id;
   // Define pricing for each plan
   const planPrices = {
     Silver: 0, // Free plan

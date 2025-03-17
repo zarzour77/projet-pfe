@@ -1,0 +1,70 @@
+.mesPropositionsContainer {
+    margin: 0 auto;
+    padding: 1rem;
+    margin-top: 100px;
+    max-width: 800px;        /* Limit overall container width */
+    margin-left: 10%;         /* Shift content toward the right */
+  }
+  
+  .loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 2rem;
+  }
+  
+  .propositionItem {
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .propositionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .statusBadge {
+    background-color: #009990;
+    color: white;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+  }
+  
+  .propositionDetails {
+    margin-top: 0.5rem;
+    line-height: 1.5;
+  }
+  
+  .propositionMessage {
+    margin-top: 0.5rem;
+    font-style: italic;
+  }
+  
+  .actionButtons {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .emptyMessage {
+    font-style: italic;
+    color: #666;
+    margin: 0.5rem 0;
+  }
+  
+  /* New container for accordions with smaller width */
+  .accordionContainer {
+    max-width: 600px;       /* Smaller width for each accordion */
+    margin: 0 auto 1rem auto; /* Center them and add bottom margin */
+  }
+  .mesPropositionsContainer h3 {
+    margin-bottom: 2rem; /* Adjust the value as needed */
+    font-weight: bold;
+    color: #333;
+  
+  }

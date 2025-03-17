@@ -7,33 +7,57 @@ const API_URL_portetravail = "http://localhost:8081/api/missions/searchByPortetr
 const API_URL_budget = "http://localhost:8081/api/missions/searchByBudget";
 const API_URL_dureeEstime = "http://localhost:8081/api/missions/searchByDureeEstime";
 const API_URL_PROPOSITION = "http://localhost:8081/api/propositions";
+const API_URL_ENTREPRISE = "http://localhost:8081/api/entreprises";
+
 const token = localStorage.getItem("token");
 
-export const applyToMission = async (consultantId, missionId, propositionData) => {
-
+export const applyWithConsultant = (entrepriseId, missionId, consultantId, montant, dureeEstime, message) => {
   if (!token) {
     console.error("JWT Token is missing lors de l'application à la mission.");
     return Promise.reject(new Error("JWT Token is missing"));
   }
-  console.log(`Envoi de la proposition pour la mission ${missionId} par le consultant ${consultantId}`, propositionData);
-  try {
-    const response = await axios.post(
-      API_URL_PROPOSITION,
-      propositionData,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    console.log("Proposition envoyée avec succès:", response.data);
-    return response.data;
-  } catch (error) {
-    console.error("Erreur lors de l'envoi de la proposition :", error);
-    throw error;
-  }
+  return axios.post(
+    `${API_URL_ENTREPRISE }/${entrepriseId}/missions/${missionId}/apply-with-consultant`,
+    null,
+    {
+      params: {
+        consultantId,
+        montant,
+        dureeEstime,
+        message,
+      },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  ).then(response => response.data);
 };
+  export const applyToMission = async (consultantId, missionId, propositionData) => {
+
+    if (!token) {
+      console.error("JWT Token is missing lors de l'application à la mission.");
+      return Promise.reject(new Error("JWT Token is missing"));
+    }
+    console.log(`Envoi de la proposition pour la mission ${missionId} par le consultant ${consultantId}`, propositionData);
+    try {
+      const response = await axios.post(
+        API_URL_PROPOSITION,
+        propositionData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log("Proposition envoyée avec succès:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Erreur lors de l'envoi de la proposition :", error);
+      throw error;
+    }
+  };
 export const getMissions = () => {
   const storedUser = JSON.parse(localStorage.getItem("user"));
   const consultantId = storedUser?.user?.id || storedUser?.id;

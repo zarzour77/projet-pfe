@@ -133,6 +133,7 @@
   gap: 1rem;
 }
 .rightColumn {
+  height: 90px;
 border-left: 1px solid #0000002c;
 }
 /* Individual Info Item */
@@ -902,4 +903,20 @@ border-left: 1px solid #0000002c;
 .formationCard:hover .deleteFormationBtn,
 .certificationCard:hover .deleteCertificationBtn {
   opacity: 1;
+}
+
+.changeOfferButton {
+  background-color: #007bff; /* Example color */
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-top: 0.5rem; /* Space above the button */
+  transition: background-color 0.3s ease;
+}
+
+.changeOfferButton:hover {
+  background-color: #0056b3;
 }

@@ -8,10 +8,8 @@ const ConsultantHeader = () => {
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
-  const handleLogout = () => {
-    // Supprimez les données de l'utilisateur (par exemple, pour la déconnexion)
+  const handleSignOut = () => {
     localStorage.removeItem("user");
-    // Redirigez vers la page de login (ajustez la route si nécessaire)
     navigate("/login");
   };
 
@@ -19,7 +17,7 @@ const ConsultantHeader = () => {
     <>
       <header className={styles.header}>
         <nav className={styles.navbar}>
-          {/* Section gauche : Toggle de la sidebar */}
+          {/* Left section: Sidebar Toggle */}
           <div className={styles.leftSection}>
             <button className={styles.sidebarToggle} onClick={toggleSidebar}>
               <div className={styles.hamburger}>
@@ -35,7 +33,7 @@ const ConsultantHeader = () => {
             <Link to="/SearchMission">Trade for talent</Link>
           </div>
 
-          {/* Section centre : Barre de recherche */}
+          {/* Center section: Search bar */}
           <div className={styles.centerSection}>
             <div className={styles.searchContainer}>
               <input type="text" placeholder="Search missions..." />
@@ -43,7 +41,7 @@ const ConsultantHeader = () => {
             </div>
           </div>
 
-          {/* Section droite : Chat, Notification, Profil et Déconnexion */}
+          {/* Right section: Chat, Notifications, Profile & Sign Out */}
           <div className={styles.rightSection}>
             <button
               className={styles.iconButton}
@@ -54,14 +52,14 @@ const ConsultantHeader = () => {
 
             <button
               className={styles.iconButton}
-              onClick={() => navigate("/notification")}
+              onClick={() => navigate("/Notification")}
             >
               <i className="fa fa-bell"></i>
             </button>
 
             <button
               className={styles.profileButton}
-              onClick={() => navigate("/profilePage")}
+              onClick={() => navigate("/ProfilePage")}
             >
               <img
                 src={
@@ -73,22 +71,16 @@ const ConsultantHeader = () => {
               />
             </button>
 
-            <button
-              className={styles.deconnecterButton}
-              onClick={handleLogout}
-            >
-              Déconnecter
+            {/* Bouton Sign Out stylisé comme le bouton de recherche */}
+            <button className={styles.signOutButton} onClick={handleSignOut}>
+              Sign Out
             </button>
           </div>
         </nav>
       </header>
 
       {/* Sidebar */}
-      <div
-        className={`${styles.sidebar} ${
-          isSidebarOpen ? styles.active : ""
-        }`}
-      >
+      <div className={`${styles.sidebar} ${isSidebarOpen ? styles.active : ""}`}>
         <div className={styles.sidebarHeader}>
           <button className={styles.closeBtn} onClick={toggleSidebar}>
             &times;
@@ -97,12 +89,12 @@ const ConsultantHeader = () => {
         <nav className={styles.sidebarNav}>
           <ul>
             <li>
-              <Link to="/dashboard" onClick={toggleSidebar}>
+              <Link to="/StatConsultant" onClick={toggleSidebar}>
                 <span className={styles.icon}>📊</span> Dashboard
               </Link>
             </li>
             <li>
-              <Link to="/missions" onClick={toggleSidebar}>
+              <Link to="/SearchMission" onClick={toggleSidebar}>
                 <span className={styles.icon}>📋</span> Missions
               </Link>
             </li>
@@ -112,14 +104,13 @@ const ConsultantHeader = () => {
               </Link>
             </li>
             <li>
-              <Link to="/settings" onClick={toggleSidebar}>
-                <span className={styles.icon}>⚙️</span> Settings
-              </Link>
-            </li>
-            {/* Historique des transactions */}
-            <li>
               <Link to="/transactions" onClick={toggleSidebar}>
                 <span className={styles.icon}>🗃️</span> Transactions
+              </Link>
+            </li>
+            <li>
+              <Link to="/ConsultantPropositions" onClick={toggleSidebar}>
+                <span className={styles.icon}>📝</span> Mes Propositions
               </Link>
             </li>
           </ul>

@@ -1,0 +1,11 @@
+<!-- assets/icons/RisingTalent.svg -->
+<svg
+  width="80"
+  height="80"
+  viewBox="0 0 80 80"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <polygon fill="#28A745" points="40,5 70,20 70,50 40,65 10,50 10,20" />
+  <path d="M40 22 L30 38 H36 V50 H44 V38 H50 L40 22 Z" fill="#ffffff" />
+</svg>

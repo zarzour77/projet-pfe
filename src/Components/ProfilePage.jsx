@@ -707,19 +707,23 @@ const ProfilePage = () => {
 
         {/* RIGHT COLUMN: Abonnement */}
         <div className={styles.rightColumn}>
-          <div className={styles.infoItem}>
-            <label className={styles.infoLabel}>Abonnement</label>
-            <p className={styles.infoValue}>
-              {user.subscriptions && user.subscriptions.length > 0
-                ? user.subscriptions.find(
-                    (sub) =>
-                      sub.statut &&
-                      sub.statut.toLowerCase() === "actif"
-                  )?.planType || "Aucun"
-                : "Aucun abonnement renseigné"}
-            </p>
-          </div>
-        </div>
+  <div className={styles.infoItem}>
+    <label className={styles.infoLabel}>Abonnement</label>
+    <p className={styles.infoValue}>
+      {user.subscriptions && user.subscriptions.length > 0
+        ? user.subscriptions.find(
+            (sub) =>
+              sub.statut &&
+              sub.statut.toLowerCase() === "actif"
+          )?.planType || "Aucun abonnement renseigné"
+        : "Aucun abonnement renseigné"}
+    </p>
+    <button className={styles.changeOfferButton}>
+      Changer l'offre
+    </button>
+  </div>
+</div>
+
       </div>
     </div>
 

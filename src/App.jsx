@@ -15,11 +15,15 @@ import PublierMission from "./components/PublierMission";
 import ProfilePage from "./components/ProfilePage";
 import LandingEntreprise from "./components/LandingEntreprise";
 import ProfessionalDetails from "./components/ProfessionalDetails";
-import TransactionsHistory from "./components/TransactionsHistory"; // <-- New Import
+import TransactionsHistory from "./components/TransactionsHistory"; 
 import EntrepriseMission from "./components/EntrepriseMission";
 import Notification from "./components/Notification";
 import VoirProfileConsultant from "./components/VoirProfileConsultant";
+import StatConsultant from "./components/StatConsultant";
+// NEW: Import your ConsultantPropositions component
+import ConsultantPropositions from "./components/ConsultantPropositions";
 import ConsultantHeader from "./components/ConsultantHeader";
+
 import ProtectedRoute from "./Services/ProtectedRoute";
 import { AuthProvider } from "./Services/AuthContext";
 
@@ -31,19 +35,16 @@ const App = () => {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/UserInformation" element={<UserInformation />} />
+          <Route path="/Notification" element={<Notification />} />
+          <Route path="/EntrepriseMission" element={<EntrepriseMission />} />
+          <Route path="/consultant/:consultantId" element={<VoirProfileConsultant />} />
+          <Route path="/StatConsultant" element={<StatConsultant />} /> 
           
-            <Route path="/Notification" element={<Notification /> }  />
-            <Route path="/EntrepriseMission" element={<EntrepriseMission /> }  />
-            <Route path="/consultant/:consultantId" element={<VoirProfileConsultant />} />
-          
-
-
-
-
+          {/* Consultant routes */}
           <Route
             path="/SearchMission"
             element={
-              <ProtectedRoute allowedRoles={["Consultant"]}>
+              <ProtectedRoute allowedRoles={["Consultant", "Entreprise"]}>
                 <ConsultantHeader />
                 <SearchMission />
               </ProtectedRoute>
@@ -114,14 +115,6 @@ const App = () => {
             }
           />
           <Route
-            path="/Messenger"
-            element={
-              <ProtectedRoute allowedRoles={["Consultant", "Entreprise"]}>
-                <Messenger />
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="/ProfilePage"
             element={
               <ProtectedRoute allowedRoles={["Consultant"]}>
@@ -129,6 +122,26 @@ const App = () => {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/transactions"
+            element={
+              <ProtectedRoute allowedRoles={["Consultant"]}>
+                <TransactionsHistory />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* NEW Protected Route for ConsultantPropositions */}
+          <Route
+            path="/ConsultantPropositions"
+            element={
+              <ProtectedRoute allowedRoles={["Consultant"]}>
+                <ConsultantPropositions />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Entreprise routes */}
           <Route
             path="/PublierMission"
             element={
@@ -146,12 +159,12 @@ const App = () => {
             }
           />
 
-          {/* NEW Protected Route for Transactions */}
+          {/* Messenger accessible by both roles */}
           <Route
-            path="/transactions"
+            path="/Messenger"
             element={
-              <ProtectedRoute allowedRoles={["Consultant"]}>
-                <TransactionsHistory />
+              <ProtectedRoute allowedRoles={["Consultant", "Entreprise"]}>
+                <Messenger />
               </ProtectedRoute>
             }
           />
@@ -162,4 +175,3 @@ const App = () => {
 };
 
 export default App;
-
