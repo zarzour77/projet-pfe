@@ -1,7 +1,9 @@
 package com.example.demo.Service;
 
+import com.example.demo.model.Consultant;
 import com.example.demo.model.Entreprise;
 import com.example.demo.model.Mission;
+import com.example.demo.repository.ConsultantRepository;
 import com.example.demo.repository.EntrepriseRepository;
 import com.example.demo.repository.MissionRepository;
 import com.example.demo.exception.MissionNotFoundException;
@@ -22,6 +24,17 @@ public class MissionService {
     private final MissionRepository missionRepository;
     @Autowired
     private EntrepriseRepository entrepriseRepository;
+    @Autowired
+    private ConsultantRepository consultantRepository;
+    @Autowired
+    private NotificationService notificationService;
+
+    @Autowired
+    private MatchingService matchingService;
+
+    @Autowired
+    private EmailService emailService;
+
 
     public MissionService(MissionRepository missionRepository) {
         this.missionRepository = missionRepository;
@@ -61,13 +74,38 @@ public class MissionService {
         mission.setStatut(newStatus);
         return missionRepository.save(mission);
     }
-
+    // Seuil à définir selon vos tests (par exemple 0.8)
+    private static final double MATCH_THRESHOLD = 0.6;
     public Mission ajoutermission(Mission mission) {
         Long entrepriseId = mission.getEntreprise().getId();
         Entreprise entreprise = entrepriseRepository.findById(entrepriseId)
                 .orElseThrow(() -> new RuntimeException("Entreprise non trouvée avec l'id " + entrepriseId));
         mission.setEntreprise(entreprise);
-        return missionRepository.save(mission);
+        Mission savedMission = missionRepository.save(mission);
+
+        // Recherche de tous les consultants dans la base
+        List<Consultant> consultants = consultantRepository.findAll();
+        for (Consultant consultant : consultants) {
+            double score = matchingService.computeGlobalMatchScore(consultant, savedMission);
+            if (score > MATCH_THRESHOLD) {
+                String message = "Nouvelle mission \"" + savedMission.getTitre() +
+                        "\" correspondant à vos compétences (score: " + score + ").";
+                // Envoi de la notification
+                notificationService.sendNotification(consultant, message);
+
+                // Préparation des données pour l'email
+                String subject = "Nouvelle mission disponible";
+                String content = "Bonjour " + consultant.getNom() + ",\n\n" +
+                        "Une nouvelle mission correspondant à vos compétences a été publiée.\n" +
+                        "Titre : " + savedMission.getTitre() + "\n" +
+                        "Score de correspondance : " + score + "\n\n" +
+                        "Cordialement,\nVotre équipe";
+
+                // Envoi de l'email
+                emailService.sendInvitationEmail(consultant.getEmail(), subject, content);
+            }
+        }
+        return savedMission;
     }
 
     public List<Mission> getAllMissions() {

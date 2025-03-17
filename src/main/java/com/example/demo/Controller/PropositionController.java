@@ -21,6 +21,24 @@ public class PropositionController {
     public PropositionController(PropositionService propositionService) {
         this.propositionService = propositionService;
     }
+    // Endpoint PUT pour mettre à jour le statut d'une proposition
+    @PutMapping("/{id}")
+    public ResponseEntity<Proposition> updatePropositionStatus(@PathVariable Long id, @RequestBody Map<String, String> updateRequest) {
+        String newStatus = updateRequest.get("statut");
+        if (newStatus == null || newStatus.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        try {
+            Proposition updatedProposition = propositionService.updatePropositionStatus(id, newStatus);
+            return ResponseEntity.ok(updatedProposition);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    @PostMapping
+    public Proposition createProposition(@RequestBody Proposition proposition) {
+        return propositionService.createPropositionconsultant(proposition);
+    }
     @GetMapping("/mission/{missionId}")
     public ResponseEntity<List<Proposition>> getPropositionsByMission(@PathVariable Long missionId) {
         List<Proposition> propositions = propositionService.getPropositionsByMission(missionId);
@@ -46,28 +64,15 @@ public class PropositionController {
     }
 
     @PostMapping("/entreprises/{entrepriseId}/consultants/{consultantId}")
-    public Proposition createProposition(
+    public Proposition createPropositionRecrutment(
             @PathVariable Long entrepriseId,
             @PathVariable Long consultantId,
             @RequestBody Proposition proposition
     ) {
-        return propositionService.createProposition(entrepriseId, consultantId, proposition);
+        return propositionService.createPropositionentreprise(entrepriseId, consultantId, proposition);
     }
 
-    // Endpoint PUT pour mettre à jour le statut d'une proposition
-    @PutMapping("/{id}")
-    public ResponseEntity<Proposition> updatePropositionStatus(@PathVariable Long id, @RequestBody Map<String, String> updateRequest) {
-        String newStatus = updateRequest.get("statut");
-        if (newStatus == null || newStatus.trim().isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
-        try {
-            Proposition updatedProposition = propositionService.updatePropositionStatus(id, newStatus);
-            return ResponseEntity.ok(updatedProposition);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProposition(@PathVariable Long id) {
         propositionService.deleteProposition(id);

@@ -12,8 +12,7 @@ public interface MissionRepository extends JpaRepository<Mission, Long> {
 
     @Query("SELECT m FROM Mission m LEFT JOIN FETCH m.propositions WHERE m.statut = 'ACTIVE'")
     List<Mission> findActiveMissionsWithPropositions();
-
-    @Query("SELECT DISTINCT m FROM Mission m LEFT JOIN FETCH m.domaines WHERE m.id IN :domainIds")
+    @Query("SELECT DISTINCT m FROM Mission m LEFT JOIN FETCH m.domaines d WHERE d.id IN :domainIds")
     List<Mission> findDistinctByDomainesIdIn(List<Long> domainIds);
 
     @Query("SELECT m FROM Mission m WHERE LOWER(m.niveauExperienceRequis) = LOWER(:experience)")
