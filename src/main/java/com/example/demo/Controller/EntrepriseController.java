@@ -4,9 +4,7 @@ package com.example.demo.Controller;
 import com.example.demo.Service.EntrepriseService;
 import com.example.demo.Service.MissionService;
 import com.example.demo.Service.NotificationService;
-import com.example.demo.model.Entreprise;
-import com.example.demo.model.Mission;
-import com.example.demo.model.Notification;
+import com.example.demo.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +23,31 @@ public class EntrepriseController {
         this.entrepriseService = entrepriseService;
         this.notificationService = notificationService;
     }
+    @PostMapping("/{entrepriseId}/missions/{missionId}/apply-with-consultant")
+    public ResponseEntity<?> applyWithConsultant(
+            @PathVariable Long entrepriseId,
+            @PathVariable Long missionId,
+            @RequestParam Long consultantId,
+            @RequestParam Double montant,
+            @RequestParam String dureeEstime,
+            @RequestParam String message) {
+        try {
+            Proposition savedProposition = entrepriseService.applyWithConsultant(entrepriseId, missionId, consultantId, montant, dureeEstime, message);
+            return ResponseEntity.ok(savedProposition);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    @GetMapping("/{id}/consultants")
+    public ResponseEntity<List<Consultant>> getConsultantsForEntreprise(@PathVariable Long id) {
+        try {
+            List<Consultant> consultants = entrepriseService.getConsultantsForEntreprise(id);
+            return ResponseEntity.ok(consultants);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     @GetMapping("/{id}/notifications")
     public ResponseEntity<List<Notification>> getNotifications(@PathVariable Long id) {
         Optional<Entreprise> entrepriseOpt = entrepriseService.getEntrepriseById(id);

@@ -109,7 +109,7 @@ public class Consultant extends User {
     @Enumerated(EnumType.STRING)
     private TypeConsultant typeConsultant;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "entreprise_ssi_id")
     private Entreprise entrepriseSsi;
 

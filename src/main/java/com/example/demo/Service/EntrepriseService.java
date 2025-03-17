@@ -1,8 +1,12 @@
 package com.example.demo.Service;
 
+import com.example.demo.model.Consultant;
 import com.example.demo.model.Entreprise;
 import com.example.demo.model.Mission;
+import com.example.demo.model.Proposition;
+import com.example.demo.repository.ConsultantRepository;
 import com.example.demo.repository.EntrepriseRepository;
+import com.example.demo.repository.MissionRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,12 +17,67 @@ import java.util.Optional;
 @Service
 public class EntrepriseService {
     private final EntrepriseRepository entrepriseRepository;
-
+    private final ConsultantRepository consultantRepository;
+    private final MissionRepository missionRepository;
+    private final PropositionService propositionService;
     @Autowired
-    public EntrepriseService(EntrepriseRepository entrepriseRepository) {
+    public EntrepriseService(EntrepriseRepository entrepriseRepository, ConsultantRepository consultantRepository, MissionRepository missionRepository, PropositionService propositionService) {
         this.entrepriseRepository = entrepriseRepository;
+        this.consultantRepository = consultantRepository;
+        this.missionRepository = missionRepository;
+        this.propositionService = propositionService;
+    }
+    @Transactional
+    public Proposition applyWithConsultant(Long entrepriseId, Long missionId, Long consultantId, Double montant, String dureeEstime, String message) {
+        // Récupération de l'entreprise
+        Entreprise entreprise = entrepriseRepository.findById(entrepriseId)
+                .orElseThrow(() -> new RuntimeException("Entreprise introuvable avec l'id " + entrepriseId));
+
+        // Vérifier que l'entreprise est de type SSI
+        if (entreprise.getTypeEntreprise() != Entreprise.TypeEntreprise.SSI) {
+            throw new RuntimeException("L'entreprise n'est pas de type SSI");
+        }
+
+        // Récupération du consultant et vérification de son association à l'entreprise SSI
+        Consultant consultant = consultantRepository.findById(consultantId)
+                .orElseThrow(() -> new RuntimeException("Consultant introuvable"));
+        if (consultant.getEntrepriseSsi() == null || !consultant.getEntrepriseSsi().getId().equals(entrepriseId)) {
+            throw new RuntimeException("Ce consultant n'est pas associé à l'entreprise SSI");
+        }
+
+        // Récupération de la mission
+        Mission mission = missionRepository.findById(missionId)
+                .orElseThrow(() -> new RuntimeException("Mission introuvable avec l'id " + missionId));
+
+        // Création et configuration de la proposition
+        Proposition proposition = new Proposition();
+        proposition.setConsultant(consultant);
+        proposition.setEntreprise(entreprise);
+        proposition.setMission(mission);
+        proposition.setMontant(montant);
+        proposition.setDureeEstime(dureeEstime);
+        proposition.setMessage(message);
+        proposition.setStatut("PENDING");
+        proposition.setOrigine("APPLIED");
+
+        // Sauvegarde de la proposition et renvoi du résultat
+        return propositionService.createPropositionconsultant(proposition);
     }
 
+    @Transactional
+    public List<Consultant> getConsultantsForEntreprise(Long entrepriseId) {
+        Optional<Entreprise> entrepriseOpt = entrepriseRepository.findById(entrepriseId);
+        if (entrepriseOpt.isPresent()) {
+            Entreprise entreprise = entrepriseOpt.get();
+            if (entreprise.getTypeEntreprise() == Entreprise.TypeEntreprise.SSI) {
+                return entreprise.getConsultants();
+            } else {
+                throw new RuntimeException("L'entreprise n'est pas de type SSI");
+            }
+        } else {
+            throw new RuntimeException("Entreprise introuvable avec l'id " + entrepriseId);
+        }
+    }
 
     @Transactional
     public List<Entreprise> getAllEntreprises() {

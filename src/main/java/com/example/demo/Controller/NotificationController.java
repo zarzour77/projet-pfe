@@ -1,7 +1,9 @@
 package com.example.demo.Controller;
 
 
+import com.example.demo.Service.MatchingService;
 import com.example.demo.Service.NotificationService;
+import com.example.demo.model.MatchRequest;
 import com.example.demo.model.Notification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +16,22 @@ public class NotificationController {
 
     @Autowired
     private NotificationService notificationService;
+    @Autowired
+    private MatchingService matchingService;
+
+
+    // Par exemple, un endpoint qui évalue la correspondance entre un consultant et une mission
+    @PostMapping("/match")
+    public String checkMatch(@RequestBody MatchRequest request) {
+        double score = matchingService.computeGlobalMatchScore(request.getConsultant(), request.getMission());
+        // Définissez un seuil, par exemple 0.8 (ou autre) pour envoyer une notification
+        if (score > 0.8) {
+            // Logique pour envoyer la notification au consultant
+            return "Notification envoyée, score: " + score;
+        } else {
+            return "Pas de correspondance suffisante, score: " + score;
+        }
+    }
 
     // Endpoint pour récupérer toutes les notifications d'un utilisateur (lues et non lues)
     @GetMapping("/{userId}")

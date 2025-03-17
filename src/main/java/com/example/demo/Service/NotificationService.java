@@ -16,8 +16,11 @@ public class NotificationService {
     public NotificationService(NotificationRepository notificationRepository) {
         this.notificationRepository = notificationRepository;
     }
-
-
+    //notifica&tion intelelgente mission fasttext
+    public void sendNotification(Consultant consultant, String message) {
+        Notification notification = new Notification(message, consultant);
+        notificationRepository.save(notification);
+    }
     // Notification pour une entreprise
     public Notification createNotification(String message, Entreprise entreprise) {
         Notification notification = new Notification(message, entreprise);

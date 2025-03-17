@@ -38,14 +38,110 @@ public class PropositionService {
         this.emailService = emailService;
         this.entrepriseRepository = entrepriseRepository;
     }
+
     @Transactional
     public List<Proposition> getPropositionsByMission(Long missionId) {
         return propositionRepository.findByMissionId(missionId);
     }
 
+    public Proposition createPropositionconsultant(Proposition proposition) {
+        if (proposition.getConsultant() == null && proposition.getEntreprise() == null) {
+            throw new RuntimeException("Une proposition doit être associée à un consultant ou une entreprise.");
+        }
+       /* if (proposition.getConsultant() != null) {
+            proposition.setEntreprise(null);
+        }*/
+        if (proposition.getStatut() == null || proposition.getStatut().trim().isEmpty()) {
+            proposition.setStatut("PENDING");
+        }
+        // Pour l'origine RECRUTEMENT, charger l'objet Entreprise complet
+        if ("RECRUTEMENT".equalsIgnoreCase(proposition.getOrigine())) {
+            if (proposition.getEntreprise() != null && proposition.getEntreprise().getId() != null) {
+                Entreprise entreprise = entrepriseRepository.findById(proposition.getEntreprise().getId())
+                        .orElse(null);
+                proposition.setEntreprise(entreprise);
+            }
+        }
+        Proposition saved = propositionRepository.save(proposition);
 
+        // Logique pour l'origine "APPLIED" (ne pas modifier)
+        if ("APPLIED".equalsIgnoreCase(proposition.getOrigine())) {
+            Long missionId = proposition.getMission().getId();
+            Mission mission = missionRepository.findById(missionId).orElse(null);
+            if (mission == null) {
+                System.out.println("Mission introuvable pour l'id: " + missionId);
+            } else if (mission.getEntreprise() == null) {
+                System.out.println("Entreprise manquante pour la mission id: " + missionId);
+            } else {
+                Entreprise entreprise = mission.getEntreprise();
+                // Création de la notification pour l'entreprise
+                String notifMsg = "Un consultant a postulé à votre mission : " + mission.getTitre();
+                System.out.println("Création de la notification avec le message : " + notifMsg);
+                notificationService.createNotification(notifMsg, entreprise);
+
+                // Récupérer le consultant pour obtenir son CV
+                Consultant consultant = proposition.getConsultant();
+                if (consultant != null) {
+                    consultant = consultantRepository.findById(consultant.getId()).orElse(null);
+                }
+                byte[] cvBytes = null;
+                if (consultant != null) {
+                    cvBytes = consultant.getCv();
+                }
+                if (cvBytes != null) {
+                    System.out.println("Taille du CV : " + cvBytes.length + " octets");
+                } else {
+                    System.out.println("CV non trouvé pour le consultant.");
+                }
+
+                // Préparation et envoi de l'email à l'entreprise
+                String emailSubject = "Nouvelle candidature pour votre mission : " + mission.getTitre();
+                String emailContent = "Bonjour,\n\nUn consultant a postulé à votre mission.\n\nLettre de motivation:\n"
+                        + proposition.getMessage()
+                        + "\n\nCordialement,\nTrade for Talent";
+                emailService.sendApplicationEmail(entreprise.getEmail(), emailSubject, emailContent, cvBytes, "CV.pdf");
+            }
+        }
+        // Nouvelle logique pour l'origine "INVITED"
+        else if ("INVITED".equalsIgnoreCase(proposition.getOrigine())) {
+            // Récupération complète de la mission à partir de l'id transmis dans la proposition
+            Long missionId = proposition.getMission().getId();
+            Mission mission = missionRepository.findById(missionId).orElse(null);
+            if (mission == null) {
+                System.out.println("Mission introuvable pour l'id: " + missionId);
+            } else {
+                // Récupération complète du consultant depuis le repository
+                Consultant consultant = proposition.getConsultant();
+                if (consultant != null) {
+                    consultant = consultantRepository.findById(consultant.getId()).orElse(null);
+                }
+                if (consultant == null) {
+                    System.out.println("Consultant introuvable pour la proposition INVITED.");
+                } else {
+                    // Création de la notification pour le consultant
+                    String notifMsg = "Vous avez reçu une invitation pour la mission : " + mission.getTitre();
+                    System.out.println("Création de la notification avec le message : " + notifMsg);
+                    notificationService.createNotificationConsultant(notifMsg, consultant);
+
+                    // Préparation de l'email
+                    String entrepriseNom = (mission.getEntreprise() != null && mission.getEntreprise().getNomEntreprise() != null)
+                            ? mission.getEntreprise().getNomEntreprise()
+                            : "votre entreprise";
+                    String emailSubject = "Invitation pour la mission : " + mission.getTitre();
+                    String emailContent = "Bonjour,\n\nL'entreprise " + entrepriseNom
+                            + " vous a invité à postuler pour la mission : " + mission.getTitre()
+                            + ".\n\nMessage :\n" + proposition.getMessage()
+                            + "\n\nCordialement,\nTrade for Talent";
+                    emailService.sendInvitationEmail(consultant.getEmail(), emailSubject, emailContent);
+                }
+            }
+        }
+
+
+        return saved;
+    }
     @Transactional
-    public Proposition createProposition(Long entrepriseId, Long consultantId, Proposition proposition) {
+    public Proposition createPropositionentreprise(Long entrepriseId, Long consultantId, Proposition proposition) {
         // Récupération de l'entreprise recruteuse
         Entreprise entreprise = entrepriseRepository.findById(entrepriseId)
                 .orElseThrow(() -> new RuntimeException("Entreprise introuvable"));
