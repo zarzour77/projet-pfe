@@ -134,4 +134,5 @@ export const getMissionFromProposition = async (propositionId) => {
     console.error("Erreur lors de la récupération de la mission depuis la proposition :", error);
     throw error;
   }
+  
 };

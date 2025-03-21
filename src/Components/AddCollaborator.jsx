@@ -1,155 +1,244 @@
 /* eslint-disable react/no-unescaped-entities */
-import  { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
+import AuthService from '../Services/AuthService';
+import ConsultantService from '../Services/ConsultantService';
 import styles from './AddCollaborator.module.css';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import UserService from '../Services/UserService';
 
 const AddCollaborator = () => {
-  const [step, setStep] = useState(1);
-  const [userData, setUserData] = useState({
-    name: '',
-    email: '',
-  });
+  const [currentStep, setCurrentStep] = useState(1);
+  const [entrepriseId, setEntrepriseId] = useState(null);
+  const [createdUserId, setCreatedUserId] = useState(null);
   const [extractedData, setExtractedData] = useState(null);
 
-  // Step 1: Handle basic collaborator info submission
-  const handleUserDataSubmit = (e) => {
-    e.preventDefault();
-    setStep(2);
-  };
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    if (storedUser?.id) {
+      setEntrepriseId(storedUser.id);
+    }
+  }, []);
 
-  // Update user data on input change
-  const handleChange = (e) => {
-    setUserData({
-      ...userData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  // Validation Schemas
+  const Step1Schema = Yup.object().shape({
+    nom: Yup.string().required('Champ requis'),
+    prenom: Yup.string().required('Champ requis'),
+    email: Yup.string().email('Email invalide').required('Champ requis'),
+  });
 
-  // Step 2: Simulate CV upload and extraction
-  const handleCvUpload = (e) => {
+  const Step2Schema = Yup.object().shape({
+    competences: Yup.array().min(1, 'Au moins une compétence requise'),
+    experienceYears: Yup.number().required('Champ requis').min(0),
+    taux_horaire: Yup.number().required('Champ requis').min(0),
+  });
+
+  const handleCvUpload = (e, setFieldValue) => {
     const file = e.target.files[0];
     if (file) {
-      // Simulated API response with static data
       const staticData = {
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        skills: 'JavaScript, React, Node.js',
-        experience: '3 years',
+        competences: ['JavaScript', 'React', 'Node.js'],
+        experienceYears: 3,
+        taux_horaire: 50
       };
       setExtractedData(staticData);
+      setFieldValue('competences', staticData.competences);
+      setFieldValue('experienceYears', staticData.experienceYears);
+      setFieldValue('taux_horaire', staticData.taux_horaire);
     }
   };
 
-  // Update extracted data on input change
-  const handleExtractedChange = (e) => {
-    setExtractedData({
-      ...extractedData,
-      [e.target.name]: e.target.value,
-    });
+  const uploadDefaultProfilePicture = async (userId) => {
+    try {
+      // Fetch default image from public folder
+      const response = await fetch('/assets/defaultProfilePic.jpg');
+      const blob = await response.blob();
+      console.log(blob)
+      // Convert blob to File object
+      const file = new File([blob], 'default-profile.jpg', { type: 'image/jpeg' });
+      
+      // Upload using existing service method
+      await UserService.uploadProfilePicture(userId, file);
+    } catch (error) {
+      console.error('Error uploading default profile:', error);
+      throw error;
+    }
+  };
+
+  const handleSubmit = async (values, { setSubmitting }) => {
+    try {
+      if (currentStep === 1) {
+        // Step 1: Create user account
+        const userData = {
+          nom: values.nom,
+          prenom: values.prenom,
+          email: values.email,
+          password: 'TempPassword123!',
+        };
+
+        const response = await AuthService.signup(userData);
+        setCreatedUserId(response.id);
+        
+        // Update user role to Consultant
+        await UserService.updateUserRole(response.id, 'Consultant');
+        
+        // Upload default profile picture
+        await uploadDefaultProfilePicture(response.id);
+        
+        setCurrentStep(2);
+      } else {
+        // Step 2: Create consultant profile
+        if (!createdUserId || !entrepriseId) {
+          throw new Error("Missing required IDs");
+        }
+
+        const consultantData = {
+          experienceYears: values.experienceYears,
+          taux_horaire: values.taux_horaire,
+          typeConsultant: 'ENTREPRISE_SSI',
+          entrepriseSsi: { id: entrepriseId },
+          dateRecrutement : new Date()
+        };
+        
+        await ConsultantService.updateConsultant(createdUserId, consultantData);
+        
+        toast.success('Collaborateur ajouté avec succès !');
+        setTimeout(() => window.location.reload(), 2000);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Erreur lors de l'opération");
+      console.error('Error:', error);
+    }
+    setSubmitting(false);
   };
 
   return (
     <div className={styles.container}>
-      {step === 1 && (
-        <form className={styles.userForm} onSubmit={handleUserDataSubmit}>
-          <h2>Add Collaborator</h2>
-          <div className={styles.formGroup}>
-            <label htmlFor="name">Name:</label>
-            <input
-              type="text"
-              name="name"
-              id="name"
-              value={userData.name}
-              onChange={handleChange}
-              placeholder="Enter collaborator's name"
-              required
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label htmlFor="email">Email:</label>
-            <input
-              type="email"
-              name="email"
-              id="email"
-              value={userData.email}
-              onChange={handleChange}
-              placeholder="Enter collaborator's email"
-              required
-            />
-          </div>
-          <button type="submit" className={styles.btn}>
-            Next
-          </button>
-        </form>
-      )}
+      <ToastContainer />
+      <Formik
+        initialValues={{
+          nom: '',
+          prenom: '',
+          email: '',
+          competences: [],
+          experienceYears: 0,
+          taux_horaire: 0
+        }}
+        validationSchema={currentStep === 1 ? Step1Schema : Step2Schema}
+        onSubmit={handleSubmit}
+      >
+        {({ values, setFieldValue, isValid, isSubmitting }) => (
+          <Form>
+            {currentStep === 1 ? (
+              <div className={styles.stepContainer}>
+                <h2>Informations de base</h2>
+                <div className={styles.formGroup}>
+                  <label>Nom</label>
+                  <Field name="nom" placeholder="Nom du collaborateur" />
+                  <ErrorMessage name="nom" component="div" className={styles.error} />
+                </div>
 
-      {step === 2 && (
-        <div className={styles.cvImport}>
-          <h2>Import Freelancer's CV</h2>
-          {/* Hidden file input; label acts as a button */}
-          <input
-            type="file"
-            accept=".pdf,.doc,.docx"
-            onChange={handleCvUpload}
-            style={{ display: 'none' }}
-            id="cvUpload"
-          />
-          <label htmlFor="cvUpload" className={styles.btn}>
-            Import CV
-          </label>
+                <div className={styles.formGroup}>
+                  <label>Prénom</label>
+                  <Field name="prenom" placeholder="Prénom du collaborateur" />
+                  <ErrorMessage name="prenom" component="div" className={styles.error} />
+                </div>
 
-          {extractedData && (
-            <div className={styles.extractedData}>
-              <h3>Extracted Information</h3>
-              <div className={styles.formGroup}>
-                <label htmlFor="extractedName">Name:</label>
-                <input
-                  type="text"
-                  name="name"
-                  id="extractedName"
-                  value={extractedData.name || ''}
-                  onChange={handleExtractedChange}
-                />
+                <div className={styles.formGroup}>
+                  <label>Email</label>
+                  <Field name="email" type="email" placeholder="Email du collaborateur" />
+                  <ErrorMessage name="email" component="div" className={styles.error} />
+                </div>
+
+                <button
+                  type="submit"
+                  className={styles.nextButton}
+                  disabled={!isValid || isSubmitting}
+                >
+                  {isSubmitting ? 'Création...' : 'Suivant'}
+                </button>
               </div>
-              <div className={styles.formGroup}>
-                <label htmlFor="extractedEmail">Email:</label>
-                <input
-                  type="email"
-                  name="email"
-                  id="extractedEmail"
-                  value={extractedData.email || ''}
-                  onChange={handleExtractedChange}
-                />
+            ) : (
+              <div className={styles.stepContainer}>
+                <h2>Informations professionnelles</h2>
+                
+                <div className={styles.cvSection}>
+                  <input
+                    type="file"
+                    id="cvUpload"
+                    onChange={(e) => handleCvUpload(e, setFieldValue)}
+                    accept=".pdf,.doc,.docx"
+                    hidden
+                  />
+                  <label htmlFor="cvUpload" className={styles.uploadButton}>
+                    Importer CV
+                  </label>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Compétences</label>
+                  <Field
+                    name="competences"
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        placeholder="Compétences (séparées par des virgules)"
+                        value={values.competences.join(', ')}
+                        onChange={(e) => {
+                          const skills = e.target.value.split(',').map(s => s.trim());
+                          setFieldValue('competences', skills);
+                        }}
+                      />
+                    )}
+                  />
+                  <ErrorMessage name="competences" component="div" className={styles.error} />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Années d'expérience</label>
+                  <Field 
+                    name="experienceYears" 
+                    type="number" 
+                    min="0"
+                    placeholder="Années d'expérience" 
+                  />
+                  <ErrorMessage name="experienceYears" component="div" className={styles.error} />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Taux horaire (€)</label>
+                  <Field 
+                    name="taux_horaire" 
+                    type="number" 
+                    min="0"
+                    placeholder="Taux horaire" 
+                  />
+                  <ErrorMessage name="taux_horaire" component="div" className={styles.error} />
+                </div>
+
+                <div className={styles.buttonGroup}>
+                  <button
+                    type="button"
+                    className={styles.backButton}
+                    onClick={() => setCurrentStep(1)}
+                  >
+                    Retour
+                  </button>
+                  <button
+                    type="submit"
+                    className={styles.submitButton}
+                    disabled={!isValid || isSubmitting}
+                  >
+                    {isSubmitting ? 'Enregistrement...' : 'Ajouter Collaborateur'}
+                  </button>
+                </div>
               </div>
-              <div className={styles.formGroup}>
-                <label htmlFor="skills">Skills:</label>
-                <input
-                  type="text"
-                  name="skills"
-                  id="skills"
-                  value={extractedData.skills || ''}
-                  onChange={handleExtractedChange}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label htmlFor="experience">Experience:</label>
-                <input
-                  type="text"
-                  name="experience"
-                  id="experience"
-                  value={extractedData.experience || ''}
-                  onChange={handleExtractedChange}
-                />
-              </div>
-              <button
-                className={styles.btn}
-                onClick={() => alert("Collaborator added successfully!")}
-              >
-                Save Collaborator
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </Form>
+        )}
+      </Formik>
     </div>
   );
 };

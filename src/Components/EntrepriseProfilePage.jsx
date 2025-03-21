@@ -3,15 +3,15 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import EnterpriseService from '../Services/EntrepriseService'; // Adjust the import as needed
+import EntrepriseService from '../Services/EntrepriseService'; // Adjust the import as needed
 import styles from './EntrepriseProfilePage.module.css';
 
 
 const EntrepriseProfilePage = () => {
   const storedUser = JSON.parse(localStorage.getItem("user"));
-const enterpriseId = storedUser?.id;
-console.log(enterpriseId)
-  const [enterprise, setEnterprise] = useState(null);
+const entrepriseId = storedUser?.id;
+console.log(entrepriseId)
+  const [entreprise, setEntreprise] = useState(null);
   const [missions, setMissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -21,12 +21,12 @@ console.log(enterpriseId)
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
   useEffect(() => {
-    const fetchEnterpriseData = async () => {
+    const fetchEntrepriseData = async () => {
       try {
         setLoading(true);
-        const data = await EnterpriseService.getEntrepriseById(enterpriseId);
-        console.log("Fetched enterprise data:", data);
-        setEnterprise(data);
+        const data = await EntrepriseService.getEntrepriseById(entrepriseId);
+        console.log("Fetched entreprise data:", data);
+        setEntreprise(data);
       } catch (error) {
         console.error("Erreur lors du chargement du profil", error);
         toast.error("Erreur lors du chargement du profil");
@@ -35,16 +35,16 @@ console.log(enterpriseId)
       }
     };
 
-    if (enterpriseId) {
-      fetchEnterpriseData();
+    if (entrepriseId) {
+      fetchEntrepriseData();
     }
-  }, [enterpriseId]);
+  }, [entrepriseId]);
 
   // Fetch missions from the backend
   useEffect(() => {
     const fetchMissions = async () => {
       try {
-        const missionsData = await EnterpriseService.getMissions(enterpriseId);
+        const missionsData = await EntrepriseService.getMissions(entrepriseId);
         console.log("Fetched missions:", missionsData);
         setMissions(missionsData);
       } catch (error) {
@@ -53,10 +53,10 @@ console.log(enterpriseId)
       }
     };
 
-    if (enterpriseId) {
+    if (entrepriseId) {
       fetchMissions();
     }
-  }, [enterpriseId]);
+  }, [entrepriseId]);
 
   const handleProfilePicClick = () => fileInputRef.current.click();
   const handlePreviewMission = (mission) => {
@@ -66,21 +66,21 @@ console.log(enterpriseId)
     const file = e.target.files[0];
     if (!file) return;
     try {
-      await EnterpriseService.uploadProfilePicture(enterprise.id, file);
-      const updatedEnterprise = await EnterpriseService.getEnterpriseById(enterprise.id);
-      setEnterprise(updatedEnterprise);
-      localStorage.setItem("user", JSON.stringify(updatedEnterprise));
+      await EntrepriseService.uploadProfilePicture(entreprise.id, file);
+      const updatedEntreprise = await EntrepriseService.getEntrepriseById(entreprise.id);
+      setEntreprise(updatedEntreprise);
+      localStorage.setItem("user", JSON.stringify(updatedEntreprise));
       toast.success("Image de profil mise à jour avec succès!");
     } catch (error) {
       console.error("Erreur lors du téléchargement de l'image de profil", error);
       toast.error("Erreur lors du téléchargement de l'image de profil");
     }
   };
-
+  
   const handleDeleteMission = async (missionId) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer cette mission ?")) {
       try {
-        await EnterpriseService.deleteMission(enterprise.id,missionId);
+        await EntrepriseService.deleteMission(entreprise.id,missionId);
         const updatedMissions = missions.filter(m => m.id !== missionId);
         setMissions(updatedMissions);
         toast.success("Mission supprimée avec succès!");
@@ -105,9 +105,9 @@ console.log(enterpriseId)
   const handleUpdateSubmit = async () => {
     try {
       const updatedData = { [updateField]: updateValue };
-      const updatedEnterprise = await EnterpriseService.updateEntreprise(enterprise.id, updatedData);
-      setEnterprise(updatedEnterprise);
-      localStorage.setItem("user", JSON.stringify(updatedEnterprise));
+      const updatedEntreprise = await EntrepriseService.updateEntreprise(entreprise.id, updatedData);
+      setEntreprise(updatedEntreprise);
+      localStorage.setItem("user", JSON.stringify(updatedEntreprise));
       toast.success("Profil mis à jour avec succès!");
       closeUpdateModal();
     } catch (error) {
@@ -116,8 +116,8 @@ console.log(enterpriseId)
     }
   };
 
-  if (loading) return <div className={styles.loading}>Chargement...</div>;
-  if (!enterprise) return <div className={styles.error}>Erreur lors du chargement du profil</div>;
+  if (loading) return <div className={styles.loading}>Chargement du profil...</div>;
+  if (!entreprise) return <div className={styles.error}>Erreur lors du chargement du profil</div>;
 
   return (
     <div className={styles.pageWrapper}>
@@ -128,7 +128,7 @@ console.log(enterpriseId)
           {/* Profile Photo with edit overlay */}
           <div className={styles.profilePhotoContainer}>
             <img
-              src={enterprise.photoprofile || '/default-avatar.png'}
+              src={entreprise.photoprofile || '/default-avatar.png'}
               alt="Profil"
               className={styles.profilePhoto}
             />
@@ -147,9 +147,9 @@ console.log(enterpriseId)
             />
           </div>
 
-          <h1 className={styles.profileName}>{enterprise.nomEntreprise}</h1>
-          <span className={`${styles.roleBadge} ${enterprise.role === 'ENTREPRISE' ? styles.entrepriseBadge : styles.consultantBadge}`}>
-            {enterprise.role}
+          <h1 className={styles.profileName}>{entreprise.nomEntreprise}</h1>
+          <span className={`${styles.roleBadge} ${entreprise.role === 'ENTREPRISE' ? styles.entrepriseBadge : styles.consultantBadge}`}>
+            {entreprise.role} {entreprise.typeEntreprise}
           </span>
         </div>
 
@@ -164,7 +164,7 @@ console.log(enterpriseId)
                   <label className={styles.infoLabel}>Nom de l'entreprise</label>
                   <button
                     className={styles.editBtn}
-                    onClick={() => openUpdateModal('nomEntreprise', enterprise.nomEntreprise)}
+                    onClick={() => openUpdateModal('nomEntreprise', entreprise.nomEntreprise)}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-pencil-square" viewBox="0 1 16 16">
                       <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
@@ -172,7 +172,7 @@ console.log(enterpriseId)
                     </svg>
                   </button>
                 </div>
-                <p className={styles.infoValue}>{enterprise.nomEntreprise}</p>
+                <p className={styles.infoValue}>{entreprise.nomEntreprise}</p>
               </div>
 
               {/* E-mail */}
@@ -181,7 +181,7 @@ console.log(enterpriseId)
                   <label className={styles.infoLabel}>E-mail</label>
                   <button
                     className={styles.editBtn}
-                    onClick={() => openUpdateModal('email', enterprise.email)}
+                    onClick={() => openUpdateModal('email', entreprise.email)}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-pencil-square" viewBox="0 1 16 16">
                       <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
@@ -189,7 +189,7 @@ console.log(enterpriseId)
                     </svg>
                   </button>
                 </div>
-                <p className={styles.infoValue}>{enterprise.email}</p>
+                <p className={styles.infoValue}>{entreprise.email}</p>
               </div>
 
               {/* Téléphone */}
@@ -198,7 +198,7 @@ console.log(enterpriseId)
                   <label className={styles.infoLabel}>Téléphone</label>
                   <button
                     className={styles.editBtn}
-                    onClick={() => openUpdateModal('telephone', enterprise.telephone)}
+                    onClick={() => openUpdateModal('telephone', entreprise.telephone)}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-pencil-square" viewBox="0 1 16 16">
                       <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
@@ -206,7 +206,7 @@ console.log(enterpriseId)
                     </svg>
                   </button>
                 </div>
-                <p className={styles.infoValue}>{enterprise.telephone || "Non fourni"}</p>
+                <p className={styles.infoValue}>{entreprise.telephone || "Non fourni"}</p>
               </div>
             </div>
           </div>
@@ -216,7 +216,7 @@ console.log(enterpriseId)
               <label className={styles.infoLabel}>Localisation</label>
               <button
                 className={styles.editBtn}
-                onClick={() => openUpdateModal('adresse', enterprise.adresse)}
+                onClick={() => openUpdateModal('adresse', entreprise.adresse)}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-pencil-square" viewBox="0 1 16 16">
                   <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
@@ -224,7 +224,7 @@ console.log(enterpriseId)
                 </svg>
               </button>
             </div>
-            <p className={styles.infoValue}>{enterprise.adresse ? enterprise.adresse : "Non renseignée"}</p>
+            <p className={styles.infoValue}>{entreprise.adresse ? entreprise.adresse : "Non renseignée"}</p>
           </div>
         </div>
 

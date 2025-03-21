@@ -3,8 +3,8 @@ import axios from 'axios';
 const API_URL = 'http://localhost:8181/api/entreprises'; // Adjust the URL if needed
 
 const getConsultantsForEntreprise = async (id) => {
-  const storedUser = JSON.parse(localStorage.getItem("user"));
-  const token = storedUser?.token;
+  const token = localStorage.getItem("token");
+
   try {
     const response = await axios.get(`${API_URL}/${id}/consultants`, {
       headers: {
@@ -17,10 +17,31 @@ const getConsultantsForEntreprise = async (id) => {
     throw error;
   }
 };
+const uploadProfilePicture= async (id, file) => {
+  const token = localStorage.getItem("token");
 
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await axios.post(
+      `http://localhost:8181/api/users/${id}/uploadProfilePic`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading profile picture:", error);
+    throw error;
+  }
+};
 const getEntrepriseById = async (id) => {
-  const storedUser = JSON.parse(localStorage.getItem("user"));
-  const token = storedUser?.token;
+  const token = localStorage.getItem("token");
+
   try {
     const response = await axios.get(`${API_URL}/${id}`, {
       headers: {
@@ -35,8 +56,8 @@ const getEntrepriseById = async (id) => {
 };
 
 const updateEntreprise = async (id, entrepriseData) => {
-  const storedUser = JSON.parse(localStorage.getItem("user"));
-  const token = storedUser?.token;
+  const token = localStorage.getItem("token");
+
   try {
     const response = await axios.put(
       `${API_URL}/${id}`,
@@ -55,8 +76,8 @@ const updateEntreprise = async (id, entrepriseData) => {
 };
 
 const getMissions = async (id) => {
-  const storedUser = JSON.parse(localStorage.getItem("user"));
-  const token = storedUser?.token;
+  const token = localStorage.getItem("token");
+
   try {
     const response = await axios.get(`${API_URL}/${id}/missions`, {
       headers: {
@@ -69,10 +90,24 @@ const getMissions = async (id) => {
     throw error;
   }
 };
+const removeConsultant = async (entrepriseId, consultantId) => {
+  const token = localStorage.getItem("token");
 
+  try {
+    const response = await axios.delete(`${API_URL}/${entrepriseId}/consultants/${consultantId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Erreur lors de la suppression du consultant:", error);
+    throw error;
+  }
+};
 export default {
   getEntrepriseById,
   updateEntreprise,
   getConsultantsForEntreprise,
   getMissions,
+  removeConsultant,
+  uploadProfilePicture
 };

@@ -9,9 +9,10 @@ const API_URL_dureeEstime = "http://localhost:8181/api/missions/searchByDureeEst
 const API_URL_PROPOSITION = "http://localhost:8181/api/propositions";
 const API_URL_ENTREPRISE = "http://localhost:8181/api/entreprises";
 
-const token = localStorage.getItem("token");
 
 export const applyWithConsultant = (entrepriseId, missionId, consultantId, montant, dureeEstime, message) => {
+  const token = localStorage.getItem("token");
+
   if (!token) {
     console.error("JWT Token is missing lors de l'application à la mission.");
     return Promise.reject(new Error("JWT Token is missing"));
@@ -34,6 +35,7 @@ export const applyWithConsultant = (entrepriseId, missionId, consultantId, monta
   ).then(response => response.data);
 };
   export const applyToMission = async (consultantId, missionId, propositionData) => {
+    const token = localStorage.getItem("token");
 
     if (!token) {
       console.error("JWT Token is missing lors de l'application à la mission.");
@@ -59,6 +61,8 @@ export const applyWithConsultant = (entrepriseId, missionId, consultantId, monta
     }
   };
 export const getMissions = () => {
+  const token = localStorage.getItem("token");
+
   const storedUser = JSON.parse(localStorage.getItem("user"));
   const consultantId = storedUser?.user?.id || storedUser?.id;
   console.log("consultantId", consultantId);
@@ -91,7 +95,8 @@ export const getMissions = () => {
 
 // Récupération des missions par domaine
 export const getMissionsByDomaine = (domainIds = []) => {
-  
+  const token = localStorage.getItem("token");
+
   if (!token) {
     return Promise.reject(new Error("JWT Token is missing"));
   }
@@ -120,7 +125,8 @@ export const getMissionsByDomaine = (domainIds = []) => {
 
 // Récupération des missions par expérience
 export const getMissionsByExperience = (experience) => {
-  
+  const token = localStorage.getItem("token");
+
   if (!token) {
     return Promise.reject(new Error("JWT Token is missing"));
   }
@@ -148,7 +154,8 @@ export const getMissionsByExperience = (experience) => {
 
 // Récupération des missions par porte de travail
 export const getMissionsByPorteDeTravail = (portetravail) => {
-  
+  const token = localStorage.getItem("token");
+
   if (!token) {
     return Promise.reject(new Error("JWT Token is missing"));
   }
@@ -176,7 +183,8 @@ export const getMissionsByPorteDeTravail = (portetravail) => {
 
 // Récupération des missions par budget range
 export const getMissionsByBudgetRange = async (minBudget, maxBudget) => {
-  
+  const token = localStorage.getItem("token");
+
   if (!token) {
     return Promise.reject(new Error("JWT Token is missing"));
   }
@@ -197,7 +205,8 @@ export const getMissionsByBudgetRange = async (minBudget, maxBudget) => {
 
 // Récupération des missions par durée estimée
 export const getMissionsByDureeEstime = (dureeEstime) => {
-  
+  const token = localStorage.getItem("token");
+
   if (!token) {
     return Promise.reject(new Error("JWT Token is missing"));
   }
@@ -229,7 +238,8 @@ export const getMissionsByDureeEstime = (dureeEstime) => {
 
 // Sauvegarder une mission pour un consultant
 export const saveMissionForConsultant = async (consultantId, missionId) => {
-  
+  const token = localStorage.getItem("token");
+
   if (!token) {
     return Promise.reject(new Error("JWT Token is missing"));
   }
@@ -254,7 +264,8 @@ export const saveMissionForConsultant = async (consultantId, missionId) => {
 
 // Récupérer les missions sauvegardées pour un consultant
 export const getSavedMissions = async (consultantId) => {
-  
+  const token = localStorage.getItem("token");
+
   if (!token) {
     return Promise.reject(new Error("JWT Token is missing"));
   }

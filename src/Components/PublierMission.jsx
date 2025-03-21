@@ -1,11 +1,12 @@
 /* eslint-disable react/no-unescaped-entities */
-import  { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import CreatableSelect from "react-select/creatable";
 import { motion, AnimatePresence } from "framer-motion";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
 import styles from "./publiermission.module.css";
+import { useNavigate } from "react-router-dom";
 
 import publiermissionService from "../Services/PublierMissionService";
 import CompetenceService from "../Services/CompetenceService";
@@ -77,6 +78,7 @@ const resetLocation = (setValue) => {
 };
 
 const PublierMission = () => {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -131,6 +133,30 @@ const PublierMission = () => {
 
   const latitude = watch("latitude");
   const longitude = watch("longitude");
+
+  // New state for storing the reverse geocoded address
+  const [address, setAddress] = useState("");
+
+  // Reverse geocoding effect to fetch address from latitude & longitude
+  useEffect(() => {
+    if (latitude && longitude) {
+      const fetchAddress = async () => {
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
+          );
+          const data = await response.json();
+          setAddress(data.display_name || "Adresse introuvable");
+        } catch (error) {
+          console.error("Erreur lors de la récupération de l'adresse :", error);
+          setAddress("Erreur lors de la récupération de l'adresse");
+        }
+      };
+      fetchAddress();
+    } else {
+      setAddress("");
+    }
+  }, [latitude, longitude]);
 
   const [currentStep, setCurrentStep] = useState(0);
   const [subStep, setSubStep] = useState(0);
@@ -266,8 +292,10 @@ const PublierMission = () => {
         portetravail: data.scope,
         dureeEstime: data.duration,
         niveauExperienceRequis: data.experience,
+        // Store the coordinates along with the fetched address if needed
         latitude: data.latitude,
         longitude: data.longitude,
+        adresse: address,
       };
 
       try {
@@ -456,7 +484,7 @@ const PublierMission = () => {
               <strong>Niveau d'expérience :</strong> {data.experience}
             </div>
             <div className={styles.summaryItem}>
-              <strong>Localisation :</strong> {data.latitude}, {data.longitude}
+              <strong>Localisation :</strong> {address || "Non spécifiée"}
             </div>
             <div className={styles.summaryItem}>
               <strong>Budget :</strong> {data.budget} €
@@ -519,7 +547,7 @@ const PublierMission = () => {
       ) : (
         <div className={styles.successMessage}>
           <h2>Votre mission a bien été publiée !</h2>
-          <button onClick={() => window.location.reload()} className={styles.homeButton}>
+          <button onClick={() => navigate("/EntrepriseMission")} className={styles.homeButton}>
             Retour à l'accueil
           </button>
         </div>

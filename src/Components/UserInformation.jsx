@@ -682,19 +682,19 @@ const UserInformation = () => {
           </div>
         ) : (
           <Formik
-            innerRef={formikRef}
-            initialValues={initialValues}
-            validationSchema={currentStep === 1 ? Step1Schema : Step2Schema}
-            validateOnMount={true}
-            onSubmit={(values, { setSubmitting }) => {
-              if (userRole === 'Consultant') {
-                if (currentStep === 1) {
-                  setCurrentStep(2);
-                  setSubmitting(false);
-                } else {
-                  handlePreviewSubmit(values, setSubmitting);
-                }
-              } else {
+  innerRef={formikRef}
+  initialValues={initialValues}
+  validationSchema={currentStep === 1 ? Step1Schema : Step2Schema}
+  validateOnMount={true}
+  onSubmit={(values, { setSubmitting }) => {
+    if (userRole === 'Consultant') {
+      if (currentStep === 1) {
+        setCurrentStep(2);
+        setSubmitting(false);
+      } else {
+        handlePreviewSubmit(values, setSubmitting);
+      }
+    } else {
                 setLoading(true);
                 setTimeout(() => {
                   console.log({ ...values, role: userRole });
@@ -704,7 +704,7 @@ const UserInformation = () => {
                 }, 2000);
               }
             }}
-          >
+            >
             {({ values, setFieldValue, isSubmitting, isValid }) => (
               <Form className="mt-4">
                 {userRole === 'Consultant'

@@ -1,26 +1,59 @@
+/* eslint-disable react/no-unescaped-entities */
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import styles from "./Header.module.css";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import notificationService from "../Services/NotificationService";
+import EntrepriseService from "../Services/EntrepriseService"; // for Entreprise
+import ConsultantService from "../Services/ConsultantService"; // for Consultant (assumed)
+import styles from "./Header.module.css";
 
 const Header = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const navigate = useNavigate();
+
+  // Get basic user info from localStorage
+  const storedUser = localStorage.getItem("user");
+  const basicUser = storedUser ? JSON.parse(storedUser) : null;
+
+  // State for full user details (will include extra info like typeEntreprise, etc.)
+  const [fullUser, setFullUser] = useState(basicUser);
+  const userId = fullUser ? fullUser.id : null;
+  const role = fullUser?.role; // e.g., "Consultant" or "Entreprise"
+
+  // Fetch full user details based on the role
+  useEffect(() => {
+    if (basicUser && basicUser.id) {
+      const fetchFullUser = async () => {
+        try {
+          let fetchedData;
+          if (basicUser.role === "Entreprise") {
+            fetchedData = await EntrepriseService.getEntrepriseById(basicUser.id);
+          } else if (basicUser.role === "Consultant") {
+            fetchedData = await ConsultantService.getConsultantById(basicUser.id);
+          }
+          // Merge the basic user info with the full details from the API
+          const updatedUser = { ...basicUser, ...fetchedData };
+          setFullUser(updatedUser);
+          // Update localStorage so that subsequent pages use full details
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+        } catch (error) {
+          console.error("Error fetching full user details:", error);
+        }
+      };
+      fetchFullUser();
+    }
+  }, [basicUser]);
+
+  // State for notifications and dropdowns
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [visibleCount, setVisibleCount] = useState(5);
   const [filter, setFilter] = useState("all"); // "all" or "unread"
-  const [openMenuId, setOpenMenuId] = useState(null); // track which notification menu is open
+  const [openMenuId, setOpenMenuId] = useState(null); // which notification menu is open
   const [showMarkAllMenu, setShowMarkAllMenu] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-  const navigate = useNavigate();
-
-  // Extract user info from localStorage
-  const storedUser = localStorage.getItem("user");
-  const user = storedUser ? JSON.parse(storedUser) : null;
-  const userId = user ? user.id : null;
-  const role = user?.role; // e.g., "CONSULTANT" or "Entreprise"
-
-  // Fetch notifications for the user
+  // Fetch notifications from the API
   const fetchNotifications = async () => {
     if (userId) {
       try {
@@ -35,6 +68,20 @@ const Header = () => {
       }
     }
   };
+
+  useEffect(() => {
+    if (showNotifications && userId) {
+      fetchNotifications();
+    }
+  }, [showNotifications, userId]);
+
+  useEffect(() => {
+    if (userId) {
+      fetchNotifications();
+    }
+  }, [userId]);
+
+  // Mark all notifications as read
   const handleMarkAllAsRead = async () => {
     try {
       const unreadNotifications = notifications.filter(n => !n.readStatus);
@@ -47,21 +94,13 @@ const Header = () => {
       console.error("Erreur lors de la mise à jour des notifications", error);
     }
   };
-  useEffect(() => {
-    // Fetch notifications only when the dropdown is shown
-    if (showNotifications && userId) {
-      fetchNotifications();
-    }
-  }, [showNotifications, userId]);
-
-
 
   // Mark individual notification as read
   const handleMarkAsRead = async (id) => {
     try {
       await notificationService.markAsRead(id);
       fetchNotifications();
-      setOpenMenuId(null); // close the menu
+      setOpenMenuId(null); // close the options menu
     } catch (error) {
       console.error("Erreur lors du marquage comme lu", error);
     }
@@ -72,7 +111,7 @@ const Header = () => {
     try {
       await notificationService.deleteNotification(id);
       fetchNotifications();
-      setOpenMenuId(null); // close the menu
+      setOpenMenuId(null);
     } catch (error) {
       console.error("Erreur lors de la suppression de la notification", error);
     }
@@ -90,31 +129,32 @@ const Header = () => {
     return new Date(dateString).toLocaleDateString("fr-FR", options);
   };
 
-  // Filter notifications (all vs. unread)
+  // Filter notifications based on readStatus
   const filteredNotifications =
     filter === "all"
       ? notifications
       : notifications.filter((n) => !n.readStatus);
 
-  // Paginate
+  // Paginate notifications
   const visibleNotifications = filteredNotifications.slice(0, visibleCount);
 
-  // Toggle sidebar
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-
-  // Toggle notifications
+  // Toggle notifications dropdown
   const toggleNotifications = () => {
     setShowNotifications((prev) => !prev);
-    // Reset open menu if we close the panel
     if (showNotifications) {
       setOpenMenuId(null);
     }
   };
-  useEffect(() => {
-    if (userId) {
-      fetchNotifications();
-    }
-  }, [userId]); 
+
+  // Toggle profile dropdown
+  const toggleProfileMenu = () => setShowProfileMenu(prev => !prev);
+
+  // Logout function
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
+
   // Close notifications when clicking outside
   const notificationsRef = useRef(null);
   useEffect(() => {
@@ -125,64 +165,137 @@ const Header = () => {
         !e.target.closest(`.${styles.iconButton}`)
       ) {
         setShowNotifications(false);
-        setOpenMenuId(null); // This remains to close menu when dropdown closes
+        setOpenMenuId(null);
       }
     };
-  
     if (showNotifications) {
       document.addEventListener("mousedown", handleClickOutside);
     }
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showNotifications]);
-  
+
+  // Close options menu or "mark all" menu if clicked outside
   useEffect(() => {
     const handleMenuClickOutside = (e) => {
       if (
-        (openMenuId !== null && 
-        !e.target.closest(`.${styles.notificationOptionsMenu}`) && 
-        !e.target.closest(`.${styles.optionsButton}`)) ||
-        (showMarkAllMenu && 
-        !e.target.closest(`.${styles.markAllOptionsMenu}`) && 
-        !e.target.closest(`.${styles.optionsButton}`))
+        (openMenuId !== null &&
+          !e.target.closest(`.${styles.notificationOptionsMenu}`) &&
+          !e.target.closest(`.${styles.optionsButton}`)) ||
+        (showMarkAllMenu &&
+          !e.target.closest(`.${styles.markAllOptionsMenu}`) &&
+          !e.target.closest(`.${styles.optionsButton}`))
       ) {
         setOpenMenuId(null);
         setShowMarkAllMenu(false);
       }
     };
-  
     document.addEventListener('mousedown', handleMenuClickOutside);
     return () => document.removeEventListener('mousedown', handleMenuClickOutside);
-  }, [openMenuId, showMarkAllMenu, styles]);
+  }, [openMenuId, showMarkAllMenu]);
+
+  // Close profile dropdown when clicking outside
+  const profileMenuRef = useRef(null);
+  useEffect(() => {
+    const handleClickOutsideProfile = (e) => {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(e.target) &&
+        !e.target.closest(`.${styles.profileButton}`)
+      ) {
+        setShowProfileMenu(false);
+      }
+    };
+    if (showProfileMenu) {
+      document.addEventListener('mousedown', handleClickOutsideProfile);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutsideProfile);
+  }, [showProfileMenu]);
+
   return (
     <>
       <header className={styles.header}>
         <nav className={styles.navbar}>
-          {/* Left Section: Sidebar Toggle */}
+
+          {/* Left: Logo */}
           <div className={styles.leftSection}>
-            <button className={styles.sidebarToggle} onClick={toggleSidebar}>
-              <div className={styles.hamburger}>
-                <span className={styles.bar}></span>
-                <span className={styles.bar}></span>
-                <span className={styles.bar}></span>
-              </div>
-            </button>
+            <div className={styles.logo}>
+              <Link to={role === "Entreprise" ? "/EntrepriseMission" : "/SearchMission"}>
+                Trade for talent
+              </Link>
+            </div>
           </div>
 
-          {/* Logo */}
-          <div className={styles.logo}>
-            <Link to="/SearchMission">Trade for talent</Link>
-          </div>
-
-          {/* Center Section: Search Bar */}
+          {/* Center: Nav links with new dropdown for "Manage Finances" */}
           <div className={styles.centerSection}>
+  <ul className={styles.navLinks}>
+    {role === "Entreprise" ? (
+      fullUser?.typeEntreprise === "CLIENTE" ? (
+        <li>
+          <Link to="/landingEntreprise">Find Talent</Link>
+        </li>
+      ) : (
+        <li>
+          <Link to="/SearchMission">Find Work</Link>
+        </li>
+      )
+    ) : (
+      <li>
+        <Link to="/SearchMission">Find Work</Link>
+      </li>
+    )}
+
+    {/* For Entreprises that are neither SSI nor Cliente, display "My Missions" dropdown */}
+    {role === "Entreprise" && fullUser?.typeEntreprise !== "SSI" && fullUser?.typeEntreprise !== "Cliente" && (
+      <li className={styles.dropdown}>
+        <span className={styles.dropdownTitle}>Missions</span>
+        <ul className={styles.dropdownMenu}>
+          <li>
+            <Link to="/publierMission">Publier une mission</Link>
+          </li>
+          {/* You may also add more options, such as a link to view current missions */}
+          <li>
+            <Link to="/EntrepriseMission">Mes Missions</Link>
+          </li>
+        </ul>
+      </li>
+    )}
+
+    {/* For Entreprise type SSI, show Collaborators */}
+    {role === "Entreprise" && fullUser?.typeEntreprise === "SSI" && (
+      <li>
+        <Link to="/CollaboratorsList">Collaborators</Link>
+      </li>
+    )}
+
+    {role === "Consultant" && (
+      <li>
+        <Link to="/ConsultantPropositions">Mes Propositions</Link>
+      </li>
+    )}
+
+    {/* New Dropdown: Manage Finances */}
+    <li className={styles.dropdown}>
+      <span className={styles.dropdownTitle}>Manage Finances</span>
+      <ul className={styles.dropdownMenu}>
+        <li>
+          <Link to="/transactions">Transactions</Link>
+        </li>
+        {/* Additional finance-related options can be added here */}
+      </ul>
+    </li>
+  </ul>
+</div>
+
+
+
+          {/* Right: Search, Messages, Notifications, Profile */}
+          <div className={styles.rightSection}>
             <div className={styles.searchContainer}>
               <input type="text" placeholder="Search missions..." />
               <button className={styles.searchButton}>Search</button>
             </div>
-          </div>
 
-          {/* Right Section: Chat, Notifications, Profile */}
-          <div className={styles.rightSection}>
+            {/* Messages */}
             <button
               className={styles.iconButton}
               onClick={() => navigate("/Messenger")}
@@ -190,29 +303,26 @@ const Header = () => {
               <i className="fa fa-comment"></i>
             </button>
 
-            {/* Clicking the bell toggles the notifications dropdown */}
+            {/* Notifications */}
             <button className={styles.iconButton} onClick={toggleNotifications}>
-  <div className={styles.notificationIconContainer}>
-    <i className="fa fa-bell"></i>
-    {notifications.filter(n => !n.readStatus).length > 0 && (
-      <span className={styles.notificationBadge}>
-        {Math.min(notifications.filter(n => !n.readStatus).length, 9)}
-        {notifications.filter(n => !n.readStatus).length > 9 && "+"}
-      </span>
-    )}
-  </div>
-</button>
+              <div className={styles.notificationIconContainer}>
+                <i className="fa fa-bell"></i>
+                {notifications.filter(n => !n.readStatus).length > 0 && (
+                  <span className={styles.notificationBadge}>
+                    {Math.min(notifications.filter(n => !n.readStatus).length, 9)}
+                    {notifications.filter(n => !n.readStatus).length > 9 && "+"}
+                  </span>
+                )}
+              </div>
+            </button>
 
+            {/* Profile */}
             <button
               className={styles.profileButton}
-              onClick={() =>
-                navigate(
-                  role === "Entreprise" ? "/EntrepriseProfilePage" : "/ProfilePage"
-                )
-              }
+              onClick={toggleProfileMenu}
             >
               <img
-                src={user?.photoprofile || "default-avatar.png"}
+                src={fullUser?.photoprofile || "default-avatar.png"}
                 alt="Profile"
                 className={styles.profileIcon}
               />
@@ -220,50 +330,96 @@ const Header = () => {
           </div>
         </nav>
 
-        {/* Notifications Dropdown Panel */}
+        {/* Profile Dropdown */}
+        {showProfileMenu && (
+          <div className={styles.profileDropdown} ref={profileMenuRef}>
+            <div className={styles.profileHeader}>
+              <img
+                src={fullUser?.photoprofile || "default-avatar.png"}
+                alt="Profile"
+                className={styles.profileHeaderImage}
+              />
+              <div className={styles.profileHeaderInfo}>
+                <h4 className={styles.userName}>
+                  {fullUser?.prenom} {fullUser?.nom}
+                </h4>
+                <p className={styles.userRole}>
+                  {role === "Consultant" ? "Freelancer" : "Entreprise"}
+                </p>
+              </div>
+            </div>
+            <div className={styles.dropdownDivider}></div>
+            <button
+              className={styles.dropdownItem}
+              onClick={() => {
+                setShowProfileMenu(false);
+                navigate(role === "Entreprise" ? "/EntrepriseProfilePage" : "/ProfilePage");
+              }}
+            >
+              <i className="fa fa-user"></i> Your profile
+            </button>
+            <button
+              className={styles.dropdownItem}
+              onClick={() => {
+                setShowProfileMenu(false);
+                navigate("/settings");
+              }}
+            >
+              <i className="fa fa-cog"></i> Account settings
+            </button>
+            <button
+              className={styles.dropdownItem}
+              onClick={() => {
+                setShowProfileMenu(false);
+                handleLogout();
+              }}
+            >
+              <i className="fa fa-sign-out-alt"></i> Log out
+            </button>
+          </div>
+        )}
+
+        {/* Notifications Dropdown */}
         {showNotifications && (
           <div className={styles.notificationsDropdown} ref={notificationsRef}>
             <div className={styles.notificationsHeader}>
-  <h4>Notifications</h4>
-  <div className={styles.headerRight}>
-    <button 
-      className={styles.optionsButton} 
-      onClick={() => setShowMarkAllMenu(!showMarkAllMenu)}
-    >
-      <i className="fa fa-ellipsis-h"></i>
-    </button>
-    {showMarkAllMenu && (
-  <div className={styles.markAllOptionsMenu}>
-    <button onClick={handleMarkAllAsRead}>
-      <i className="fas fa-check me-2"></i>
-      Mark all as read
-    </button>
-    <button onClick={() => {
-      navigate('/notification');
-      setShowMarkAllMenu(false);
-    }}>
-      <i className="fas fa-list me-2"></i>
-      See notifications
-    </button>
-  </div>
-)}
-  </div>
-</div>
+              <h4>Notifications</h4>
+              <div className={styles.headerRight}>
+                <button
+                  className={styles.optionsButton}
+                  onClick={() => setShowMarkAllMenu(!showMarkAllMenu)}
+                >
+                  <i className="fa fa-ellipsis-h"></i>
+                </button>
+                {showMarkAllMenu && (
+                  <div className={styles.markAllOptionsMenu}>
+                    <button onClick={handleMarkAllAsRead}>
+                      <i className="fas fa-check me-2"></i>
+                      Mark all as read
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate('/notification');
+                        setShowMarkAllMenu(false);
+                      }}
+                    >
+                      <i className="fas fa-list me-2"></i>
+                      See notifications
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
 
-            {/* Filter Buttons */}
             <div className={styles.notificationsFilter}>
               <button
-                className={`${styles.filterButton} ${
-                  filter === "all" ? styles.activeFilter : ""
-                }`}
+                className={`${styles.filterButton} ${filter === "all" ? styles.activeFilter : ""}`}
                 onClick={() => setFilter("all")}
               >
                 Tout
               </button>
               <button
-                className={`${styles.filterButton} ${
-                  filter === "unread" ? styles.activeFilter : ""
-                }`}
+                className={`${styles.filterButton} ${filter === "unread" ? styles.activeFilter : ""}`}
                 onClick={() => setFilter("unread")}
               >
                 Non lus
@@ -279,13 +435,14 @@ const Header = () => {
                 visibleNotifications.map((notification) => (
                   <div
                     key={notification.id}
-                    className={`${styles.notificationCard} ${
-                      notification.readStatus ? styles.read : styles.unread
-                    }`}
+                    className={`${styles.notificationCard} ${notification.readStatus ? styles.read : styles.unread}`}
                     style={{ position: "relative" }}
                   >
                     <div className={styles.notificationBody}>
-                    <i className={`fa-solid ${notification.readStatus ? "fa-bell" : "fa-circle-exclamation"} fa-lg`}></i>                      <div className={styles.notificationText}>
+                      <i
+                        className={`fa-solid ${notification.readStatus ? "fa-bell" : "fa-circle-exclamation"} fa-lg`}
+                      ></i>
+                      <div className={styles.notificationText}>
                         <h6>{notification.message}</h6>
                         <small>
                           <i className="fa-regular fa-clock me-1"></i>
@@ -306,23 +463,19 @@ const Header = () => {
 
                       {/* Options menu */}
                       {openMenuId === notification.id && (
-  <div className={styles.notificationOptionsMenu}>
-    {!notification.readStatus && (
-      <button
-        onClick={() => handleMarkAsRead(notification.id)}
-      >
-        <i className="fas fa-check me-2"></i>
-        Marquer comme lu
-      </button>
-    )}
-    <button
-      onClick={() => handleDeleteNotification(notification.id)}
-    >
-      <i className="fas fa-trash me-2"></i>
-      Supprimer
-    </button>
-  </div>
-)}
+                        <div className={styles.notificationOptionsMenu}>
+                          {!notification.readStatus && (
+                            <button onClick={() => handleMarkAsRead(notification.id)}>
+                              <i className="fas fa-check me-2"></i>
+                              Marquer comme lu
+                            </button>
+                          )}
+                          <button onClick={() => handleDeleteNotification(notification.id)}>
+                            <i className="fas fa-trash me-2"></i>
+                            Supprimer
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))
@@ -341,57 +494,7 @@ const Header = () => {
           </div>
         )}
       </header>
-
-      {/* Sidebar */}
-      <div className={`${styles.sidebar} ${isSidebarOpen ? styles.active : ""}`}>
-        <div className={styles.sidebarHeader}>
-          <button className={styles.closeBtn} onClick={toggleSidebar}>
-            &times;
-          </button>
-        </div>
-        <nav className={styles.sidebarNav}>
-          <ul>
-            <li>
-              <Link to="/StatConsultant" onClick={toggleSidebar}>
-                <span className={styles.icon}>📊</span> Dashboard
-              </Link>
-            </li>
-            <li>
-              <Link to="/SearchMission" onClick={toggleSidebar}>
-                <span className={styles.icon}>📋</span> Missions
-              </Link>
-            </li>
-            <li>
-              <Link
-                to={role === "Entreprise" ? "/EntrepriseProfilePage" : "/ProfilePage"}
-                onClick={toggleSidebar}
-              >
-                <span className={styles.icon}>👤</span> Profile
-              </Link>
-            </li>
-            <li>
-              <Link to="/transactions" onClick={toggleSidebar}>
-                <span className={styles.icon}>🗃️</span> Transactions
-              </Link>
-            </li>
-            {role === "Consultant" ? (
-              <li>
-                <Link to="/ConsultantPropositions" onClick={toggleSidebar}>
-                  <span className={styles.icon}>📝</span> Mes Propositions
-                </Link>
-              </li>
-            ) : (
-              <li>
-                <Link to="/EnterpriseMissions" onClick={toggleSidebar}>
-                  <span className={styles.icon}>📝</span> Mes Missions
-                </Link>
-              </li>
-            )}
-          </ul>
-        </nav>
-      </div>
-      {/* Sidebar Overlay */}
-      {isSidebarOpen && <div className={styles.overlay} onClick={toggleSidebar} />}
+      <ToastContainer />
     </>
   );
 };

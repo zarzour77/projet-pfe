@@ -39,7 +39,7 @@ const ConsultantService = {
 
   updateConsultant: async (id, consultantData) => {
     const token = localStorage.getItem("token");
-
+    console.log(id,consultantData)
     try {
       const response = await axios.put(
         `${API_URL}/${id}`,

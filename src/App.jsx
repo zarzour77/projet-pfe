@@ -19,15 +19,17 @@ import TransactionsHistory from "./Components/TransactionsHistory";
 import EntrepriseMission from "./Components/EntrepriseMission";
 import Notification from "./Components/Notification";
 import VoirProfileConsultant from "./Components/VoirProfileConsultant";
-import Header from "./Components/Header";
-import EntrepriseProfilePage from "./Components/EntrepriseProfilePage";
+import StatConsultant from "./Components/StatConsultant";
+// NEW: Import your ConsultantPropositions component
 import ConsultantPropositions from "./Components/ConsultantPropositions";
+import Header from "./Components/Header";
+import VirtualAssistant from "./Components/VirtualAssistant";
 import ProtectedRoute from "./Services/ProtectedRoute";
 import { AuthProvider } from "./Services/AuthContext";
-import VirtualAssistant from './Components/VirtualAssistant';
 import AddCollaborator from "./Components/AddCollaborator";
 import CollaboratorsList from "./Components/CollaboratorsList";
-import StatConsultant from "./Components/StatConsultant";
+import EntrepriseProfilePage from "./Components/EntrepriseProfilePage"
+import VoirProfileEntreprise from "./Components/VoirProfileEntreprise"
 
 const App = () => {
   return (
@@ -37,19 +39,37 @@ const App = () => {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/UserInformation" element={<UserInformation />} />
-          <Route path="/Notification" element={<Notification /> }  />
-          <Route path="/EntrepriseMission" element={<EntrepriseMission />} />
+          <Route path="/Notification" element={<Notification />} />
           <Route path="/consultant/:consultantId" element={<VoirProfileConsultant />} />
           <Route path="/StatConsultant" element={<StatConsultant />} /> 
+          <Route
+           path="/entreprise/:entrepriseId"
+            element={
+              <ProtectedRoute allowedRoles={["Entreprise" , "Consultant", "Admin" ]}>
+            <VoirProfileEntreprise />
+            <Header />
+             </ProtectedRoute>
+            } 
+            />
+
+          <Route
+  path="/EntrepriseMission"
+  element={
+    <ProtectedRoute allowedRoles={["Entreprise"]}>
+      <Header />
+      <EntrepriseMission />
+    </ProtectedRoute>
+  }
+/>
 
           {/* Consultant routes */}
           <Route
             path="/SearchMission"
             element={
-              <ProtectedRoute allowedRoles={["Consultant" , "Entreprise"]}>
-                <Header />
+              <ProtectedRoute allowedRoles={["Consultant", "Entreprise" , "Admin"]}>
+                <Header/>
                 <SearchMission />
-                <VirtualAssistant />
+                < VirtualAssistant/>
               </ProtectedRoute>
             }
           />
@@ -58,7 +78,6 @@ const App = () => {
             element={
               <ProtectedRoute allowedRoles={["Consultant"]}>
                 <MissioinTinder />
-                <VirtualAssistant />
               </ProtectedRoute>
             }
           />
@@ -115,7 +134,6 @@ const App = () => {
             element={
               <ProtectedRoute allowedRoles={["Consultant"]}>
                 <ProfessionalDetails />
-                
               </ProtectedRoute>
             }
           />
@@ -124,17 +142,7 @@ const App = () => {
             element={
               <ProtectedRoute allowedRoles={["Consultant"]}>
                 <ProfilePage />
-                <VirtualAssistant />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/EntrepriseProfilePage"
-            element={
-              <ProtectedRoute allowedRoles={["Entreprise"]}>
-                <Header />
-                <EntrepriseProfilePage />
-                <VirtualAssistant />
+                <Header/>< VirtualAssistant/>
               </ProtectedRoute>
             }
           />
@@ -143,7 +151,7 @@ const App = () => {
             element={
               <ProtectedRoute allowedRoles={["Consultant" , "Entreprise"]}>
                 <TransactionsHistory />
-                <VirtualAssistant />
+                < VirtualAssistant/>
               </ProtectedRoute>
             }
           />
@@ -154,7 +162,8 @@ const App = () => {
             element={
               <ProtectedRoute allowedRoles={["Consultant"]}>
                 <ConsultantPropositions />
-                <VirtualAssistant />
+                < VirtualAssistant/>
+                <Header/>
               </ProtectedRoute>
             }
           />
@@ -165,7 +174,8 @@ const App = () => {
             element={
               <ProtectedRoute allowedRoles={["Entreprise"]}>
                 <PublierMission />
-                <VirtualAssistant />
+                <Header />
+                < VirtualAssistant/>
               </ProtectedRoute>
             }
           />
@@ -173,8 +183,9 @@ const App = () => {
             path="/LandingEntreprise"
             element={
               <ProtectedRoute allowedRoles={["Entreprise"]}>
-                <LandingEntreprise /><Header />
-                <VirtualAssistant />
+                <LandingEntreprise />
+                <Header/>
+                < VirtualAssistant/>
               </ProtectedRoute>
             }
           />
@@ -185,32 +196,40 @@ const App = () => {
             element={
               <ProtectedRoute allowedRoles={["Consultant", "Entreprise"]}>
                 <Messenger />
-                
-              </ProtectedRoute>
-            }
-          />
-           <Route
-            path="/add-collaborator"
-            element={
-              <ProtectedRoute allowedRoles={["Entreprise"]}>
-                <Header />
-                <AddCollaborator />
-                <VirtualAssistant />
               </ProtectedRoute>
             }
           />
           <Route
-            path="/collaborators-list"
+            path="/AddCollaborator"
             element={
               <ProtectedRoute allowedRoles={["Entreprise"]}>
-                <Header />
-                <CollaboratorsList />
-                <VirtualAssistant />
+                <AddCollaborator />
+                < VirtualAssistant/>
+                <Header/>
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/CollaboratorsList"
+            element={
+              <ProtectedRoute allowedRoles={["Entreprise"]}>
+                <CollaboratorsList />
+                <Header/>
+                < VirtualAssistant/>
+              </ProtectedRoute>
+            }
+          />  
+          <Route
+            path="/EntrepriseProfilePage"
+            element={
+              <ProtectedRoute allowedRoles={["Entreprise"]}>
+                <EntrepriseProfilePage />
+                <Header/>
+                < VirtualAssistant/>
+              </ProtectedRoute>
+            }
+          />        
         </Routes>
-
       </Router>
     </AuthProvider>
   );

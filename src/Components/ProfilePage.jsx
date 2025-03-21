@@ -247,13 +247,18 @@ const ProfilePage = () => {
         toast.error("Veuillez remplir tous les champs");
         return;
       }
-      const existing = allCompetences.find(c => c.nom.toLowerCase() === competenceName.toLowerCase());
-      let competenceToAdd;
-      if (existing) {
-        competenceToAdd = existing;
-      } else {
-        competenceToAdd = { nom: competenceName, competenceNiveau: newCompetenceLevel };
-      }
+      const existing = allCompetences.find(c => 
+        c.nom.toLowerCase() === competenceName.toLowerCase() &&
+        c.competenceNiveau.toLowerCase() === newCompetenceLevel.toLowerCase()
+      );
+      
+          let competenceToAdd;
+    if (existing) {
+      competenceToAdd = existing;
+    } else {
+      competenceToAdd = { nom: competenceName, competenceNiveau: newCompetenceLevel };
+    }
+
       const updatedUser = await ConsultantService.addCompetence(user.id, competenceToAdd);
       setUser(updatedUser);
       await ConsultantService.saveCv(user.id);
@@ -335,13 +340,17 @@ const ProfilePage = () => {
         toast.error("Veuillez remplir tous les champs");
         return;
       }
-      const existing = allLangues.find(l => l.nom.toLowerCase() === langueName.toLowerCase());
+      const existing = allLangues.find(l => 
+        l.nom.toLowerCase() === langueName.toLowerCase() &&
+        l.niveau.toLowerCase() === newLangueLevel.toLowerCase()
+      );
+      
       let langueToAdd;
-      if (existing) {
-        langueToAdd = existing;
-      } else {
-        langueToAdd = { nom: langueName, niveau: newLangueLevel };
-      }
+if (existing) {
+  langueToAdd = existing;
+} else {
+  langueToAdd = { nom: langueName, niveau: newLangueLevel };
+}
       const updatedUser = await ConsultantService.addLangue(user.id, langueToAdd);
       setUser(updatedUser);
       await ConsultantService.saveCv(user.id);

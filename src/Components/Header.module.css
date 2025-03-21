@@ -14,7 +14,7 @@
   justify-content: center;
 }
 
-/* Navbar container with three sections */
+/* Navbar container */
 .navbar {
   width: 100%;
   max-width: 1200px;
@@ -24,20 +24,104 @@
   position: relative;
 }
 
-/* Left section (sidebar toggle) */
+/* Left section: Logo positioned more to the left */
 .leftSection {
   flex: 0 0 auto;
-  margin-left: -10px;
+  margin-left: -145px;
+}
+.logo a {
+  text-decoration: none;
+  color: #00796b;
+  font-size: 1.5rem;
+  font-weight: bold;
 }
 
-/* Center section (search bar) */
+/* Center section: Nav links with dropdowns */
 .centerSection {
   flex: 1;
   display: flex;
   justify-content: center;
+  margin-left: -150px;
+}
+.navLinks {
+  list-style: none;
+  display: flex;
+  gap: 2rem;
+  margin: 0;
+  padding: 0;
+}
+.navLinks li a {
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: color 0.2s;
+}
+.navLinks li a:hover {
+  color: #00796b;
+}
+.notificationIconContainer {
+  position: relative;
+  display: inline-block;
 }
 
-/* Right section (icons) */
+.notificationBadge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background: #ff4444;
+  color: white;
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 0.65rem;
+  font-weight: bold;
+  min-width: 20px;
+  text-align: center;
+  border: 2px solid white;
+}
+/* Dropdown styles for nav links */
+.dropdown {
+  position: relative;
+  cursor: pointer;
+}
+.dropdownTitle {
+  color: #333;
+  font-weight: 500;
+  font-size: 1rem;
+}
+.dropdownMenu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #fff;
+  min-width: 150px;
+  width: auto;              /* Allow flexible width */
+  white-space: nowrap;      /* Prevent text wrapping */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  list-style: none;
+  padding: 0.5rem 0;
+  margin: 0;
+  z-index: 1000;
+}
+
+.dropdown:hover .dropdownMenu {
+  display: block;
+}
+.dropdownMenu li {
+  padding: 0.5rem 1rem;
+}
+
+.dropdownMenu li a {
+  text-decoration: none;
+  color: #333;
+  display: block;
+}
+.dropdownMenu li a:hover {
+  background-color: #f0f0f0;
+}
+
+/* Right section: Search, Messages, Notifications, Profile */
 .rightSection {
   flex: 0 0 auto;
   display: flex;
@@ -46,32 +130,12 @@
   margin-left: 2rem;
 }
 
-/* Sidebar Toggle */
-.sidebarToggle {
-  background: none;
-  border: none;
-  padding: 0.5rem;
-  cursor: pointer;
-  margin-left: -100px;
-}
-
-/* Hamburger icon */
-.hamburger .bar {
-  display: block;
-  width: 25px;
-  height: 3px;
-  margin: 3px 0;
-  background-color: #00796b;
-  transition: all 0.3s;
-}
-
-/* Search container */
+/* Search container: pushed further right */
 .searchContainer {
   display: flex;
   align-items: center;
-  margin-right: 120px;
+  margin-right: 10px;
 }
-
 .searchContainer input {
   padding: 0.3rem 1rem;
   border: 1px solid #ccc;
@@ -79,7 +143,6 @@
   outline: none;
   width: 250px;
 }
-
 .searchButton {
   padding: 0.3rem 0.8rem;
   border: 1px solid #00796b;
@@ -89,145 +152,32 @@
   cursor: pointer;
   transition: background-color 0.3s;
 }
-
 .searchButton:hover {
   background-color: #fff;
   color: #00796b;
   font-weight: bold;
 }
 
-/* Right section icons */
+/* Icon buttons */
 .iconButton {
   background: none;
   border: none;
   cursor: pointer;
   font-size: 1.4rem;
   color: #00796b !important;
+  position: relative;
 }
-
 .profileButton {
   background: none;
   border: none;
   cursor: pointer;
   margin-right: -140px;
 }
-
 .profileIcon {
   width: 35px;
   height: 35px;
   border-radius: 50%;
   object-fit: cover;
-}
-
-/* Sidebar styles */
-.sidebar {
-  position: fixed;
-  left: -250px;
-  top: 0;
-  width: 250px;
-  height: 100vh;
-  background: #fff;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-  transition: left 0.3s ease-in-out;
-  z-index: 1000;
-}
-
-.sidebar.active {
-  left: 0;
-}
-
-.sidebarHeader {
-  padding: 1.5rem;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.sidebarHeader h3 {
-  margin: 0;
-  color: #2c3e50;
-  font-size: 1.4rem;
-}
-
-.closeBtn {
-  background: none;
-  border: none;
-  font-size: 2rem;
-  color: #7f8c8d;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.closeBtn:hover {
-  color: #e74c3c;
-}
-
-.sidebarNav {
-  padding: 1rem;
-  flex-grow: 1;
-  margin-top: -40px;
-}
-
-.sidebarNav ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.sidebarNav li a {
-  display: flex;
-  align-items: center;
-  padding: 1rem;
-  color: #34495e;
-  text-decoration: none;
-  border-radius: 8px;
-  transition: all 0.2s;
-}
-
-.sidebarNav li a:hover {
-  background: #ecf0f1;
-  transform: translateX(5px);
-}
-
-.icon {
-  margin-right: 1rem;
-  font-size: 1.2rem;
-  width: 30px;
-  display: inline-block;
-}
-
-/* Overlay */
-.overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.3);
-  z-index: 999;
-  backdrop-filter: blur(2px);
-}
-
-/* Additional responsive adjustments */
-@media (max-width: 768px) {
-  .navbar {
-    flex-direction: row;
-  }
-  .sidebar {
-    width: 250px;
-  }
-  .logo {
-    margin-left: auto;
-  }
-}
-
-/* Logo styling */
-.logo a {
-  text-decoration: none;
-  color: #00796b;
-  font-size: 1.5rem;
-  font-weight: bold;
 }
 
 /* Notifications Dropdown Panel */
@@ -251,30 +201,61 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem;
-  position: relative; /* Add this */
+  padding: 0.5rem 1rem;
+  position: relative;
   border-bottom: 1px solid #eee;
 }
-
 .notificationsHeader h4 {
   margin: 0;
   font-size: 1.3rem;
   color: #333;
+  font-weight: bold;
+}
+.headerRight {
+  position: relative;
+  display: inline-block;
 }
 
+/* Mark All Options Menu */
+.markAllOptionsMenu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 5px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  z-index: 1500;
+  min-width: 210px;
+}
+.markAllOptionsMenu button {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  text-align: left;
+  color: #00796b;
+  cursor: pointer;
+}
+.markAllOptionsMenu button:hover {
+  background-color: #f5f5f5;
+}
+.markAllOptionsMenu button i,
+.notificationOptionsMenu button i {
+  width: 20px;
+  margin-right: 8px;
+}
 
-
-
-
-/* Filter Buttons (Tout / Non lus) */
+/* Notifications Filter */
 .notificationsFilter {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 1rem;
-  padding: 0.5rem;
+  padding: 0.5rem 0;
   border-bottom: 1px solid #eee;
+  margin-left: 1rem;
 }
-
 .filterButton {
   background: none;
   border: none;
@@ -283,12 +264,10 @@
   cursor: pointer;
   padding: 0.5rem 1rem;
 }
-
 .filterButton:hover {
   background: #ecf0f1;
   border-radius: 4px;
 }
-
 .activeFilter {
   font-weight: bold;
   border-bottom: 2px solid #00796b;
@@ -298,7 +277,6 @@
 .notificationsContent {
   padding: 0.5rem;
 }
-
 .noNotifications {
   text-align: center;
   color: #999;
@@ -316,13 +294,21 @@
   transition: background-color 0.2s ease;
   cursor: pointer;
 }
-
 .notificationCard.read {
   background: #f7f7f7;
 }
-
 .notificationCard.unread {
   background: #e8f4f8;
+  font-weight: 600;
+}
+.notificationCard:hover {
+  background-color: #f0f0f0 !important;
+}
+.notificationCard.read:hover {
+  background-color: #e7e7e7 !important;
+}
+.notificationCard.unread:hover {
+  background-color: #d8e8f0 !important;
 }
 
 /* Notification Body */
@@ -330,27 +316,31 @@
   display: flex;
   align-items: center;
 }
-
 .notificationBody i {
   margin-right: 0.5rem;
-  color: #00796b; /* icon color */
+  color: #00796b;
+  transition: transform 0.2s;
 }
-
+.notificationBody i.fa-circle-exclamation {
+  color: #d32f2f;
+}
+.notificationCard:hover i {
+  transform: scale(1.1);
+}
 .notificationText {
   flex-grow: 1;
 }
-
 .notificationText h6 {
   margin: 0;
   font-size: 0.95rem;
   color: #333;
+  font-weight: 700;
 }
-
 .notificationText small {
   color: #777;
 }
 
-/* Ellipsis ("...") Button */
+/* Ellipsis Button */
 .optionsButton {
   background: none;
   border: none;
@@ -371,7 +361,6 @@
   z-index: 1300;
   padding: 0.5rem;
 }
-
 .notificationOptionsMenu button {
   background: none;
   border: none;
@@ -382,19 +371,15 @@
   text-align: left;
   color: #00796b;
 }
-
 .notificationOptionsMenu button:hover {
   background: #ecf0f1;
 }
-
-
 
 /* Load More Button */
 .loadMoreContainer {
   text-align: center;
   margin: 0.5rem 0;
 }
-
 .loadMoreButton {
   background: #00796b;
   color: #fff;
@@ -403,121 +388,75 @@
   border-radius: 4px;
   cursor: pointer;
 }
-
 .loadMoreButton:hover {
   background: #005f56;
 }
 
-.notificationsHeader h4{
-  font-weight: bold;
-}
-/* Notification Card */
-.notificationCard.unread {
-  background: #e8f4f8;
-  font-weight: 600; /* Add this line */
-}
-.notificationCard.unread:hover {
-  background-color: #d8e8f0 !important;
-}
-/* If you want only the message text to be bold */
-.notificationCard.unread .notificationText h6 {
-  font-weight: 700;
-}
-.notificationCard:hover {
-  background-color: #f0f0f0 !important; /* Override both read/unread states */
-}
-.notificationCard.read:hover {
-  background-color: #e7e7e7 !important;
-}
-.notificationBody i.fa-circle-exclamation {
-  color: #d32f2f; /* Red color for unread notifications */
-}
-
-.notificationCard:hover i {
-  transform: scale(1.1);
-}
-/* Notification badge */
-.notificationIconContainer {
-  position: relative;
-  display: inline-block;
-}
-
-.notificationBadge {
+/* Profile Dropdown */
+.profileDropdown {
   position: absolute;
-  top: -6px;
-  right: -8px;
-  background: #ff4444;
-  color: white;
-  border-radius: 10px;
-  padding: 2px 6px;
-  font-size: 0.65rem;
-  font-weight: bold;
-  min-width: 20px;
-  text-align: center;
-  border: 2px solid white;
-}
-
-/* Updated notifications filter positioning */
-.notificationsFilter {
-  display: flex;
-  justify-content: flex-start;
-  gap: 1rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #eee;
-  margin-left: 1rem;
-}
-
-/* Adjust header layout */
-/* Notifications Header */
-.notificationsHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 1rem;
-  border-bottom: 1px solid #eee;
-  position: relative; /* Add this */
-}
-
-/* Header right section */
-.headerRight {
-  position: relative; /* Changed from absolute */
-  display: inline-block; /* Add this */
-}
-
-.markAllOptionsMenu {
-  position: absolute;
-  top: 100%; /* Position below the ellipsis */
-  right: 0;
-  margin-top: 5px; /* Small gap from button */
-  background: white;
+  top: 60px;
+  right: 20px;
+  background-color: #fff;
   border: 1px solid #ccc;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   z-index: 1500;
-  min-width: 210px;
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
-
-.markAllOptionsMenu button {
-  width: 100%;
-  padding: 0.75rem 1rem;
+.profileHeader {
+  display: flex;
+  border-bottom: 1px solid #77777757;
+  align-items: center;
+  padding: 0.8rem;
+  gap: 0.75rem;
+}
+.profileHeaderImage {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid #00796b;
+}
+.userName {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  line-height: 1.2;
+}
+.userRole {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #00796b;
+  font-weight: 500;
+}
+.dropdownDivider {
+  border-top: 1px solid #eee;
+  margin: 0;
+}
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  padding: 0.6rem 1rem;
   background: none;
   border: none;
-  text-align: left;
-  color: #00796b;
   cursor: pointer;
+  color: #00796b;
+  font-size: 0.9rem;
+  width: 100%;
+  gap: 0.75rem;
+  transition: background 0.3s;
 }
-
-.markAllOptionsMenu button:hover {
-  background-color: #f5f5f5;
+.dropdownItem:hover {
+  background-color: #ecf0f1;
 }
-.markAllOptionsMenu button i,
-.notificationOptionsMenu button i {
+.dropdownItem i {
+  font-size: 0.9rem;
   width: 20px;
-  margin-right: 8px;
 }
 
-/* Optional: Add hover effect to icons */
-.markAllOptionsMenu button:hover i,
-.notificationOptionsMenu button:hover i {
-  color: #005f56;
-}
+/* End of Header.module.css */

@@ -1,5 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
-import  { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   Autocomplete,
@@ -33,7 +34,8 @@ import {
 // Import de la fonction de création de conversation depuis le service Messenger
 import { createConversation } from "../services/MessengerService";
 import ProfileViewService from '../Services/ProfileViewService';
-
+// Import du service Entreprise pour récupérer les détails de l'entreprise
+import EntrepriseService from '../Services/EntrepriseService';
 
 const EntrepriseMission = () => {
   const navigate = useNavigate();
@@ -57,6 +59,9 @@ const EntrepriseMission = () => {
   const [consultantProposition, setConsultantProposition] = useState(null);
   const [loadingProposition, setLoadingProposition] = useState(false);
 
+  // Nouvel état pour stocker les détails complets de l'entreprise qui a proposé la proposition
+  const [entrepriseDetails, setEntrepriseDetails] = useState(null);
+
   // Récupère l'id de l'entreprise depuis le localStorage
   const storedUser = localStorage.getItem('user');
   const entrepriseId = storedUser ? JSON.parse(storedUser).id : null;
@@ -66,6 +71,7 @@ const EntrepriseMission = () => {
     const fetchMissions = async () => {
       try {
         const data = await getPublishedMissions(entrepriseId);
+        console.log(data)
         setMissions(data);
         setFilteredMissions(data);
       } catch (err) {
@@ -121,16 +127,16 @@ const EntrepriseMission = () => {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
   };
+
   const handleViewProfile = async (consultant) => {
     try {
       await ProfileViewService.createProfileView(consultant.id);
     } catch (error) {
       console.error("Erreur lors de la création de la vue de profil :", error);
-      // Vous pouvez gérer l'erreur (ex: notifier l'utilisateur) si nécessaire
     }
-    // Puis naviguer vers le profil du consultant
     navigate(`/consultant/${consultant.id}`);
   };
+
   // Lorsqu'une mission est sélectionnée, on charge les consultants et leurs propositions
   const handleSelectMission = async (mission) => {
     setSelectedMission(mission);
@@ -169,7 +175,6 @@ const EntrepriseMission = () => {
     const propositionForConsultant = missionPropositions.find(
       (prop) => prop && prop.consultant && prop.consultant.id === consultant.id
     );
-    
 
     setConsultantProposition(propositionForConsultant || null);
     setLoadingProposition(false);
@@ -179,8 +184,34 @@ const EntrepriseMission = () => {
   const handleClosePropositionModal = () => {
     setSelectedConsultant(null);
     setConsultantProposition(null);
+    setEntrepriseDetails(null);
     setOpenPropositionModal(false);
   };
+
+  // Si la proposition a un champ entreprise (qui ne contient que l'id),
+  // on récupère les détails complets de l'entreprise pour afficher son nom.
+  useEffect(() => {
+    const fetchEntrepriseDetails = async () => {
+      if (consultantProposition && consultantProposition.entreprise) {
+        
+        // Si l'objet entreprise ne contient pas encore le nom, on le récupère
+        if (!consultantProposition.entreprise.nomEntreprise) {
+          try {
+            const entreprise = await EntrepriseService.getEntrepriseById(consultantProposition.entreprise);
+            setEntrepriseDetails(entreprise);
+            console.log(entreprise)
+          } catch (error) {
+            console.error("Erreur lors du chargement des détails de l'entreprise :", error);
+          }
+        } else {
+          // Si l'objet contient déjà le nom, utilisez-le directement
+          setEntrepriseDetails(consultantProposition.entreprise);
+        }
+      }
+    };
+
+    fetchEntrepriseDetails();
+  }, [consultantProposition]);
 
   // Fonction pour mettre à jour le statut d'une proposition
   const updateStatusForConsultant = async (consultant, newStatus) => {
@@ -237,15 +268,11 @@ const EntrepriseMission = () => {
   // Nouvelle fonction pour initialiser une conversation avec un consultant
   const handleContacter = async (consultant) => {
     try {
-      // Récupère l'utilisateur courant depuis le localStorage
       const userWithToken = JSON.parse(localStorage.getItem("user")) || {};
       const currentUser = userWithToken.email || "me@domain.com";
       
-      // Crée une nouvelle conversation entre l'utilisateur courant et le consultant
       let conversation = await createConversation(currentUser, consultant.email);
       
-      // On peut transformer la conversation si besoin (par exemple avec une fonction transformConversation)
-      // Ici, on navigue vers Messenger en passant la conversation dans l'état
       navigate("/messenger", { state: { conversation } });
     } catch (error) {
       console.error("Erreur lors de la création de la conversation :", error);
@@ -282,19 +309,24 @@ const EntrepriseMission = () => {
             <div className={styles.missionGrid}>
               {filteredMissions.map((mission, index) => (
                 <motion.div
-                  key={mission.id}
-                  className={`${styles.cardContainer} ${styles.missionCard}`}
-                  variants={cardVariants}
-                  initial="hidden"
-                  animate="visible"
-                  transition={{ duration: 0.4, delay: index * 0.1 }}
-                  onClick={() => handleSelectMission(mission)}
-                >
+                key={mission.id}
+                className={`${styles.cardContainer} ${styles.missionCard}`}
+                variants={cardVariants}
+                initial="hidden"
+                animate="visible"
+                transition={{ duration: 0.4, delay: index * 0.1 }}
+                onClick={() => handleSelectMission(mission)}
+              >
+                {mission.propositionsCount > 0 && (
+                  <div className={styles.propositionsBadge}>
+                    {mission.propositionsCount}
+                  </div>
+                )}
                   <div className={styles.cardHeader}>
-                    <h3>{mission.titre}</h3>
+                    <h3>{mission.titre}</h3> 
                   </div>
                   <div className={styles.cardBody}>
-                    <p className={styles.description}>{mission.description}</p>
+                    
                     <div className={styles.infoRow}>
                       <span className={styles.label}>Budget:</span>
                       <span>{mission.budget}€</span>
@@ -332,6 +364,13 @@ const EntrepriseMission = () => {
                             size="small"
                           />
                         ))}
+                        {mission.statut && (
+    <div className={styles.missionStatus}>
+      <span className={`${styles.status} ${styles[mission.statut.toLowerCase().replace(/ /g, '-')]}`}>
+  {mission.statut}
+</span>
+    </div>
+  )}
                     </div>
                   </div>
                 </motion.div>
@@ -382,6 +421,17 @@ const EntrepriseMission = () => {
                         <div className={styles.talentHeader} style={{ position: 'relative' }}>
                           <div>
                             <h2>{consultant.nom} {consultant.prenom}</h2>
+                            <div className={styles.originBadge}>
+                              {propositionForConsultant?.entreprise ? (
+                                <span className={styles.entrepriseBadge}>
+                                  🏢 Proposition par Entreprise SSI
+                                </span>
+                              ) : (
+                                <span className={styles.freelanceBadge}>
+                                  🧑💻 Proposition indépendante
+                                </span>
+                              )}
+                            </div>
                             <Rating
                               name={`rating-${consultant.id}`}
                               value={ratingValue}
@@ -437,13 +487,13 @@ const EntrepriseMission = () => {
                           <div className={styles.actionButtons}>
                             <div className={styles.leftActions}>
                               <MUITooltip title="Voir le profil" arrow>
-                              <Button 
-                              variant="contained" 
-                              size="small"
-                              onClick={() => handleViewProfile(consultant)}
-                            >
-                              Profil
-                            </Button>
+                                <Button 
+                                  variant="contained" 
+                                  size="small"
+                                  onClick={() => handleViewProfile(consultant)}
+                                >
+                                  Profil
+                                </Button>
                               </MUITooltip>
                               <MUITooltip title="Contacter" arrow>
                                 <Button
@@ -570,6 +620,20 @@ const EntrepriseMission = () => {
           Proposition de {selectedConsultant && `${selectedConsultant.nom} ${selectedConsultant.prenom}`}
         </DialogTitle>
         <DialogContent dividers>
+        {consultantProposition?.entreprise && (
+  <Box marginBottom={2}>
+    <strong>
+      Proposé par l'entreprise :{" "}
+      {entrepriseDetails ? (
+        <Link to={`/entreprise/${entrepriseDetails.id}`} className={styles.enterpriseLink}>
+          {entrepriseDetails.nomEntreprise}
+        </Link>
+      ) : (
+        <CircularProgress size={15} />
+      )}
+    </strong>
+  </Box>
+)}
           {loadingProposition ? (
             <Box className={styles.loadingContainer}>
               <CircularProgress />

@@ -85,7 +85,9 @@ const ConsultantPropositions = () => {
           p.statut?.toUpperCase() === 'PENDING'
       );
       const filteredActives = propositions.filter(
-        (p) => p.statut?.toUpperCase() === 'ACCEPTED'
+        (p) => p.statut?.toUpperCase() === 'ACCEPTED' &&
+        p.origine?.toUpperCase() !== 'RECRUTEMENT' 
+
       );
       const filteredRefusees = propositions.filter(
         (p) => p.statut?.toUpperCase() === 'REFUSED'
