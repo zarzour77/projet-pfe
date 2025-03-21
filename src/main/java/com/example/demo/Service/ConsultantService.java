@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,20 +28,25 @@ public class ConsultantService {
     private final FormationRepository formationRepository;
     private final LangueRepository langueRepository;
     private final CertificationRepository certificationRepository;
-
+    private final PropositionRepository propositionRepository;
+    private final CompetenceRepository competenceRepository;
     @Autowired
     public ConsultantService(ConsultantRepository consultantRepository,
                              ExperienceRepository experienceRepository,
                              MissionRepository missionRepository,
                              FormationRepository formationRepository,
                              LangueRepository langueRepository,
-                             CertificationRepository certificationRepository) {
+                             CertificationRepository certificationRepository,
+                             PropositionRepository propositionRepository,
+                             CompetenceRepository competenceRepository) {
         this.consultantRepository = consultantRepository;
         this.experienceRepository = experienceRepository;
         this.missionRepository = missionRepository;
         this.formationRepository = formationRepository;
         this.langueRepository = langueRepository;
         this.certificationRepository = certificationRepository;
+        this.propositionRepository = propositionRepository;
+        this.competenceRepository = competenceRepository;
     }
     @Transactional
     public List<Consultant> getAllConsultants() {
@@ -137,6 +143,16 @@ public class ConsultantService {
             if (updatedConsultant.getCertifications() != null) {
                 consultant.setCertifications(updatedConsultant.getCertifications());
             }
+            if (updatedConsultant.getTypeConsultant() != null) {
+                consultant.setTypeConsultant(updatedConsultant.getTypeConsultant());
+            }
+            if (updatedConsultant.getEntrepriseSsi() != null) {
+                consultant.setEntrepriseSsi(updatedConsultant.getEntrepriseSsi());
+            }
+            if (updatedConsultant.getDateRecrutement() != null) {
+                consultant.setDateRecrutement(updatedConsultant.getDateRecrutement());
+            }
+
 
             return consultantRepository.save(consultant);
         }).orElseThrow(() -> new RuntimeException("Consultant not found with id " + id));
@@ -179,10 +195,22 @@ public class ConsultantService {
             if (consultant.getCompetences() == null) {
                 consultant.setCompetences(new ArrayList<>());
             }
-            consultant.getCompetences().add(competence);
+            // Check if a competence with the same name and level already exists
+            Optional<Competence> existingCompetenceOpt =
+                    competenceRepository.findByNomIgnoreCaseAndCompetenceNiveau(
+                            competence.getNom(), competence.getCompetenceNiveau()
+                    );
+            // Reuse the existing competence if found; otherwise, save the new one
+            Competence competenceToAdd = existingCompetenceOpt.orElseGet(() -> competenceRepository.save(competence));
+
+            // Add the competence to the consultant if not already associated
+            if (!consultant.getCompetences().contains(competenceToAdd)) {
+                consultant.getCompetences().add(competenceToAdd);
+            }
             return consultantRepository.save(consultant);
         }).orElseThrow(() -> new RuntimeException("Consultant not found with id " + consultantId));
     }
+
 
     @Transactional
     public String deleteCompetence(Long consultantId, Long competenceId) {
@@ -264,13 +292,23 @@ public class ConsultantService {
     @Transactional
     public Consultant addLangueToConsultant(Long consultantId, Langue langue) {
         return consultantRepository.findById(consultantId).map(consultant -> {
+            // Initialize the consultant's language list if null
             if (consultant.getLangues() == null) {
                 consultant.setLangues(new ArrayList<>());
             }
-            consultant.getLangues().add(langue);
+            // Check if a Langue with the same nom and niveau exists
+            Optional<Langue> existingLangueOpt = langueRepository.findByNomAndNiveau(langue.getNom(), langue.getNiveau());
+            // Reuse the existing Langue if found, otherwise save the new one
+            Langue langueToAdd = existingLangueOpt.orElseGet(() -> langueRepository.save(langue));
+
+            // Add langue only if it's not already associated with the consultant
+            if (!consultant.getLangues().contains(langueToAdd)) {
+                consultant.getLangues().add(langueToAdd);
+            }
             return consultantRepository.save(consultant);
         }).orElseThrow(() -> new RuntimeException("Consultant not found with id " + consultantId));
     }
+
 
     @Transactional
     public String deleteLangue(Long consultantId, Long langueId) {
@@ -358,5 +396,13 @@ public class ConsultantService {
         Integer currentWorkload = consultant.getWorkload() == null ? 0 : consultant.getWorkload();
         consultant.setWorkload(Math.max(currentWorkload - 1, 0));
         return consultantRepository.save(consultant);
+    }
+
+    @Transactional
+    public List<Date> getAcceptedInvitationDates(Long consultantId) {
+        Consultant consultant = consultantRepository.findById(consultantId)
+                .orElseThrow(() -> new RuntimeException("Consultant not found with id " + consultantId));
+
+        return propositionRepository.findAcceptationDatesByConsultant(consultant);
     }
 }

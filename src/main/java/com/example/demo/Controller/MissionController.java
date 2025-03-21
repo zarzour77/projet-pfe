@@ -1,6 +1,7 @@
 package com.example.demo.Controller;
 
 import com.example.demo.Service.MissionService;
+import com.example.demo.Service.PropositionService;
 import com.example.demo.model.Consultant;
 import com.example.demo.model.Mission;
 import com.example.demo.exception.MissionNotFoundException;

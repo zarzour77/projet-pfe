@@ -1,13 +1,12 @@
 package com.example.demo.Service;
 
-import com.example.demo.model.Consultant;
-import com.example.demo.model.Entreprise;
-import com.example.demo.model.Mission;
+import com.example.demo.model.*;
+import com.example.demo.repository.CompetenceRepository;
 import com.example.demo.repository.ConsultantRepository;
 import com.example.demo.repository.EntrepriseRepository;
 import com.example.demo.repository.MissionRepository;
 import com.example.demo.exception.MissionNotFoundException;
-import com.example.demo.model.Avis;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +33,8 @@ public class MissionService {
 
     @Autowired
     private EmailService emailService;
-
+    @Autowired
+    private CompetenceRepository competenceRepository;
 
     public MissionService(MissionRepository missionRepository) {
         this.missionRepository = missionRepository;
@@ -81,27 +81,37 @@ public class MissionService {
         Entreprise entreprise = entrepriseRepository.findById(entrepriseId)
                 .orElseThrow(() -> new RuntimeException("Entreprise non trouvée avec l'id " + entrepriseId));
         mission.setEntreprise(entreprise);
+
+        // If the mission has competences, iterate and check each one.
+        if (mission.getCompetencesRequises() != null) {
+            mission.setCompetencesRequises(
+                    mission.getCompetencesRequises().stream().map(competence -> {
+                        Optional<Competence> existingCompetenceOpt =
+                                competenceRepository.findByNomIgnoreCaseAndCompetenceNiveau(
+                                        competence.getNom(), competence.getCompetenceNiveau());
+                        // If found, return the existing competence; otherwise, save the new one.
+                        return existingCompetenceOpt.orElseGet(() -> competenceRepository.save(competence));
+                    }).collect(Collectors.toList())
+            );
+        }
+
         Mission savedMission = missionRepository.save(mission);
 
         // Recherche de tous les consultants dans la base
         List<Consultant> consultants = consultantRepository.findAll();
         for (Consultant consultant : consultants) {
             double score = matchingService.computeGlobalMatchScore(consultant, savedMission);
-            if (score > MATCH_THRESHOLD) {
+            if (score > 0.6) {  // Using your MATCH_THRESHOLD directly inline
                 String message = "Nouvelle mission \"" + savedMission.getTitre() +
                         "\" correspondant à vos compétences (score: " + score + ").";
-                // Envoi de la notification
                 notificationService.sendNotification(consultant, message);
 
-                // Préparation des données pour l'email
                 String subject = "Nouvelle mission disponible";
                 String content = "Bonjour " + consultant.getNom() + ",\n\n" +
                         "Une nouvelle mission correspondant à vos compétences a été publiée.\n" +
                         "Titre : " + savedMission.getTitre() + "\n" +
                         "Score de correspondance : " + score + "\n\n" +
                         "Cordialement,\nVotre équipe";
-
-                // Envoi de l'email
                 emailService.sendInvitationEmail(consultant.getEmail(), subject, content);
             }
         }
@@ -177,4 +187,6 @@ public class MissionService {
         }
         return missionRepository.save(mission);
     }
+
+
 }

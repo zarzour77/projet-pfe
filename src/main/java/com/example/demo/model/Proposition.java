@@ -41,6 +41,8 @@
 
         private String origine; // "APPLIED", "INVITED" ou "RECRUTEMENT"
 
+        private Date dateAcceptation;
+
         public Proposition() {}
 
         // Constructeur mis à jour incluant l'entreprise
@@ -134,5 +136,12 @@
         }
         public void setOrigine(String origine) {
             this.origine = origine;
+        }
+        public Date getDateAcceptation() {
+            return dateAcceptation;
+        }
+
+        public void setDateAcceptation(Date dateAcceptation) {
+            this.dateAcceptation = dateAcceptation;
         }
     }

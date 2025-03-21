@@ -380,13 +380,15 @@ public class PropositionService {
             throw new RuntimeException("Consultant ou entreprise introuvable dans la proposition");
         }
 
-        // Mise à jour du statut de la proposition
+        // Mise à jour du statut de la proposition et enregistrer la date d'acceptation
         proposition.setStatut("ACCEPTED");
+        proposition.setDateAcceptation(new Date()); // Save the current date as the acceptance date
         propositionRepository.save(proposition);
 
         // Mise à jour du consultant : changer son type et lui assigner l'entreprise SSI
         consultant.setTypeConsultant(Consultant.TypeConsultant.ENTREPRISE_SSI);
         consultant.setEntrepriseSsi(entreprise);
+        consultant.setDateRecrutement(new Date()); // Définir la date de recrutement
         consultantRepository.save(consultant);
 
         // Ajout du consultant à la liste des consultants de l'entreprise (si non déjà présent)
@@ -399,7 +401,7 @@ public class PropositionService {
         return proposition;
     }
 
-
+    
 
 
 

@@ -1,11 +1,14 @@
 package com.example.demo.Controller;
 
 import com.example.demo.Service.ConsultantService;
+import com.example.demo.Service.PropositionService;
 import com.example.demo.model.*;
+import com.example.demo.repository.ConsultantRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -15,10 +18,15 @@ import java.util.Map;
 public class ConsultantController {
 
     private final ConsultantService consultantService;
+    private final ConsultantRepository consultantRepository;
+    private final PropositionService propositionService;
 
     @Autowired
-    public ConsultantController(ConsultantService consultantService) {
+    public ConsultantController(PropositionService propositionService, ConsultantRepository consultantRepository,
+                                ConsultantService consultantService) {
+        this.consultantRepository = consultantRepository;
         this.consultantService = consultantService;
+        this.propositionService = propositionService;
     }
 
     @GetMapping
@@ -197,6 +205,15 @@ public class ConsultantController {
         try {
             Consultant updatedConsultant = consultantService.decrementWorkload(id);
             return ResponseEntity.ok(updatedConsultant);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    @GetMapping("/{id}/accepted-invitations")
+    public ResponseEntity<List<Date>> getAcceptedInvitationDates(@PathVariable Long id) {
+        try {
+            List<Date> acceptationDates = consultantService.getAcceptedInvitationDates(id);
+            return ResponseEntity.ok(acceptationDates);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

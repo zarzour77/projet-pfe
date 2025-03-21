@@ -99,6 +99,16 @@ public class EntrepriseController {
             return ResponseEntity.notFound().build();
         }
     }
+    @DeleteMapping("/{entrepriseId}/consultants/{consultantId}")
+    public ResponseEntity<?> removeConsultant(@PathVariable Long entrepriseId, @PathVariable Long consultantId) {
+        try {
+            entrepriseService.removeConsultantFromEntreprise(entrepriseId, consultantId);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
 
 
 }

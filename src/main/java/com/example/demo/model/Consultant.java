@@ -52,6 +52,9 @@ public class Consultant extends User {
     private List<Domaine> domaines;
     @Column(nullable = true)
     private Integer taux_horaire; // Remplacer budget_min par taux_horaire en Java
+
+    @Column(nullable = true)
+    private Date dateRecrutement;
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER)
     @JoinTable(
             name = "consultant_experiences",
@@ -242,6 +245,13 @@ public class Consultant extends User {
         this.experiences = experiences;
     }
 
+    public Date getDateRecrutement() {
+        return dateRecrutement;
+    }
+
+    public void setDateRecrutement(Date dateRecrutement) {
+        this.dateRecrutement = dateRecrutement;
+    }
     @Override
     public String toString() {
         return "Consultant{" +
@@ -351,4 +361,5 @@ public class Consultant extends User {
     public void setBadge(String badge) {
         this.badge = badge;
     }
+
 }
