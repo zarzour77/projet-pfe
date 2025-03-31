@@ -13,7 +13,7 @@ public class FastTextService {
     public FastTextService() {
         jFastText = new JFastText();
         // Assurez-vous que le chemin vers le modèle binaire est correct
-        jFastText.loadModel("C:/Users/mrabe/OneDrive/Desktop/Projet PFE/cc.fr.300.bin/cc.fr.300.bin");
+        jFastText.loadModel("C:/Users/zinig/Desktop/projetpfe/cc.fr.300.bin/cc.fr.300.bin");
     }
 
     /**
