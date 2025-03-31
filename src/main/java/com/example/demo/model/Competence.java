@@ -40,11 +40,14 @@ public class Competence {
     }
 
     public void setCompetenceNiveau(String competenceNiveau) {
-        String niveauLower = competenceNiveau != null ? competenceNiveau.toLowerCase() : null;
-        if (niveauLower == null || (!niveauLower.equals("débutant") && !niveauLower.equals("intermédiaire") && !niveauLower.equals("expert"))) {
-            throw new IllegalArgumentException("Invalid competence level...");
+        // Validate the provided level without converting it to lowercase.
+        if (competenceNiveau == null ||
+                (!competenceNiveau.equals("Débutant") &&
+                        !competenceNiveau.equals("Intermédiaire") &&
+                        !competenceNiveau.equals("Expert"))) {
+            throw new IllegalArgumentException("Invalid competence level. Allowed: Débutant, Intermédiaire, Expert");
         }
-        this.competenceNiveau = niveauLower; // Stocker en minuscules
+        this.competenceNiveau = competenceNiveau;
     }
 
 

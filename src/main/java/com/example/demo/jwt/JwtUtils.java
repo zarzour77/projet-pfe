@@ -32,20 +32,19 @@ public class JwtUtils {
     @Value("${app.jwtExpirationMs}")
     private int jwtExpirationMs;
 
-    public String generateJwtToken(Authentication authentication) {
+    public String generateJwtToken(Authentication authentication, Integer tokenVersion) {
         String username = authentication.getName();
         Date expiration = new Date(new Date().getTime() + jwtExpirationMs);
 
-        String token = Jwts.builder()
+        return Jwts.builder()
                 .setSubject(username)
+                .claim("tokenVersion", tokenVersion)
                 .setIssuedAt(new Date())
                 .setExpiration(expiration)
                 .signWith(jwtSecret)
                 .compact();
-
-        logger.info("Generated JWT for {} expiring at {}", username, expiration);
-        return token;
     }
+
 
     public boolean validateJwtToken(String authToken) {
         try {
@@ -69,6 +68,13 @@ public class JwtUtils {
                 .getBody()
                 .getSubject();
     }
-
+    public Integer getTokenVersionFromJwtToken(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(jwtSecret)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("tokenVersion", Integer.class);
+    }
 
 }

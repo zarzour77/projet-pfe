@@ -193,6 +193,11 @@ public class EntrepriseService {
         String notifMsg = "Vous avez été retiré de la liste des collaborateurs par l'entreprise " + entreprise.getNomEntreprise();
         notificationService.createNotificationConsultant(notifMsg, consultant);
     }
-
+    @Transactional
+    public Double getFrozenBalance(Long userId) {
+        return entrepriseRepository.findById(userId)
+                .map(Entreprise::getFrozenBalance)
+                .orElseThrow(() -> new RuntimeException("Entreprise not found with id: " + userId));
+    }
 
 }

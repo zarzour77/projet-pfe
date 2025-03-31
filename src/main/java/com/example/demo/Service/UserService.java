@@ -10,6 +10,7 @@ import com.example.demo.repository.UserRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,16 +26,18 @@ public class UserService {
     private final ConsultantRepository consultantRepository;
     private final EntrepriseRepository entrepriseRepository;
     private final EntityManager entityManager;
+    private final PasswordEncoder passwordEncoder; // Inject the PasswordEncoder
 
     @Autowired
     public UserService(UserRepository userRepository, AvisRepository avisRepository,
                        ConsultantRepository consultantRepository, EntrepriseRepository entrepriseRepository,
-                       EntityManager entityManager) {
+                       EntityManager entityManager, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.avisRepository = avisRepository;
         this.consultantRepository = consultantRepository;
         this.entrepriseRepository = entrepriseRepository;
         this.entityManager = entityManager;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public List<User> getAllUsers() {
@@ -51,6 +54,11 @@ public class UserService {
 
     public User updateUser(Long id, User updatedUser) {
         return userRepository.findById(id).map(user -> {
+            boolean emailChanged = false;
+            if (updatedUser.getEmail() != null && !updatedUser.getEmail().equals(user.getEmail())) {
+                emailChanged = true;
+                user.setTokenVersion(user.getTokenVersion() + 1); // Invalidate existing tokens
+            }
             if (updatedUser.getNom() != null) {
                 user.setNom(updatedUser.getNom());
             }
@@ -67,7 +75,7 @@ public class UserService {
                 user.setAdresse(updatedUser.getAdresse());
             }
             if (updatedUser.getPassword() != null) {
-                user.setPassword(updatedUser.getPassword());
+                user.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
             }
             if (updatedUser.getRole() != null) {
                 user.setRole(updatedUser.getRole());
@@ -133,7 +141,9 @@ public class UserService {
         return updatedUser;
     }
 
-
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
     public List<User> searchUsers(String query) {
         return userRepository.findByNomContainingIgnoreCase(query);
     }

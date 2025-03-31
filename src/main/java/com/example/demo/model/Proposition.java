@@ -12,7 +12,7 @@
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         private Long id;
 
-        @ManyToOne
+        @ManyToOne(fetch = FetchType.EAGER)
         @JoinColumn(name = "consultant_id")
         private Consultant consultant;
 
@@ -144,4 +144,5 @@
         public void setDateAcceptation(Date dateAcceptation) {
             this.dateAcceptation = dateAcceptation;
         }
+
     }

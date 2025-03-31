@@ -109,6 +109,14 @@ public class EntrepriseController {
         }
     }
 
-
+    @GetMapping("/frozen-balance/{userId}")
+    public ResponseEntity<Double> getFrozenBalance(@PathVariable Long userId) {
+        try {
+            Double frozenBalance = entrepriseService.getFrozenBalance(userId);
+            return ResponseEntity.ok(frozenBalance);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 
 }

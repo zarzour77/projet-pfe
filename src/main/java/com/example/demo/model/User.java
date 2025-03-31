@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import com.example.demo.Payment.PaymentTransaction;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -13,7 +14,6 @@ import java.util.List;
 @Inheritance(strategy = InheritanceType.JOINED)
 @DiscriminatorColumn(name = "user_type", discriminatorType = DiscriminatorType.STRING)
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,9 +47,31 @@ public class User {
     @JsonIgnore
     private String verificationCode;
 
-    @JsonIgnore  // Ignore transactions pour éviter LazyInitializationException
-    @OneToMany(mappedBy = "expediteur", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Transaction> transactions = new ArrayList<>();
+    @JsonIgnore
+    @OneToMany(mappedBy = "entrepriseSender", fetch = FetchType.LAZY)
+    private List<PaymentTransaction> transactionsAsEntrepriseSender = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "consultantSender", fetch = FetchType.LAZY)
+    private List<PaymentTransaction> transactionsAsConsultantSender = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "consultantReceiver", fetch = FetchType.LAZY)
+    private List<PaymentTransaction> transactionsAsConsultantReceiver = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "adminSender", fetch = FetchType.LAZY)
+    private List<PaymentTransaction> transactionsAsAdminSender = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "adminReceiver", fetch = FetchType.LAZY)
+    private List<PaymentTransaction> transactionsAsAdminReceiver = new ArrayList<>();
+    // --- End PaymentTransaction Associations ---
+    @Column(name = "token_version", columnDefinition = "integer DEFAULT 0")
+    private Integer tokenVersion = 0;
+    @Column(name = "stripe_customer_id")
+    private String stripeCustomerId;
+
     public User() {}
 
     public User(String nom) {
@@ -197,14 +219,42 @@ public class User {
     public void setTelephone(String telephone) {
         this.telephone = telephone;
     }
-    public List<Transaction> getTransactions() {
-        return transactions;
+    public List<PaymentTransaction> getTransactionsAsEntrepriseSender() {
+        return transactionsAsEntrepriseSender;
+    }
+    public void setTransactionsAsEntrepriseSender(List<PaymentTransaction> transactionsAsEntrepriseSender) {
+        this.transactionsAsEntrepriseSender = transactionsAsEntrepriseSender;
     }
 
-    public void setTransactions(List<Transaction> transactions) {
-        this.transactions = transactions;
+    public List<PaymentTransaction> getTransactionsAsConsultantSender() {
+        return transactionsAsConsultantSender;
+    }
+    public void setTransactionsAsConsultantSender(List<PaymentTransaction> transactionsAsConsultantSender) {
+        this.transactionsAsConsultantSender = transactionsAsConsultantSender;
     }
 
+    public List<PaymentTransaction> getTransactionsAsConsultantReceiver() {
+        return transactionsAsConsultantReceiver;
+    }
+    public void setTransactionsAsConsultantReceiver(List<PaymentTransaction> transactionsAsConsultantReceiver) {
+        this.transactionsAsConsultantReceiver = transactionsAsConsultantReceiver;
+    }
+
+    public List<PaymentTransaction> getTransactionsAsAdminSender() {
+        return transactionsAsAdminSender;
+    }
+    public void setTransactionsAsAdminSender(List<PaymentTransaction> transactionsAsAdminSender) {
+        this.transactionsAsAdminSender = transactionsAsAdminSender;
+    }
+
+    public List<PaymentTransaction> getTransactionsAsAdminReceiver() {
+        return transactionsAsAdminReceiver;
+    }
+    public void setTransactionsAsAdminReceiver(List<PaymentTransaction> transactionsAsAdminReceiver) {
+        this.transactionsAsAdminReceiver = transactionsAsAdminReceiver;
+    }
+    public Integer getTokenVersion() { return tokenVersion; }
+    public void setTokenVersion(Integer tokenVersion) { this.tokenVersion = tokenVersion; }
     // Utilisation de @JsonGetter pour retourner l'image avec le préfixe approprié dans la réponse JSON
     @JsonGetter("photoprofile")
     public String getPhotoprofileUrl() {
@@ -225,4 +275,18 @@ public class User {
         // Si le préfixe n'est pas présent, on l'ajoute
         return prefix + photoprofile;
     }
+    public String getStripeCustomerId() {
+        return stripeCustomerId;
+    }
+
+    public void setStripeCustomerId(String stripeCustomerId) {
+        this.stripeCustomerId = stripeCustomerId;
+    }
+
+    private List<PaymentTransaction> getReceivedTransactions() {
+        // This will be populated by the service layer
+        return new ArrayList<>();
+    }
+
+
 }

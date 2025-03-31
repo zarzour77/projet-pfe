@@ -37,6 +37,8 @@ public class Entreprise extends User {
         CLIENTE,  // Entreprise cliente : peut publier des missions
         SSI       // Entreprise SSI : ne publie pas de missions, gère des consultants
     }
+    @Column(name = "frozen_balance", columnDefinition = "double default 0.0")
+    private Double frozenBalance = 0.0;
     // Constructeur par défaut
     public Entreprise() {}
 
@@ -99,5 +101,12 @@ public class Entreprise extends User {
         this.nomEntreprise = nomEntreprise;
     }
 
+    public Double getFrozenBalance() {
+        return frozenBalance;
+    }
+
+    public void setFrozenBalance(Double frozenBalance) {
+        this.frozenBalance = frozenBalance != null ? frozenBalance : 0.00;
+    }
 }
 

@@ -20,16 +20,19 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        logger.debug("Loading user by email: {}", email);
-
-        // Use the autowired repository instance instead of static call
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> {
-                    logger.error("User not found with email: {}", email);
-                    return new UsernameNotFoundException("User Not Found with email: " + email);
-                });
+                .orElseThrow(() -> new UsernameNotFoundException("User Not Found with email: " + email));
 
-        logger.info("User loaded successfully: {}", email);
-        return UserDetailsImpl.build(user);
+        return new UserDetailsImpl(
+                user.getId(),
+                user.getNom(),
+                user.getPrenom(),
+                user.getTelephone(),
+                user.getEmail(),
+                user.getPassword(),
+                user.getRole(),
+                user.isEmailVerified(),
+                user.getTokenVersion()
+        );
     }
 }

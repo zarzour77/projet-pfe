@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import com.example.demo.Payment.PaymentTransaction;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
@@ -25,8 +26,8 @@ public class Subscription {
     private Consultant consultant;
 
     @OneToOne
-    @JoinColumn(name = "transaction_id")
-    private Transaction transaction;
+    @JoinColumn(name = "transaction_id", referencedColumnName = "id")
+    private PaymentTransaction transaction;
 
     public Subscription() {
         // Set default status to active upon creation
@@ -88,10 +89,10 @@ public class Subscription {
     public void setConsultant(Consultant consultant) {
         this.consultant = consultant;
     }
-    public Transaction getTransaction() {
+    public PaymentTransaction getTransaction() {
         return transaction;
     }
-    public void setTransaction(Transaction transaction) {
+    public void setTransaction(PaymentTransaction transaction) {
         this.transaction = transaction;
     }
 }

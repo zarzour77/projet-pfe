@@ -17,9 +17,9 @@ public class UserDetailsImpl implements UserDetails {
     private String password;
     private String role;
     private boolean emailVerified; // nouveau champ
-
+    private Integer tokenVersion;
     // Constructeur modifié dans l'ordre : id, nom, prenom, telephone, email, password, role, emailVerified
-    public UserDetailsImpl(Long id, String nom, String prenom, String telephone, String email, String password, String role, boolean emailVerified) {
+    public UserDetailsImpl(Long id, String nom, String prenom, String telephone, String email, String password, String role, boolean emailVerified, Integer tokenVersion) {
         this.id = id;
         this.nom = nom;
         this.prenom = prenom;
@@ -28,6 +28,7 @@ public class UserDetailsImpl implements UserDetails {
         this.password = password;
         this.role = role;
         this.emailVerified = emailVerified;
+        this.tokenVersion = tokenVersion;
     }
 
     public static UserDetailsImpl build(User user) {
@@ -39,7 +40,8 @@ public class UserDetailsImpl implements UserDetails {
                 user.getEmail(),
                 user.getPassword(),
                 user.getRole(),
-                user.isEmailVerified()  // passage de la vérification
+                user.isEmailVerified(),
+                user.getTokenVersion()// passage de la vérification
         );
     }
 
@@ -108,5 +110,8 @@ public class UserDetailsImpl implements UserDetails {
 
     public String getRole() {
         return role;
+    }
+    public Integer getTokenVersion() {
+        return tokenVersion;
     }
 }

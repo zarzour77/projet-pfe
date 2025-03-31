@@ -1,19 +1,25 @@
 package com.example.demo.Service;
 
+import com.example.demo.Payment.PaymentBusinessService;
+import com.example.demo.Payment.PaymentIntentRequest;
+import com.example.demo.Payment.PaymentTransaction;
+import com.example.demo.Payment.StripeService;
 import com.example.demo.model.*;
-import com.example.demo.repository.CompetenceRepository;
-import com.example.demo.repository.ConsultantRepository;
-import com.example.demo.repository.EntrepriseRepository;
-import com.example.demo.repository.MissionRepository;
+import com.example.demo.repository.*;
 import com.example.demo.exception.MissionNotFoundException;
+import com.stripe.exception.StripeException;
+import com.stripe.model.Customer;
+import com.stripe.model.PaymentIntent;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -29,13 +35,20 @@ public class MissionService {
     private NotificationService notificationService;
 
     @Autowired
+    UserRepository userRepository;
+    @Autowired
     private MatchingService matchingService;
 
     @Autowired
     private EmailService emailService;
     @Autowired
     private CompetenceRepository competenceRepository;
-
+    @Autowired
+    PaymentBusinessService paymentBusinessService;
+    @Autowired
+    StripeService stripeService;
+    @Autowired
+    private PaymentTransactionRepository paymentTransactionRepository;
     public MissionService(MissionRepository missionRepository) {
         this.missionRepository = missionRepository;
     }
@@ -145,11 +158,12 @@ public class MissionService {
         return missionRepository.findDistinctByDureeEstimeIgnoreCase(dureeEstime);
     }
 
+    @Transactional
     public Mission acceptMission(Long missionId) {
         Mission mission = missionRepository.findById(missionId)
                 .orElseThrow(() -> new MissionNotFoundException(missionId));
-        mission.setStatut("en cours"); // Passage au statut "en cours"
-        mission.setStartdate(new Date()); // Mise à jour de la date de démarrage avec la date actuelle
+        mission.setStatut("en cours");
+        mission.setStartdate(new Date());
         return missionRepository.save(mission);
     }
 
@@ -170,8 +184,7 @@ public class MissionService {
         }).collect(Collectors.toList());
         return missions;
     }
-
-    // NEW: Terminate a mission by setting its status to "terminée" and filling the end date.
+      // NEW: Terminate a mission by setting its status to "terminée" and filling the end date.
     public Mission terminateMission(Long missionId, String endDateStr) {
         Mission mission = missionRepository.findById(missionId)
                 .orElseThrow(() -> new MissionNotFoundException(missionId));

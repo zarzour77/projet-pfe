@@ -8,6 +8,7 @@ import com.example.demo.Response.MessageResponse;
 import com.example.demo.Sec.UserDetailsImpl;
 import com.example.demo.Sec.UserDetailsServiceImpl;
 import com.example.demo.model.User;
+import io.jsonwebtoken.Jwts;
 import jakarta.validation.Valid;
 import com.example.demo.jwt.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,18 +49,18 @@ public class AuthController {
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
         // Authenticate the user
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-        // Vérifier si l'email est vérifié
         if (!userDetails.isEmailVerified()) {
             // Envoi du code de vérification par email
             authService.sendVerificationCode(userDetails.getEmail());
             return ResponseEntity.badRequest().body(new MessageResponse("Votre email n'est pas vérifié. Un code de vérification vous a été envoyé."));
         }
-
         // Si vérifié, générer le token JWT
-        String jwt = jwtUtils.generateJwtToken(authentication);
+        String jwt = jwtUtils.generateJwtToken(
+                authentication,
+                userDetails.getTokenVersion() // Get from UserDetailsImpl
+        );
         List<String> roles = List.of(userDetails.getRole());
         return ResponseEntity.ok(new JwtResponse(
                 jwt,

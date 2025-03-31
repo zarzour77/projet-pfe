@@ -1,11 +1,16 @@
 package com.example.demo.jwt;
 
+import com.example.demo.Sec.UserDetailsImpl;
 import com.example.demo.Sec.UserDetailsServiceImpl;
+import com.example.demo.model.User;
+import com.example.demo.repository.UserRepository;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.ServletException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -23,28 +28,38 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
+    @Autowired
+    private UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         try {
             String jwt = parseJwt(request);
-            System.out.println("Extracted JWT: " + jwt);
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-                String username = jwtUtils.getUsernameFromJwtToken(jwt);
-                System.out.println("Authenticated User: " + username);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
+                String email = jwtUtils.getUsernameFromJwtToken(jwt);
+                Integer tokenVersion = jwtUtils.getTokenVersionFromJwtToken(jwt);
+
+                User user = userRepository.findByEmail(email)
+                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+                if (!user.getTokenVersion().equals(tokenVersion)) {
+                    throw new JwtException("Token version mismatch");
+                }
+
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-            } else {
-                System.out.println("Invalid or missing JWT token");
             }
+        } catch (JwtException | UsernameNotFoundException e) {
+            logger.error("Authentication failure");
+            SecurityContextHolder.clearContext();
         } catch (Exception e) {
-            System.out.println("Cannot set user authentication: " + e.getMessage());
+            logger.error("Authentication error");
         }
-
         filterChain.doFilter(request, response);
     }
 

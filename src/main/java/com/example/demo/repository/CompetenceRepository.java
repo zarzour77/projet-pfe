@@ -12,7 +12,7 @@ import java.util.Optional;
 public interface CompetenceRepository extends JpaRepository<Competence, Long> {
     Optional<Competence> findByNomIgnoreCase(String nom);
     Optional<Competence> findByNomIgnoreCaseAndCompetenceNiveau(String nom, String competenceNiveau);
-    Competence findByNom(String nom);
-    boolean existsByNom(String nom);
+    Optional<Competence> findByNomAndCompetenceNiveau(String nom, String competenceNiveau);
+
 }
 
