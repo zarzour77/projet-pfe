@@ -1,3 +1,4 @@
+// ProfileView.java
 package com.example.demo.model;
 
 import jakarta.persistence.*;
@@ -10,17 +11,21 @@ public class ProfileView {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Référence au consultant concerné
+    // Référence au consultant (optionnel, si applicable)
     @ManyToOne
     @JoinColumn(name = "consultant_id")
     private Consultant consultant;
+
+    // Nouvelle référence à l'entreprise
+    @ManyToOne
+    @JoinColumn(name = "entreprise_id")
+    private Entreprise entreprise;
 
     // Date de la vue
     @Temporal(TemporalType.TIMESTAMP)
     private Date dateView;
 
     // Getters et setters
-
     public Long getId() {
         return id;
     }
@@ -37,6 +42,14 @@ public class ProfileView {
         this.consultant = consultant;
     }
 
+    public Entreprise getEntreprise() {
+        return entreprise;
+    }
+
+    public void setEntreprise(Entreprise entreprise) {
+        this.entreprise = entreprise;
+    }
+
     public Date getDateView() {
         return dateView;
     }
@@ -45,4 +58,3 @@ public class ProfileView {
         this.dateView = dateView;
     }
 }
-

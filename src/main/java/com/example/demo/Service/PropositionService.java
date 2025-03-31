@@ -97,8 +97,7 @@ public class PropositionService {
                 // Préparation et envoi de l'email à l'entreprise
                 String emailSubject = "Nouvelle candidature pour votre mission : " + mission.getTitre();
                 String emailContent = "Bonjour,\n\nUn consultant a postulé à votre mission.\n\nLettre de motivation:\n"
-                        + proposition.getMessage()
-                        + "\n\nCordialement,\nTrade for Talent";
+                        + proposition.getMessage();
                 emailService.sendApplicationEmail(entreprise.getEmail(), emailSubject, emailContent, cvBytes, "CV.pdf");
             }
         }
@@ -130,8 +129,7 @@ public class PropositionService {
                     String emailSubject = "Invitation pour la mission : " + mission.getTitre();
                     String emailContent = "Bonjour,\n\nL'entreprise " + entrepriseNom
                             + " vous a invité à postuler pour la mission : " + mission.getTitre()
-                            + ".\n\nMessage :\n" + proposition.getMessage()
-                            + "\n\nCordialement,\nTrade for Talent";
+                            + ".\n\nMessage :\n" + proposition.getMessage() ;
                     emailService.sendInvitationEmail(consultant.getEmail(), emailSubject, emailContent);
                 }
             }
@@ -160,9 +158,12 @@ public class PropositionService {
             notificationService.createNotificationConsultant(notifMsg, consultant);
 
             String emailSubject = "Invitation de recrutement de " + entreprise.getNomEntreprise();
-            String emailContent = "Bonjour,\n\nVous avez reçu une invitation de recrutement de l'entreprise "
-                    + entreprise.getNomEntreprise()
-                    + ".\nVeuillez consulter votre espace pour accepter ou refuser cette invitation.\n\nCordialement,\nTrade for Talent";
+            // Utilisation de <br/> pour les retours à la ligne en HTML
+            String emailContent =
+                    "Vous avez reçu une invitation de recrutement de l'entreprise " + entreprise.getNomEntreprise() + ".<br/><br/>"
+                    + "Message :<br/>" + proposition.getMessage() + "<br/><br/>"
+                    + "Veuillez consulter votre espace pour accepter ou refuser cette invitation.";
+
             emailService.sendInvitationEmail(consultant.getEmail(), emailSubject, emailContent);
         }
         // Pour une candidature ou invitation classique, la mission doit être renseignée
@@ -173,6 +174,7 @@ public class PropositionService {
             }
             Long missionId = proposition.getMission().getId();
             Mission mission = missionRepository.findById(missionId).orElse(null);
+
             if ("APPLIED".equalsIgnoreCase(proposition.getOrigine())) {
                 if (mission == null) {
                     System.out.println("Mission introuvable pour l'id: " + missionId);
@@ -182,10 +184,11 @@ public class PropositionService {
                     Entreprise missionEntreprise = mission.getEntreprise();
                     String notifMsg = "Un consultant a postulé à votre mission : " + mission.getTitre();
                     notificationService.createNotification(notifMsg, missionEntreprise);
+
                     String emailSubject = "Nouvelle candidature pour votre mission : " + mission.getTitre();
-                    String emailContent = "Bonjour,\n\nUn consultant a postulé à votre mission.\n\nLettre de motivation:\n"
-                            + proposition.getMessage()
-                            + "\n\nCordialement,\nTrade for Talent";
+                    String emailContent = "Un consultant a postulé à votre mission.<br/><br/>Lettre de motivation:<br/>"
+                            + proposition.getMessage();
+
                     byte[] cvBytes = consultant.getCv();
                     emailService.sendApplicationEmail(missionEntreprise.getEmail(), emailSubject, emailContent, cvBytes, "CV.pdf");
                 }
@@ -195,14 +198,16 @@ public class PropositionService {
                 } else {
                     String notifMsg = "Vous avez reçu une invitation pour la mission : " + mission.getTitre();
                     notificationService.createNotificationConsultant(notifMsg, consultant);
+
                     String entrepriseNom = (mission.getEntreprise() != null && mission.getEntreprise().getNomEntreprise() != null)
                             ? mission.getEntreprise().getNomEntreprise()
                             : "votre entreprise";
+
                     String emailSubject = "Invitation pour la mission : " + mission.getTitre();
-                    String emailContent = "Bonjour,\n\nL'entreprise " + entrepriseNom
+                    String emailContent = "L'entreprise " + entrepriseNom
                             + " vous a invité à postuler pour la mission : " + mission.getTitre()
-                            + ".\n\nMessage :\n" + proposition.getMessage()
-                            + "\n\nCordialement,\nTrade for Talent";
+                            + ".<br/><br/>Message :<br/>" + proposition.getMessage();
+
                     emailService.sendInvitationEmail(consultant.getEmail(), emailSubject, emailContent);
                 }
             }

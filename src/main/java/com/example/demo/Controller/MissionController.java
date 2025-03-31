@@ -39,6 +39,12 @@ public class MissionController {
         return missionService.getAllMissions();
     }
 
+    // NEW: Endpoint pour récupérer les données Top Talents (missions réalisées)
+    @GetMapping("/top-talents")
+    public ResponseEntity<Map<String, Integer>> getTopTalentsBadgeData() {
+        Map<String, Integer> data = missionService.getTopTalentsBadgeData();
+        return ResponseEntity.ok(data);
+    }
     @GetMapping("/{id}")
     public ResponseEntity<Object> getMissionById(@PathVariable Long id) {
         return missionService.getMissionById(id)

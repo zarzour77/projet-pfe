@@ -27,6 +27,12 @@ public class ConversationService {
         this.conversationRepository = conversationRepository;
         this.userRepository = userRepository;
     }
+    // Récupère le nombre de conversations pour un utilisateur via son ID
+    public long getConversationCount(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        return conversationRepository.countByParticipantsContaining(user);
+    }
 
     /**
      * Retrieves all conversations in which the user is a participant.

@@ -68,6 +68,42 @@ public class Mission {
 
 
     public Mission() {}
+    public String calculerStatut() {
+        // Mission publiée mais non démarrée
+        if (this.startdate == null && this.PublishedAt != null) {
+            return "Publié";
+        }
+        // Mission terminée
+        if (this.enddate != null) {
+            return "Terminé";
+        }
+        // Mission en cours
+        if (this.startdate != null && this.enddate == null) {
+            // Conversion de la durée estimée en millisecondes
+            long dureeMillis = 0;
+            switch (this.dureeEstime) {
+                case "< 1 mois":
+                    dureeMillis = 30L * 24 * 60 * 60 * 1000;
+                    break;
+                case "1-3 mois":
+                    dureeMillis = 90L * 24 * 60 * 60 * 1000;
+                    break;
+                case "3-6 mois":
+                    dureeMillis = 180L * 24 * 60 * 60 * 1000;
+                    break;
+                default:
+                    break;
+            }
+            // Vérifier si la mission est en retard
+            if (dureeMillis > 0 && new Date().getTime() > this.startdate.getTime() + dureeMillis) {
+                return "En retard";
+            } else {
+                return "En cours";
+            }
+        }
+        // Par défaut, retourner le statut existant
+        return this.statut;
+    }
 
     public Mission(Double budget, List<Competence> competencesRequises, String description, List<Domaine> domaines, String dureeEstime, Date enddate, Entreprise entreprise, Long id, double latitude, String logo, double longitude, double matchScore, String niveauExperienceRequis, String portetravail, List<Proposition> propositions, Date publishedAt, int requiredExperience, Date startdate, String statut, String titre) {
         this.budget = budget;

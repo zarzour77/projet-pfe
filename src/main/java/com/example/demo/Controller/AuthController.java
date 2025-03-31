@@ -20,6 +20,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import com.example.demo.repository.UserRepository;
 
+import java.time.LocalDateTime;
+import java.util.Optional;
+
 import java.util.List;
 
 @RestController
@@ -56,6 +59,18 @@ public class AuthController {
             authService.sendVerificationCode(userDetails.getEmail());
             return ResponseEntity.badRequest().body(new MessageResponse("Votre email n'est pas vérifié. Un code de vérification vous a été envoyé."));
         }
+
+
+        // Mise à jour du dernier login et du statut
+        Optional<User> optionalUser = userRepository.findByEmail(userDetails.getEmail());
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            user.setLastConnection(LocalDateTime.now());
+            user.setStatut("online");
+            userRepository.save(user);
+        }
+
+
         // Si vérifié, générer le token JWT
         String jwt = jwtUtils.generateJwtToken(
                 authentication,

@@ -5,24 +5,132 @@ import com.example.demo.Service.EntrepriseService;
 import com.example.demo.Service.MissionService;
 import com.example.demo.Service.NotificationService;
 import com.example.demo.model.*;
+import com.example.demo.repository.ConsultantRepository;
+import com.example.demo.repository.EntrepriseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Optional;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/entreprises")
 public class EntrepriseController {
     private final EntrepriseService entrepriseService;
     private final NotificationService notificationService;
+    private final ConsultantRepository consultantRepository;
+    private final EntrepriseRepository entrepriseRepository;
 
     @Autowired
-    public EntrepriseController(EntrepriseService entrepriseService, NotificationService notificationService) {
+    public EntrepriseController(EntrepriseService entrepriseService, NotificationService notificationService, ConsultantRepository consultantRepository, EntrepriseRepository entrepriseRepository) {
         this.entrepriseService = entrepriseService;
         this.notificationService = notificationService;
+        this.consultantRepository = consultantRepository;
+        this.entrepriseRepository = entrepriseRepository;
     }
+    @GetMapping("/inscriptions")
+    public List<Map<String, Object>> getInscriptionsStats(
+            @RequestParam(required = false, defaultValue = "all") String filter) {
+
+        // Regrouper les données par date (format ISO) dans une map
+        Map<String, Map<String, Object>> statsMap = new HashMap<>();
+        ZoneId zone = ZoneId.systemDefault();
+
+        // Récupération des inscriptions pour les consultants
+        List<Object[]> consultantResults = consultantRepository.countConsultantsByDate();
+        for (Object[] row : consultantResults) {
+            Date date = (Date) row[0];
+            if (date == null) continue;
+            LocalDate localDate = Instant.ofEpochMilli(date.getTime()).atZone(zone).toLocalDate();
+            String dateKey = localDate.toString(); // ex : "2025-03-20"
+            Long count = (Long) row[1];
+            Map<String, Object> stat = statsMap.getOrDefault(dateKey, new HashMap<>());
+            stat.put("date", localDate);
+            stat.put("consultantCount", count);
+            // Initialiser les autres compteurs si non présents
+            stat.put("entrepriseClienteCount", stat.getOrDefault("entrepriseClienteCount", 0L));
+            stat.put("entrepriseSsiCount", stat.getOrDefault("entrepriseSsiCount", 0L));
+            statsMap.put(dateKey, stat);
+        }
+
+        // Récupération des inscriptions pour les entreprises par type
+        List<Object[]> entrepriseResults = entrepriseRepository.countEntreprisesByDateAndType();
+        for (Object[] row : entrepriseResults) {
+            Date date = (Date) row[0];
+            if (date == null) continue;
+            LocalDate localDate = Instant.ofEpochMilli(date.getTime()).atZone(zone).toLocalDate();
+            String dateKey = localDate.toString();
+            Entreprise.TypeEntreprise type = (Entreprise.TypeEntreprise) row[1];
+            Long count = (Long) row[2];
+            Map<String, Object> stat = statsMap.getOrDefault(dateKey, new HashMap<>());
+            stat.put("date", localDate);
+            stat.put("consultantCount", stat.getOrDefault("consultantCount", 0L));
+            stat.put("entrepriseClienteCount", stat.getOrDefault("entrepriseClienteCount", 0L));
+            stat.put("entrepriseSsiCount", stat.getOrDefault("entrepriseSsiCount", 0L));
+            if (type == Entreprise.TypeEntreprise.CLIENTE) {
+                stat.put("entrepriseClienteCount", ((Long) stat.get("entrepriseClienteCount")) + count);
+            } else if (type == Entreprise.TypeEntreprise.SSI) {
+                stat.put("entrepriseSsiCount", ((Long) stat.get("entrepriseSsiCount")) + count);
+            }
+            statsMap.put(dateKey, stat);
+        }
+
+        // Conversion de la map en liste et tri par date (LocalDate)
+        List<Map<String, Object>> statsList = new ArrayList<>(statsMap.values());
+        statsList.sort(Comparator.comparing(m -> (LocalDate) m.get("date")));
+
+        // Application du filtre si nécessaire
+        if (!filter.equals("all")) {
+            LocalDate now = LocalDate.now();
+            if (filter.equals("lastWeek")) {
+                LocalDate lastWeek = now.minusDays(7);
+                statsList = statsList.stream()
+                        .filter(stat -> {
+                            LocalDate date = (LocalDate) stat.get("date");
+                            return !date.isBefore(lastWeek); // date >= lastWeek
+                        })
+                        .collect(Collectors.toList());
+            } else if (filter.equals("lastMonth")) {
+                LocalDate lastMonth = now.minusDays(30);
+                statsList = statsList.stream()
+                        .filter(stat -> {
+                            LocalDate date = (LocalDate) stat.get("date");
+                            return !date.isBefore(lastMonth);
+                        })
+                        .collect(Collectors.toList());
+            }
+        }
+        return statsList;
+    }
+
+    @GetMapping("/{id}/missions/aggregate")
+    public ResponseEntity<Map<String, Object>> getAggregatedMissions(
+            @PathVariable Long id,
+            @RequestParam("period") String period) {
+        try {
+            Map<String, Object> aggregatedData = entrepriseService.getAggregatedMissionsStats(id, period);
+            return ResponseEntity.ok(aggregatedData);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    @GetMapping("/{id}/missions/status")
+    public ResponseEntity<List<Mission>> getMissionsByStatus(
+            @PathVariable Long id,
+            @RequestParam("statut") String statut) {
+        try {
+            List<Mission> missions = entrepriseService.getMissionsByStatusForEntreprise(id, statut);
+            return ResponseEntity.ok(missions);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
     @PostMapping("/{entrepriseId}/missions/{missionId}/apply-with-consultant")
     public ResponseEntity<?> applyWithConsultant(
             @PathVariable Long entrepriseId,
