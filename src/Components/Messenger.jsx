@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react"; 
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import styles from "./Messenger.module.css";
-import ConsultantHeader from "./ConsultantHeader";
 
 /** Icônes Lucide (ou tout autre set d'icônes) **/
 import { 
@@ -39,6 +38,10 @@ export default function Messenger() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortCriteria, setSortCriteria] = useState("lastActivity");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  // État ajouté pour la langue de traduction
+  const [targetLanguage, setTargetLanguage] = useState("");
+  // Pour afficher ou non la liste déroulante des langues
+  const [showLangDropdown, setShowLangDropdown] = useState(false);
 
   /** Références **/
   const fileInputRef = useRef(null);
@@ -73,11 +76,9 @@ export default function Messenger() {
     try {
       const data = await getConversations(currentUser);
       const transformed = data.map(transformConversation);
-      // Tri par lastActivity (le plus récent en premier)
       transformed.sort((a, b) => (b.lastActivity || 0) - (a.lastActivity || 0));
       setConversations(transformed);
 
-      // Sélection automatique de la première conversation si aucune n’est ouverte
       if (transformed.length > 0 && !selectedConv) {
         setSelectedConv(transformed[0]);
         loadConversationHistory(transformed[0].id);
@@ -87,7 +88,7 @@ export default function Messenger() {
     }
   };
 
-  // Charge l’historique d’une conversation
+  // Charge l’historique d’une conversation et stocke les messages originaux
   const loadConversationHistory = async (conversationId) => {
     try {
       const messagesFromAPI = await getConversationHistory(conversationId);
@@ -103,7 +104,10 @@ export default function Messenger() {
       setConversations(prev => {
         const updated = prev.map(conv =>
           conv.id === conversationId 
-            ? { ...conv, messages: transformedMessages }
+            ? { ...conv, 
+                messages: transformedMessages,
+                originalMessages: transformedMessages // Sauvegarde des messages initiaux
+              }
             : conv
         );
         setSelectedConv(updated.find(c => c.id === conversationId));
@@ -119,9 +123,11 @@ export default function Messenger() {
     if (selectedConv && chatMessage.sender === selectedConv.name) {
       const updated = conversations.map(conv => {
         if (conv.id === selectedConv.id) {
+          // Ajout à la fois dans messages et originalMessages
           return {
             ...conv,
             messages: [...(conv.messages || []), chatMessage],
+            originalMessages: [...(conv.originalMessages || []), chatMessage],
             lastMessage: chatMessage.content,
             lastActivity: Date.now()
           };
@@ -134,7 +140,6 @@ export default function Messenger() {
     }
   };
 
-  // useEffect principal
   useEffect(() => {
     connect(onMessageReceived, () => {
       console.log("[Messenger] WebSocket connection established!");
@@ -145,10 +150,8 @@ export default function Messenger() {
     };
   }, []);
 
-  // Lorsque location.state contient une conversation et un consultant (depuis LandingEntreprise)
   useEffect(() => {
     if (location.state && location.state.conversation) {
-      // Transformation éventuelle de la conversation
       const convFromLanding = transformConversation(location.state.conversation);
       setConversations(prev => {
         const exists = prev.find(c => c.id === convFromLanding.id);
@@ -158,7 +161,6 @@ export default function Messenger() {
         } else {
           updated = [convFromLanding, ...prev];
         }
-        // Tri par dernière activité
         updated.sort((a, b) => (b.lastActivity || 0) - (a.lastActivity || 0));
         return updated;
       });
@@ -167,25 +169,19 @@ export default function Messenger() {
     }
   }, [location.state]);
 
-  // Scroller en bas lorsqu’on ajoute un nouveau message
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [selectedConv?.messages]);
 
-  // Sélection d’un utilisateur (pour créer une nouvelle conversation)
   const handleUserSelected = async (user) => {
     try {
       let conversation = await createConversation(currentUser, user.email);
       conversation = transformConversation(conversation);
-
       setConversations(prev => {
         const exists = prev.some(conv => conv.id === conversation.id);
-        if (!exists) {
-          return [conversation, ...prev];
-        }
-        return prev;
+        return exists ? prev : [conversation, ...prev];
       });
       setSelectedConv(conversation);
       loadConversationHistory(conversation.id);
@@ -194,7 +190,6 @@ export default function Messenger() {
     }
   };
 
-  // Sélection d’une conversation
   const handleSelectConversation = (conv) => {
     if (conv.unread > 0) {
       const updated = conversations.map(c =>
@@ -206,7 +201,6 @@ export default function Messenger() {
     loadConversationHistory(conv.id);
   };
 
-  // Envoi d’un message texte
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || !selectedConv) return;
     const newChatMessage = {
@@ -220,8 +214,6 @@ export default function Messenger() {
     } catch (error) {
       console.error("[Messenger] Error sending message:", error);
     }
-
-    // Mise à jour locale (optimiste)
     const newMessage = {
       id: Date.now(),
       sender: currentUser,
@@ -233,6 +225,7 @@ export default function Messenger() {
         return {
           ...conv,
           messages: [...(conv.messages || []), newMessage],
+          originalMessages: [...(conv.originalMessages || []), newMessage],
           lastMessage: newMessage.content,
           lastActivity: Date.now()
         };
@@ -245,7 +238,6 @@ export default function Messenger() {
     setInputMessage("");
   };
 
-  // Gestion des fichiers
   const handleFileIconClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
@@ -256,18 +248,13 @@ export default function Messenger() {
     const files = event.target.files;
     if (!files || files.length === 0 || !selectedConv) return;
     const file = files[0];
-
-    // Création d'un FormData pour envoyer le fichier en multipart/form-data
     const formData = new FormData();
     formData.append("file", file);
     formData.append("sender", currentUser);
     formData.append("receiver", selectedConv.partnerEmail);
-
     try {
       const savedMessage = await uploadFileMessage(formData);
       console.log("Fichier envoyé avec succès, message sauvegardé:", savedMessage);
-
-      // Mise à jour locale : on l'ajoute dans la conversation courante
       const newMessage = {
         id: savedMessage.idMessage,
         sender: currentUser,
@@ -279,6 +266,7 @@ export default function Messenger() {
           return {
             ...conv,
             messages: [...(conv.messages || []), newMessage],
+            originalMessages: [...(conv.originalMessages || []), newMessage],
             lastMessage: newMessage.content,
             lastActivity: Date.now()
           };
@@ -293,12 +281,10 @@ export default function Messenger() {
     }
   };
 
-  // Envoi d’emoji seul
   const handleEmojiClick = () => {
     setInputMessage("😊");
   };
 
-  // Filtrer et trier les conversations
   const filteredConversations = conversations.filter(conv =>
     conv.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -329,10 +315,66 @@ export default function Messenger() {
     setShowEmojiPicker((prev) => !prev);
   };
 
+  /*** FONCTIONS DE TRADUCTION ***/
+  async function translateText(text, targetLang) {
+    try {
+      const response = await fetch(
+        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=fr|${targetLang}`
+      );
+      const data = await response.json();
+      return data.responseData.translatedText;
+    } catch (error) {
+      console.error("Erreur de traduction :", error);
+      return text;
+    }
+  }
+
+  async function translateConversation(targetLang) {
+    if (!selectedConv || !selectedConv.originalMessages) return;
+    const translatedMessages = await Promise.all(
+      selectedConv.originalMessages.map(async (msg) => {
+        if (msg.content.startsWith("[FILE]")) return msg;
+        const translatedContent = await translateText(msg.content, targetLang);
+        return { ...msg, content: translatedContent };
+      })
+    );
+    setSelectedConv({ ...selectedConv, messages: translatedMessages });
+    setConversations(conversations.map(conv =>
+      conv.id === selectedConv.id ? { ...conv, messages: translatedMessages } : conv
+    ));
+  }
+  
+
+  const handleTranslateButtonClick = () => {
+    setShowLangDropdown(prev => !prev);
+  };
+
+  const handleLanguageSelect = async (event) => {
+    const lang = event.target.value;
+    if (lang) {
+      setTargetLanguage(lang);
+      setShowLangDropdown(false);
+      // Si l'utilisateur choisit le français, on réaffiche les messages originaux
+      if (lang === "fr") {
+        setSelectedConv({ ...selectedConv, messages: selectedConv.originalMessages });
+        setConversations(conversations.map(conv =>
+          conv.id === selectedConv.id ? { ...conv, messages: conv.originalMessages } : conv
+        ));
+      } else {
+        await translateConversation(lang);
+      }
+    }
+  };
+
+  const languages = [
+    { label: "Arabe", code: "ar" },
+    { label: "Français", code: "fr" },
+    { label: "Anglais", code: "en" },
+    { label: "Espagnol", code: "es" }
+  ];
+
   return (
     <div className={styles.container}>
-            <ConsultantHeader />
-
       {/* --- COLONNE GAUCHE --- */}
       <div className={styles.leftColumn}>
         <div className={styles.searchBar}>
@@ -354,7 +396,6 @@ export default function Messenger() {
             <option value="unread">Non lus</option>
           </select>
         </div>
-
         <div className={styles.conversationList}>
           {filteredConversations.map(conv => (
             <div
@@ -376,7 +417,6 @@ export default function Messenger() {
           ))}
         </div>
       </div>
-
       {/* --- COLONNE CENTRALE --- */}
       {selectedConv ? (
         <div className={styles.centerColumn}>
@@ -394,7 +434,6 @@ export default function Messenger() {
               <MoreVertical className={styles.icon} />
             </div>
           </div>
-
           <div className={styles.messagesArea}>
             {selectedConv.messages &&
               selectedConv.messages.map(msg => (
@@ -422,13 +461,9 @@ export default function Messenger() {
                 </motion.div>
               ))
             }
-            {/* Référence invisible pour scroller en bas */}
             <div ref={messagesEndRef} />
           </div>
-
-          {/* --- BARRE D’ENVOI --- */}
           <div className={styles.inputBar}>
-            {/* Icône Fichier (à gauche) */}
             <div className={styles.iconLeft} onClick={handleFileIconClick}>
               <Paperclip size={20} />
               <input
@@ -439,8 +474,23 @@ export default function Messenger() {
                 multiple
               />
             </div>
-
-            {/* Champ de saisie */}
+            <div className={styles.translateButton} onClick={handleTranslateButtonClick}>
+              Traduire
+            </div>
+            {showLangDropdown && (
+              <select 
+                className={styles.languageSelect}
+                onChange={handleLanguageSelect}
+                defaultValue=""
+              >
+                <option value="" disabled>Choisir une langue</option>
+                {languages.map(lang => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.label}
+                  </option>
+                ))}
+              </select>
+            )}
             <input
               type="text"
               placeholder="Écrivez un message..."
@@ -449,13 +499,9 @@ export default function Messenger() {
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
             />
-
-            {/* Icône Emoji (à droite) */}
             <div className={styles.iconRight} onClick={handleEmojiIconClick}>
               <Smile size={20} />
             </div>
-
-            {/* Bouton Envoyer */}
             <button className={styles.sendButton} onClick={handleSendMessage}>
               <Send size={20} />
             </button>

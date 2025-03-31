@@ -4,65 +4,67 @@ const API_URL = 'http://localhost:8081/api/entreprises';
 const MISSION_API_URL = 'http://localhost:8081/api/missions';
 const PROPOSITION_API_URL = 'http://localhost:8081/api/propositions';
 const CONSULTANT_API_URL = 'http://localhost:8081/api/consultants';
-
-// Configuration de l'authentification
+const PAYMENT_API_URL = 'http://localhost:8081/api/payments';
 const getTokenConfig = () => {
   const token = localStorage.getItem('token');
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
+  return { headers: { Authorization: `Bearer ${token}` } };
 };
 
-// Récupère les missions publiées par une entreprise
 export const getPublishedMissions = async (entrepriseId) => {
-  const config = getTokenConfig();
-  const response = await axios.get(`${API_URL}/${entrepriseId}/missions`, config);
+  const response = await axios.get(`${API_URL}/${entrepriseId}/missions`, getTokenConfig());
   return response.data;
 };
 
-// Récupère les consultants associés à une mission
 export const getConsultantsForMission = async (missionId) => {
-  const config = getTokenConfig();
-  const response = await axios.get(`${MISSION_API_URL}/${missionId}/consultants`, config);
+  const response = await axios.get(`${MISSION_API_URL}/${missionId}/consultants`, getTokenConfig());
   return response.data;
 };
 
-// Récupère toutes les propositions pour une mission donnée
 export const getPropositionsForMission = async (missionId) => {
-  const config = getTokenConfig();
-  const response = await axios.get(`${PROPOSITION_API_URL}/mission/${missionId}`, config);
+  const response = await axios.get(`${PROPOSITION_API_URL}/mission/${missionId}`, getTokenConfig());
   return response.data;
 };
+
 export const updatePropositionStatus = async (propositionId, newStatus) => {
-  const config = getTokenConfig();
-  // On envoie uniquement le champ 'statut' à mettre à jour
-  const response = await axios.put(`${PROPOSITION_API_URL}/${propositionId}`, { statut: newStatus }, config);
+  const response = await axios.put(`${PROPOSITION_API_URL}/${propositionId}`, { statut: newStatus }, getTokenConfig());
   return response.data;
 };
 
 export const acceptMission = async (missionId) => {
-  const config = getTokenConfig();
-  const response = await axios.put(`${MISSION_API_URL}/${missionId}/accept`, {}, config);
-  return response.data;
-};
-export const incrementConsultantWorkload = async (consultantId) => {
-  const config = getTokenConfig();
-  const response = await axios.put(`${CONSULTANT_API_URL}/${consultantId}/incrementWorkload`, {}, config);
-  return response.data;
-};
-// NEW FUNCTION: Terminates a mission by updating its status and end date
-export const terminateMission = async (missionId, endDate) => {
-  const config = getTokenConfig();
-  const response = await axios.put(`${MISSION_API_URL}/${missionId}/terminate`, { endDate }, config);
+  const response = await axios.post(`${MISSION_API_URL}/${missionId}/accept`, {}, getTokenConfig());
   return response.data;
 };
 
-// NEW FUNCTION: Decrements the consultant's workload by 1
+export const incrementConsultantWorkload = async (consultantId) => {
+  const response = await axios.put(`${CONSULTANT_API_URL}/${consultantId}/incrementWorkload`, {}, getTokenConfig());
+  return response.data;
+};
+
+export const terminateMission = async (missionId, endDate) => {
+  const response = await axios.put(`${MISSION_API_URL}/${missionId}/terminate`, { endDate }, getTokenConfig());
+  return response.data;
+};
+
 export const decrementConsultantWorkload = async (consultantId) => {
-  const config = getTokenConfig();
-  const response = await axios.put(`${CONSULTANT_API_URL}/${consultantId}/decrementWorkload`, {}, config);
+  const response = await axios.put(`${CONSULTANT_API_URL}/${consultantId}/decrementWorkload`, {}, getTokenConfig());
+  return response.data;
+};
+
+export const getMissionPaymentDetails = async (missionId) => {
+  const response = await axios.get(
+    `${PAYMENT_API_URL}/${missionId}/payment-details`,
+    getTokenConfig()
+  );
+  return response.data;
+};
+
+export const initiateFirstPayment = async (missionId) => {
+  const response = await axios.post(`${PAYMENT_API_URL}/${missionId}/first-payment`, {}, getTokenConfig());
+  return response.data;
+};
+
+export const initiateFinalPayment = async (missionId) => {
+  const response = await axios.post(`${PAYMENT_API_URL}/${missionId}/final-payment`, {}, getTokenConfig());
   return response.data;
 };
 
@@ -74,6 +76,8 @@ export default {
   acceptMission,
   incrementConsultantWorkload,
   terminateMission,
-  decrementConsultantWorkload
+  decrementConsultantWorkload,
+  getMissionPaymentDetails,
+  initiateFirstPayment,
+  initiateFinalPayment
 };
-

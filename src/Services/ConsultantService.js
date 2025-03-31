@@ -39,7 +39,8 @@ const ConsultantService = {
 
   updateConsultant: async (id, consultantData) => {
     const token = localStorage.getItem("token");
-
+    console.log(id,consultantData)
+    console.log(token)
     try {
       const response = await axios.put(
         `${API_URL}/${id}`,
@@ -94,7 +95,7 @@ const ConsultantService = {
       const formData = new FormData();
       formData.append("file", file);
       const response = await axios.post(
-        `http://localhost:8181/api/users/${id}/uploadProfilePic`,
+        `http://localhost:8081/api/users/${id}/uploadProfilePic`,
         formData,
         {
           headers: {
@@ -144,7 +145,6 @@ const ConsultantService = {
   // Competence methods
   addCompetence: async (consultantId, competenceData) => {
     const token = localStorage.getItem("token");
-
     try {
       const response = await axios.post(
         `${API_URL}/${consultantId}/addCompetence`,
@@ -157,6 +157,7 @@ const ConsultantService = {
       throw error;
     }
   },
+  
 
   deleteCompetence: async (consultantId, competenceId) => {
     const token = localStorage.getItem("token");
@@ -208,9 +209,8 @@ try {
   // New methods for Langue, Formation, Certification
 
   addLangue: async (consultantId, langueData) => {
-    
     const token = localStorage.getItem("token");
-try {
+    try {
       const response = await axios.post(
         `${API_URL}/${consultantId}/addLangue`,
         langueData,
@@ -222,6 +222,7 @@ try {
       throw error;
     }
   },
+  
 
   addFormation: async (consultantId, formationData) => {
     

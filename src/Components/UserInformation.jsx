@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
-import React, { useState, Suspense, useEffect } from 'react';
+import React, { useState, Suspense, useEffect, useRef } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import CreatableSelect from 'react-select/creatable';
@@ -20,8 +20,6 @@ import CompetenceService from '../Services/CompetenceService';
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 
-// Instead of reading the user only once at the module level,
-// initialize a state variable inside the component.
 const UserInformation = () => {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(() => {
@@ -183,6 +181,87 @@ const UserInformation = () => {
     return <input {...field} {...props} onBlur={handleBlur} />;
   };
 
+  const handleCVImport = async (file, setFieldValue, fetchedCompetences = []) => {
+    const formData = new FormData();
+    formData.append("file", file);
+  
+    try {
+      // Appel de l'API d'extraction globale (champs principaux, langues, compétences, etc.)
+      const allResponse = await axios.post("http://localhost:5000/extract/all", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const data = allResponse.data;
+      toast.success("CV importé et informations extraites avec succès !");
+      
+      // Mise à jour des champs principaux
+      if (data.nom) setFieldValue('nom', data.nom);
+      if (data.prenom) setFieldValue('prenom', data.prenom);
+      if (data.telephone) setFieldValue('telephone', data.telephone);
+      if (data.adresse) setFieldValue('adresse', data.adresse);
+      
+      // Traitement des compétences (inchangé)
+      if (data.competences_text && data.competences_list) {
+        const importedCompetences = data.competences_list.map(comp => {
+          const cleanedComp = comp.includes(':') 
+            ? comp.split(':').pop().trim() 
+            : comp.trim();
+          const existing = fetchedCompetences.find(c => c.nom.toLowerCase() === cleanedComp.toLowerCase());
+          return existing 
+            ? { ...existing, competenceNiveau: "Débutant" }
+            : { nom: cleanedComp, competenceNiveau: "Débutant" };
+        });
+        setFieldValue('competences', importedCompetences);
+        console.log("Compétences importées: ", importedCompetences);
+      }
+    
+      // Appel de l'API pour les formations (renvoie des objets parsés)
+      const formationsResponse = await axios.post("http://localhost:5000/extract/formations", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const formationsData = formationsResponse.data;
+    
+      // Appel de l'API pour les certifications (renvoie des objets parsés)
+      const certificationsResponse = await axios.post("http://localhost:5000/extract/certifications", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const certificationsData = certificationsResponse.data;
+    
+      // Appel de l'API pour les expériences (renvoie des objets parsés)
+      const experiencesResponse = await axios.post("http://localhost:5000/extract/experiences", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const experiencesData = experiencesResponse.data;
+    
+      // Stockage des données extraites du CV dans le localStorage pour une utilisation ultérieure.
+      // Pour les langues, on conserve la logique actuelle (extraction avant le deux-points).
+      const cvExtracted = {
+        langues: data.langues_text
+          ? data.langues_text
+              .split('\n')
+              .filter(line => line.trim() !== '')
+              .map(line => {
+                const parts = line.split(':');
+                return parts[0].trim();
+              })
+          : [],
+        formations: formationsData.formations || [],
+        certifications: certificationsData.certifications || [],
+        experiences: experiencesData.experiences || []
+      };
+      localStorage.setItem("cvExtracted", JSON.stringify(cvExtracted));
+      console.log("Données du CV stockées dans le localStorage:", cvExtracted);
+    
+    } catch (error) {
+      console.error("Erreur lors de l'import du CV :", error);
+      toast.error("Erreur lors de l'import du CV");
+    }
+  };
+  
+
+
+  // Référence pour l'input de type file dédié à l'import de CV
+  const cvInputRef = useRef(null);
+
   // Local state for the form
   const [fetchedUser, setFetchedUser] = useState(null);
 
@@ -234,6 +313,7 @@ const UserInformation = () => {
       try {
         const domaines = await DomaineService.getAllDomaines();
         const competences = await CompetenceService.getAllCompetences();
+        console.log(competences)
         setFetchedDomaines(domaines);
         setFetchedCompetences(competences);
       } catch (error) {
@@ -300,6 +380,7 @@ const UserInformation = () => {
         const existing = fetchedCompetences.find(c => c.nom.toLowerCase() === comp.nom.toLowerCase());
         return existing ? { ...existing, competenceNiveau: comp.competenceNiveau } : comp;
       });
+      console.log(transformedCompetences)
       
       const transformedDomaines = values.domaines.map(dom => {
         const existing = fetchedDomaines.find(
@@ -369,7 +450,7 @@ const UserInformation = () => {
     setLoading(false);
   };
 
-  // Step 1 for Consultants: personal info and interactive map
+  // Step 1 for Consultants: personal info, map and CV import
   const renderConsultantStep = (values, setFieldValue, isSubmitting, isValid) => {
     return (
       <AnimatePresence exitBeforeEnter>
@@ -381,6 +462,23 @@ const UserInformation = () => {
             exit={{ opacity: 0, x: 50 }}
           >
             <h4 className="mb-3">Informations Personnelles</h4>
+            {/* Bouton pour importer le CV */}
+            <div className="mb-3">
+              <Button variant="info" onClick={() => cvInputRef.current.click()}>
+                Importer votre CV
+              </Button>
+              <input
+                type="file"
+                ref={cvInputRef}
+                style={{ display: 'none' }}
+                accept=".pdf,.doc,.docx"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    handleCVImport(e.target.files[0], setFieldValue);
+                  }
+                }}
+              />
+            </div>
             <div className="mb-3">
               <Field type="text" name="nom" placeholder="Nom" className="form-control" />
               <ErrorMessage name="nom" component="div" className="text-danger" />
@@ -520,9 +618,9 @@ const UserInformation = () => {
                         setFieldValue('competences', updatedCompetences);
                       }}
                     >
-                      <option value="débutant">Débutant</option>
-                      <option value="intermédiaire">Intermédiaire</option>
-                      <option value="expert">Expert</option>
+                      <option value="Débutant">Débutant</option>
+                      <option value="Intermédiaire">Intermédiaire</option>
+                      <option value="Expert">Expert</option>
                     </select>
                   </div>
                 ))}

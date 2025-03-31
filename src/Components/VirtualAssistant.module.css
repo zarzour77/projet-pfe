@@ -1,0 +1,270 @@
+/* Floating Chat Button */
+.chatToggleButton {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #1abc9c;
+    color: #fff;
+    border: none;
+    padding: 1rem;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 1001;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .chatToggleButton:hover {
+    background: #16a085;
+    transform: translateY(-5px) scale(1.1);
+  }
+  
+  .chatToggleButton i {
+    font-size: 1.5rem;
+  }
+  
+  /* Chat Window */
+  .chatWindow {
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    width: 320px;
+    max-height: 450px;
+    background: #ffffff;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    z-index: 1001;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 0.5s ease-out;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .chatHeader {
+    padding: 1rem;
+    background: #3498db;
+    color: #ffffff;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    font-weight: bold;
+    text-align: center;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .chatBody {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    background: #f7f7f7;
+    border-bottom: 1px solid #ccc;
+  }
+  
+  .chatMessage {
+    margin-bottom: 0.8rem;
+    padding: 0.7rem;
+    border-radius: 10px;
+    font-size: 1rem;
+    line-height: 1.4;
+    max-width: 85%;
+    word-wrap: break-word;
+    box-sizing: border-box;
+  }
+  
+  .userMessage {
+    background: #1abc9c;
+    color: #fff;
+    align-self: flex-end;
+    border-radius: 12px 12px 0 12px;
+    margin-left: auto;
+  }
+  
+  .assistantMessage {
+    background: #3498db;
+    color: #fff;
+    align-self: flex-start;
+    border-radius: 12px 12px 12px 0;
+    margin-right: auto;
+  }
+  
+  .loadingMessage {
+    font-style: italic;
+    color: #888;
+    margin-top: 1rem;
+    font-size: 1rem;
+  }
+  
+  .chatFooter {
+    display: flex;
+    padding: 1rem;
+    border-top: 1px solid #ccc;
+    background: #ecf6fd;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+  }
+  
+  .chatInput {
+    flex: 1;
+    padding: 0.8rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    margin-right: 1rem;
+    outline: none;
+    transition: border-color 0.3s ease;
+  }
+  
+  .chatInput:focus {
+    border-color: #1abc9c;
+  }
+  
+  .sendButton {
+    background: #1abc9c;
+    color: #fff;
+    border: none;
+    padding: 0.7rem 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+  }
+  
+  .sendButton:hover {
+    background: #16a085;
+    transform: translateY(-3px);
+  }
+  
+  .sendButton:active {
+    transform: translateY(1px);
+  }
+  
+  /* Feedback Input and Button Styling */
+  .feedbackContainer {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-top: 1px solid #ccc;
+    background: #f7f7f7;
+    margin: 0.5rem 0;
+  }
+  
+  .feedbackInput {
+    flex: 1;
+    padding: 0.8rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s ease;
+    margin-right: 0.5rem;
+  }
+  
+  .feedbackInput:focus {
+    border-color: #1abc9c;
+  }
+  
+  .feedbackButton {
+    background: #3498db;
+    color: #fff;
+    border: none;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    font-size: 1rem;
+  }
+  
+  .feedbackButton:hover {
+    background: #2980b9;
+    transform: translateY(-2px);
+  }
+  
+  .feedbackButton:active {
+    transform: translateY(1px);
+  }
+  
+  /* Suggestions Container and Item Styling */
+  .suggestionsContainer {
+    padding: 0.5rem 1rem;
+    background: #f7f7f7;
+    border-top: 1px solid #ccc;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start; /* Prevents stretching items to full width */
+  
+  }
+  
+  .suggestionsHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    font-size: 0.95rem;
+  }
+  
+  .suggestionsCloseButton {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    color: #888;
+    padding: 0;
+  }
+  
+  .suggestionsCloseButton:hover {
+    color: #000;
+  }
+  
+  .suggestionItem {
+    background: #e0e0e0;
+    border-radius: 20px;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: inline-block; /* Ensures flexible width based on content */
+    transition: background-color 0.3s ease;
+  }
+  
+  .suggestionItem:hover {
+    background: #d0d0d0;
+  }
+  
+  @media screen and (max-width: 480px) {
+    .chatWindow {
+      width: 260px;
+      max-height: 380px;
+    }
+  
+    .chatToggleButton {
+      width: 50px;
+      height: 50px;
+      padding: 0.8rem;
+    }
+  }
+  .suggestionsCloseButton:hover {
+    color: #000;
+  }
+  .suggestionsCloseButton {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    color: #888;
+    padding: 0;
+  }

@@ -5,12 +5,13 @@ import VoirProfileConsultantService from '../services/VoirProfileConsultantServi
 import styles from './ProfilePage.module.css';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import ConsultantService from '../Services/ConsultantService';
 const VoirProfileConsultant = () => {
   const { consultantId } = useParams();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  const [showCvModal, setShowCvModal] = useState(false);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState("");
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -26,6 +27,26 @@ const VoirProfileConsultant = () => {
     
     fetchUserData();
   }, [consultantId]);
+  const handleGenerateCV = async () => {
+    try {
+      const response = await ConsultantService.generateCv(consultantId);
+      const blob = new Blob([response], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      setPdfPreviewUrl(url);
+      setShowCvModal(true);
+    } catch (error) {
+      console.error("Erreur lors de la génération du CV:", error);
+    }
+  };
+
+  const handleDownloadCV = () => {
+    if (pdfPreviewUrl) {
+      const link = document.createElement("a");
+      link.href = pdfPreviewUrl;
+      link.download = "cv.pdf";
+      link.click();
+    }
+  };
 
   if (loading) return <div className={styles.loading}>Chargement...</div>;
   if (!user) return <div className={styles.error}>Erreur lors du chargement du profil</div>;
@@ -35,6 +56,10 @@ const VoirProfileConsultant = () => {
       <ToastContainer position="top-right" />
       
       <div className={styles.profileHeader}>
+      <button className={styles.cvButton} onClick={handleGenerateCV}>
+          <i className={`bi bi-file-earmark-text ${styles.cvIcon}`}></i>
+          <span className={styles.cvText}>Aperçu du CV</span>
+        </button>
         <div className={styles.profilePhotoContainer}>
           <img
             src={user.photoprofile || '/default-avatar.png'}
@@ -70,12 +95,7 @@ const VoirProfileConsultant = () => {
             <label className={styles.infoLabel}>Adresse</label>
             <p className={styles.infoValue}>{user.adresse || "Non fourni"}</p>
           </div>
-
-          <div className={styles.infoItem}>
-            <label className={styles.infoLabel}>Type d'abonnement</label>
-            <p className={styles.infoValue}>{user.subscriptionType || "Aucun"}</p>
-          </div>
-
+          
           <div className={styles.infoItem}>
             <label className={styles.infoLabel}>Évaluation</label>
             <p className={styles.infoValue}>
@@ -225,6 +245,29 @@ const VoirProfileConsultant = () => {
           </div>
         </div>
       </div>
+      {/* Add CV Preview Modal */}
+      {showCvModal && (
+        <div className={styles.modalOverlay} onClick={() => { setShowCvModal(false); setPdfPreviewUrl(""); }}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <h2 className={styles.pdfPreviewTitle}>Aperçu du CV</h2>
+            {pdfPreviewUrl ? (
+              <>
+                <iframe src={pdfPreviewUrl} title="CV Preview" className={styles.pdfPreview} />
+                <div className={styles.modalActions}>
+                  <button onClick={handleDownloadCV} className={styles.downloadButton}>
+                    Télécharger le CV
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div>Chargement du CV...</div>
+            )}
+            <button className={styles.modalCloseBtn} onClick={() => { setShowCvModal(false); setPdfPreviewUrl(""); }}>
+              X
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

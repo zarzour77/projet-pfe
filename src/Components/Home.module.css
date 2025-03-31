@@ -47,7 +47,9 @@
   transform-origin: 0 0;
   transition-timing-function: cubic-bezier(0.5,1.5,0.4,0.7);
 }
-
+.headerContent p{
+  color: white;
+}
 .headerContent {
   margin-top: 20px;
 }

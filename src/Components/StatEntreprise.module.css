@@ -1,0 +1,226 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+.statsContainer {
+  font-family: 'Roboto', sans-serif;
+  color: #333;
+  margin: 20px;
+  background: #f7f9fc;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.title {
+  font-size: 32px;
+  margin-bottom: 5px;
+  text-align: center;
+  color: #0c68ff;
+  font-weight: 700;
+}
+
+.subTitle {
+  text-align: center;
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.note {
+  text-align: center;
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 20px;
+}
+
+/* Conteneur principal divisé en deux colonnes */
+.mainColumns {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.leftColumn,
+.rightColumn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Cartes */
+.card {
+  background: #fff;
+  border: 1px solid #e1e8ed;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+}
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.cardTitle {
+  font-size: 20px;
+  margin-bottom: 8px;
+  color: #333;
+  font-weight: 500;
+}
+
+.cardDescription {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.link {
+  color: #0c68ff;
+  text-decoration: none;
+  font-size: 14px;
+  cursor: pointer;
+}
+.link:hover {
+  text-decoration: underline;
+}
+
+.earningsAmount {
+  font-size: 28px;
+  color: #0c68ff;
+  font-weight: 700;
+  margin-top: 10px;
+}
+
+.btn {
+  background: linear-gradient(135deg, #0c68ff, #094fbf);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+  transition: background 0.3s ease;
+}
+.btn:hover {
+  background: linear-gradient(135deg, #094fbf, #0c68ff);
+}
+
+.scoreContainer {
+  display: flex;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.scoreCircle {
+  width: 60px;
+  height: 60px;
+  border: 3px solid #e1e8ed;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  background: #f0f4f8;
+}
+
+.scoreValue {
+  font-size: 24px;
+  color: #0c68ff;
+  font-weight: 700;
+}
+
+.noScoreText {
+  font-size: 14px;
+  color: #555;
+}
+
+/* Proposals / Statut des projets */
+.proposalsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.select {
+  border: 1px solid #e1e8ed;
+  border-radius: 4px;
+  padding: 6px;
+  font-size: 14px;
+  background: #fff;
+}
+.proposalsChart {
+  margin-top: 15px;
+}
+
+.searchJobs {
+  font-size: 12px;
+  color: #888;
+  margin-top: 20px;
+}
+
+/* Relations clients */
+.clientRelTitle {
+  font-size: 18px;
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.clientRelDescription {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 20px;
+}
+.clientRelCircle {
+  width: 60px;
+  height: 60px;
+  border: 3px solid #e1e8ed;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
+  background: #f0f4f8;
+}
+.clientRelValue {
+  font-size: 24px;
+  color: #0c68ff;
+  font-weight: 700;
+}
+.clientRelLegend {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 10px;
+}
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.legendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Profile Metrics (Profile Views) */
+.profileMetrics {
+  background: #fff;
+  border: 1px solid #e1e8ed;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 40px;
+}
+.profileMetricsTitle {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 10px;
+}
+.metricsNav {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.profileChart {
+  width: 100%;
+  min-height: 200px;
+}
+ 

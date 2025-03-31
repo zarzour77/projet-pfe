@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import ConsultantHeader from "./ConsultantHeader";
+import Header from "./Header";
 
 // MUI
 import {
@@ -22,7 +22,7 @@ import {
   deleteProposition,
   updatePropositionStatus,
   acceptRecruitmentProposition  // Fonction dédiée pour le recrutement
-} from '../services/PropositionService';
+} from '../Services/PropositionService';
 
 // Import des services pour les missions classiques
 import { 
@@ -33,7 +33,7 @@ import {
 } from '../Services/EntrepriseMissionService';
 
 // Import du service Entreprise pour récupérer les détails
-import EntrepriseService from '../services/EntrepriseService';
+import EntrepriseService from '../Services/EntrepriseService';
 
 import styles from './ConsultantPropositions.module.css';
 
@@ -85,7 +85,9 @@ const ConsultantPropositions = () => {
           p.statut?.toUpperCase() === 'PENDING'
       );
       const filteredActives = propositions.filter(
-        (p) => p.statut?.toUpperCase() === 'ACCEPTED'
+        (p) => p.statut?.toUpperCase() === 'ACCEPTED' &&
+        p.origine?.toUpperCase() !== 'RECRUTEMENT' 
+
       );
       const filteredRefusees = propositions.filter(
         (p) => p.statut?.toUpperCase() === 'REFUSED'
@@ -344,7 +346,7 @@ const ConsultantPropositions = () => {
 
   return (
     <div className={styles.mesPropositionsContainer}>
-      <ConsultantHeader />
+      <Header />
       <ToastContainer />
       <h3>Mes Propositions</h3>
       {isLoading ? (

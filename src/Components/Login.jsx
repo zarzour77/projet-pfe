@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
-import { useState, useEffect, useRef, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthService from "../Services/AuthService";
 import UserService from "../Services/UserService";
@@ -7,7 +7,6 @@ import { AuthContext } from "../Services/AuthContext";
 import styles from "./Login.module.css";
 
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import user1 from "../assets/hidingUser.png";
 
 const Login = () => {
   const { setCurrentUser } = useContext(AuthContext);
@@ -37,9 +36,8 @@ const Login = () => {
   const [showVerify, setShowVerify] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
 
-  // Pour le popover de validation de mot de passe
-  const [showPopover, setShowPopover] = useState(false);
-  const passwordInputRef = useRef(null);
+  // State pour la validation de mot de passe
+  const [showPasswordError, setShowPasswordError] = useState(false);
 
   const navigate = useNavigate();
 
@@ -51,14 +49,6 @@ const Login = () => {
     const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
     return regex.test(pwd);
   };
-
-  useEffect(() => {
-    if (showPopover && passwordInputRef.current) {
-      const rect = passwordInputRef.current.getBoundingClientRect();
-      document.documentElement.style.setProperty("--popover-left", `${rect.right + 10}px`);
-      document.documentElement.style.setProperty("--popover-top", `${rect.top + rect.height / 2 - 23}px`);
-    }
-  }, [showPopover, password]);
 
   // Fonction de connexion commune
   const performLogin = async () => {
@@ -74,10 +64,10 @@ const Login = () => {
       }
       localStorage.setItem("user", JSON.stringify(fullUser));
       setCurrentUser(fullUser);
-
+      console.log(fullUser.role)
       if (fullUser.role === "ROLE_USER") {
         navigate("/UserInformation");
-      } else if (fullUser.role === "Consultant") {
+      } else if (fullUser.role === "Consultant" || fullUser.role === "Admin") {
         navigate("/SearchMission");
       } else {
         navigate("/LandingEntreprise");
@@ -107,7 +97,7 @@ const Login = () => {
       setPrenom("");
       setEmail("");
       setPassword("");
-      setShowPopover(false);
+      setShowPasswordError(false);
 
       setTimeout(() => {
         setIsActive(false);
@@ -142,11 +132,12 @@ const Login = () => {
 
         if (fullUser.role === "ROLE_USER") {
           navigate("/UserInformation");
-        } else if (fullUser.role === "Consultant") {
+        } else if (fullUser.role === "Consultant" || fullUser.role === "Admin") {
           navigate("/SearchMission");
         } else {
           navigate("/LandingEntreprise");
         }
+        
       } catch (error) {
         if (
           error.response &&
@@ -162,7 +153,6 @@ const Login = () => {
         console.error(error);
       }
     } else {
-      // Mode vérification activé : on vérifie le code saisi
       await handleVerifySubmit(e);
     }
   };
@@ -216,27 +206,25 @@ const Login = () => {
               <input type="text" placeholder="Prénom" required value={prenom} onChange={(e) => setPrenom(e.target.value)} />
               <input type="email" placeholder="Email" required value={email} onChange={(e) => setEmail(e.target.value)} />
 
-              <div className={styles.popoverContainer}>
+              <div className={styles.passwordContainer}>
                 <input
-                  ref={passwordInputRef}
                   type="password"
                   placeholder="Mot de passe"
                   required
                   value={password}
-                  onFocus={() => setShowPopover(true)}
-                  onBlur={() => {
-                    if (validatePassword(password)) setShowPopover(false);
-                  }}
+                  onFocus={() => setShowPasswordError(true)}
+                  onBlur={() => setShowPasswordError(false)}
                   onChange={(e) => {
                     const pwd = e.target.value;
                     setPassword(pwd);
-                    if (validatePassword(pwd)) {
-                      setShowPopover(false);
-                    } else {
-                      setShowPopover(true);
-                    }
+                    setShowPasswordError(!validatePassword(pwd));
                   }}
                 />
+                {showPasswordError && !validatePassword(password) && (
+                  <div className={styles.passwordError}>
+                    Le mot de passe dois avoir au moins 8 caractères, 1 majuscule et 1 numéro.
+                  </div>
+                )}
               </div>
 
               <button type="submit" className={styles.loginButton}>
@@ -312,7 +300,6 @@ const Login = () => {
                   className={styles.hidden}
                   onClick={() => {
                     setIsActive(false);
-                    setShowPopover(false);
                     setSignUpError("");
                     setSignUpSuccess("");
                   }}
@@ -339,17 +326,7 @@ const Login = () => {
             </div>
           </div>
         </div>
-
-        <div className={styles.formHero}>
-          <img className={styles.user} src={user1} alt="Decorative Icon" />
-        </div>
       </div>
-
-      {showPopover && !validatePassword(password) && (
-        <div className={styles.passwordPopover}>
-          Au moins 8 caractères, 1 majuscule et 1 numéro.
-        </div>
-      )}
     </>
   );
 };

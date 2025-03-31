@@ -1,0 +1,343 @@
+.container {
+  max-width: 1300px;
+  margin: 70px auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background: #f9f9f9;
+  border-radius: 10px;
+}
+
+.container h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 2rem;
+}
+
+.collaboratorsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-gap: 20px;
+  align-items: start; /* Ensures cards align at the top */
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #dddddd;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, max-height 0.3s;
+  overflow: hidden;
+  max-height: 100px; /* Collapsed card height */
+  position: relative;
+}
+
+.card.expanded {
+  max-height: 400px; /* Expanded card height */
+}
+
+.card:hover {
+  transform: scale(1.02);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Hide remove button by default */
+.removeButton {
+  background: #ff4d4d;
+  border: none;
+  color: #fff;
+  border-radius: 50%;
+  width: 25px;
+  height: 25px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+  object-fit: cover;
+}
+
+.collaboratorName {
+  flex-grow: 1;
+  margin: 0;
+  cursor: pointer;
+  color: #007acc;
+  font-size: 1rem;
+}
+
+.cardDetails {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  position: relative;
+  min-height: 150px; /* Ensure consistent space */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.cardDetails p {
+  margin: 5px 0;
+  line-height: 1.4;
+}
+
+.card a {
+  color: #007acc;
+  text-decoration: none;
+}
+
+.card a:hover {
+  text-decoration: underline;
+}
+
+.acceptationDate {
+  margin-top: auto;
+  align-self: flex-end;
+  color: #666;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  background: #f5f5f5;
+  border-radius: 12px;
+  margin-top: 10px;
+  font-style: italic;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.profileButton {
+  background: #007acc;
+  border: none;
+  color: #fff;
+  border-radius: 50%;
+  width: 25px;
+  height: 25px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+/* Update header container styles */
+.headerContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; /* Ensure vertical alignment */
+  margin-bottom: 2rem;
+  padding: 0;
+}
+
+/* Keep the original h2 styles but remove margin for the header container h2 */
+.headerContainer h2 {
+  margin: 0; /* Remove default h2 margin */
+  font-size: 2rem;
+  font-weight: 700;
+  color: #333;
+}
+
+/* Adjust add button for better alignment */
+.addButton {
+  background-color: #074799;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+  font-size: 0.9rem;
+  height: fit-content; /* Maintain button height */
+  white-space: nowrap; /* Prevent text wrapping */
+  margin-left: auto; /* Push to right */
+}
+
+/* Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.missionsModalContent {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 1200px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modalContent {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 600px;
+  width: 90%;
+}
+.missionsGrid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  margin: 2rem 0;
+}
+
+.missionCard {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+
+.missionCard:hover {
+  transform: translateY(-2px);
+}
+.missionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.missionHeader h4 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #2d3436;
+}
+
+.budget {
+  background: #074799;
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-weight: bold;
+}
+
+.missionMeta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: #636e72;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.tag {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+}
+
+.description {
+  color: #2d3436;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.missionFooter {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.applyButton {
+  background: #009990 !important;
+  color: white !important;
+  text-transform: none !important;
+  padding: 0.5rem 1.5rem !important;
+  border-radius: 8px !important;
+}
+
+.closeButton {
+  background: #074799;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 1rem;
+  float: right;
+}
+
+/* Update existing modalOverlay */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.missionsList {
+  list-style: none;
+  padding: 0;
+}
+
+.closeButton {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: #333;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Saved Missions Button */
+.savedMissionsButton {
+  border: none;
+  color: #fff;
+  border-radius: 50%;
+  width: 25px;
+  height: 25px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  background-color: #000;
+}
+
+/* IMPORTANT: Make sure the savedMissionsButton also becomes visible on hover */
+.card:hover .profileButton,
+.card:hover .removeButton,
+.card:hover .savedMissionsButton {
+  opacity: 1;
+}

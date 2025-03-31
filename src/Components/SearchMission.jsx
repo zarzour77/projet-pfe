@@ -30,7 +30,8 @@ import {
   getMissionsByPorteDeTravail,
   getSavedMissions,
   saveMissionForConsultant,
-  applyWithConsultant // nouvelle fonction pour l'API entreprise SSI
+  applyWithConsultant, // nouvelle fonction pour l'API entreprise SSI
+  createProfileView 
 } from '../services/SearchMission';
 import ConsultantService from '../Services/ConsultantService';
 import EntrepriseService from '../services/EntrepriseService';
@@ -272,7 +273,24 @@ function SearchMission() {
         toast.error("Erreur lors de la sauvegarde de la mission");
       });
   };
-
+  const handleProfileClick = (mission) => {
+    // On suppose que la mission contient une propriété "entreprise" qui est un objet avec un "id"
+    console.log(mission)
+    const entrepriseId = mission.entreprise;
+    if (!entrepriseId) {
+      toast.error("Aucune entreprise associée à cette mission.");
+      return;
+    }
+    createProfileView(entrepriseId)
+      .then((profileView) => {
+        toast.success("Profile view créée !");
+        // Vous pouvez ici rediriger l'utilisateur ou afficher les détails du profileview
+      })
+      .catch((error) => {
+        console.error("[ERROR] Erreur lors de la création du profile view :", error);
+        toast.error("Erreur lors de la création du profile view");
+      });
+  };
   // Bascule entre missions normales et sauvegardées
   const handleShowSavedMissions = () => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -592,7 +610,17 @@ function SearchMission() {
                       >
                         Share
                       </Button>
+                      </MUITooltip>
+                      <MUITooltip title="View Profile" arrow>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => handleProfileClick(mission)}
+                      >
+                        Profile
+                      </Button>
                     </MUITooltip>
+                    
                   </div>
                 </motion.div>
               ))

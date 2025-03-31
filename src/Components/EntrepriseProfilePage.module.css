@@ -1,0 +1,479 @@
+/* Définition des variables de couleur */
+:root {
+  --color-dark-blue: #001A6E;
+  --color-blue: #074799;
+  --color-teal: #009990;
+  --color-light: #E1FFBB;
+}
+
+/* Container & Header */
+.profileContainer {
+  position: relative;
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+}
+
+.profileHeader {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(45deg, var(--color-dark-blue), var(--color-blue));
+  border-radius: 10px;
+}
+
+/* Profile Photo Container & Hover Overlay */
+.profilePhotoContainer {
+  position: relative;
+  display: inline-block;
+}
+
+.profilePhoto {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 1.5rem;
+  border: 3px solid var(--color-light);
+  transition: filter 0.3s ease;
+}
+
+.profilePhotoContainer:hover .profilePhoto {
+  filter: brightness(0.7);
+}
+
+/* Edit Button Overlay for Profile Photo */
+.profilePhotoEditBtn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.profilePhotoContainer:hover .profilePhotoEditBtn {
+  opacity: 1;
+}
+
+/* Profile Name & Role Badge */
+.profileName {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  color: #fff;
+}
+
+.roleBadge {
+  display: inline-block;
+  padding: 0.4rem 1.2rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #fff;
+}
+
+.entrepriseBadge {
+  background: var(--color-teal);
+}
+
+.consultantBadge {
+  background: var(--color-blue);
+}
+
+/* Profile Section Container */
+.profileSection {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: #FBFCF2;
+  border: none;
+  border-radius: 10px;
+  box-shadow: 8px 14px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Section Header with Add Button */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.sectionTitle {
+  font-size: 1.5rem;
+  color: #000;
+  margin: 0;
+  border-bottom: 2px solid #074799;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Add Mission Button - Positioned next to title */
+.addMissionBtn {
+  background: var(--color-blue);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 0.3rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  opacity: 0;
+  transform: scale(1);
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.5rem;
+}
+
+.sectionHeader:hover .addMissionBtn {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.addMissionBtn:hover {
+  background: var(--color-dark-blue);
+}
+
+
+
+/* Individual Info Item */
+.infoItem {
+  padding: 1rem;
+  background: #fff;
+  position: relative;
+}
+
+/* Info Header */
+.infoHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.infoLabel {
+  font-weight: bold;
+  color: #000;
+  margin-bottom: 0.3rem;
+  border-bottom: 2px solid #074799;
+}
+
+.infoValue {
+  font-size: 1rem;
+  color: #000;
+  margin: 0;
+}
+
+/* Edit Button */
+.editBtn {
+  background: none;
+  border: none;
+  color: #000;
+  cursor: pointer;
+  padding: 0.3rem;
+  font-size: 1rem;
+  transition: transform 0.2s ease, opacity 0.3s ease;
+  opacity: 0;
+}
+
+.infoItem:hover .editBtn {
+  opacity: 1;
+}
+
+.editBtn:hover {
+  transform: scale(1.1);
+}
+
+/* Missions List */
+.missionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.missionItem {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  position: relative;
+  transition: transform 0.3s ease;
+  border-bottom: 1px solid #074799;
+}
+
+.missionItem:hover {
+  transform: translateY(-2px);
+}
+
+.missionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.missionTitle {
+  font-size: 1.2rem;
+  color: var(--color-dark-blue);
+  margin: 0;
+}
+
+.missionDescription {
+  font-size: 1rem;
+  color: var(--color-blue);
+  margin: 0.5rem 0 0 0;
+}
+
+/* Mission Actions */
+.missionActions {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.previewBtn,
+.deleteBtn {
+  background: var(--color-blue);
+  color: #fff;
+  border: none;
+  padding: 0.3rem;
+  border-radius: 5px;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.3s ease;
+}
+
+.deleteBtn {
+  background: #dc3545;
+}
+
+.missionItem:hover .previewBtn,
+.missionItem:hover .deleteBtn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3000;
+  backdrop-filter: blur(3px);
+}
+
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.modalContent h2{
+  font-size: 1.5rem;
+  color: #1a1a1a;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+.modalContent {
+  position: relative; /* Add this */
+
+  background: white;
+  width: 90%;
+  max-width: 500px;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: modalSlideIn 0.3s ease-out;
+}
+.modalCloseBtn {
+  position: absolute;
+  top: 0.7rem;
+  right: 1rem;
+  z-index: 1; /* Ensure it stays on top */
+  color: #333; /* Darker color for better visibility */
+  background: transparent;
+  border: none;
+  font-size: 2.5rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.modalHeader {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.modalCloseBtn:hover {
+  color: #333;
+}
+
+/* Form Groups for the add experience modal */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.formLabel {
+  font-size: 0.9rem;
+  color: #444;
+  font-weight: 500;
+}
+.formGroup input {
+  padding: 0.8rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.modalInput {
+  padding: 0.8rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.modalSubtitle {
+  color: var(--color-dark-blue);
+  margin-bottom: 0.5rem;
+  border-bottom: 2px solid var(--color-teal);
+  padding-bottom: 0.3rem;
+  display: inline-block;
+}
+.modalSubmitBtn {
+  padding: 0.8rem 2rem; /* Adjust padding */
+  width: 150px;
+    background: linear-gradient(135deg, #28a745, #218838);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
+  margin: 0 auto;
+}
+
+
+.modalSubmitBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.2);
+}
+.modalText {
+  color: var(--color-blue);
+  line-height: 1.6;
+  margin: 0.5rem 0;
+}
+
+/* Form Groups in Modal */
+.modalFormGroup {
+  margin-bottom: 1.5rem;
+}
+
+.modalActions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  justify-content: center; /* Center the button */
+}
+.modalFormGroup input,
+.modalFormGroup textarea {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .profileContainer {
+    padding: 1rem;
+    margin: 1rem;
+  }
+
+  .profilePhoto {
+    width: 120px;
+    height: 120px;
+  }
+
+  .profileName {
+    font-size: 1.5rem;
+  }
+
+  .profileSection {
+    padding: 1rem;
+  }
+
+  .infoGridP {
+    grid-template-columns: 1fr;
+  }
+
+  .sectionHeader {
+    flex-wrap: wrap;
+  }
+
+  .addMissionBtn {
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+
+  .modalContent {
+    padding: 1.5rem;
+  }
+}
+.editSectionButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  margin-top: -12px;
+  transition: opacity 0.3s ease;
+  color: var(--color-blue);
+}
+.profileSection:hover .editSectionButton {
+  opacity: 1;
+  transform: scale(1);
+
+}
+
+.editSectionButton svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.2s ease;
+}
+
+.editSectionButton:hover svg {
+  transform: scale(1.1);
+  color: var(--color-dark-blue);
+}

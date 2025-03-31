@@ -8,8 +8,26 @@ const API_URL_budget = "http://localhost:8081/api/missions/searchByBudget";
 const API_URL_dureeEstime = "http://localhost:8081/api/missions/searchByDureeEstime";
 const API_URL_PROPOSITION = "http://localhost:8081/api/propositions";
 const API_URL_ENTREPRISE = "http://localhost:8081/api/entreprises";
+const API_URL_PROFILEVIEW = "http://localhost:8081/api/profile-views/entreprise";
+
 
 const token = localStorage.getItem("token");
+export const createProfileView = (entrepriseId) => {
+  if (!token) {
+    console.error("JWT Token is missing lors de la création du profile view.");
+    return Promise.reject(new Error("JWT Token is missing"));
+  }
+  return axios.post(
+    API_URL_PROFILEVIEW,
+    { entrepriseId },
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  ).then(response => response.data);
+};
 
 export const applyWithConsultant = (entrepriseId, missionId, consultantId, montant, dureeEstime, message) => {
   if (!token) {
