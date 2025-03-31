@@ -102,6 +102,25 @@ const removeConsultant = async (entrepriseId, consultantId) => {
     console.error("Erreur lors de la suppression du consultant:", error);
     throw error;
   }
+
+};
+const getFrozenBalance = async (userId) => {
+  const token = localStorage.getItem("token");
+  
+  try {
+    const response = await axios.get(
+      `${API_URL}/frozen-balance/${userId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching frozen balance:", error);
+    throw error;
+  }
 };
 export default {
   getEntrepriseById,
@@ -109,5 +128,6 @@ export default {
   getConsultantsForEntreprise,
   getMissions,
   removeConsultant,
-  uploadProfilePicture
+  uploadProfilePicture,
+  getFrozenBalance
 };

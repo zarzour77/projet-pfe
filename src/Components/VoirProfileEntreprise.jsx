@@ -47,7 +47,7 @@ const VoirProfileEntreprise = () => {
     }
   }, [entrepriseId]);
 
-  if (loading) return <div className={styles.loading}>Chargement du profil...</div>;
+  if (loading) return <div className={styles.loading}>Chargement...</div>;
   if (!entreprise) return <div className={styles.error}>Erreur lors du chargement du profil</div>;
 
   return (

@@ -1,3 +1,4 @@
+// src/App.jsx
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Home from "./Components/Home";
 import Login from "./Components/Login";
@@ -20,7 +21,6 @@ import EntrepriseMission from "./Components/EntrepriseMission";
 import Notification from "./Components/Notification";
 import VoirProfileConsultant from "./Components/VoirProfileConsultant";
 import StatConsultant from "./Components/StatConsultant";
-// NEW: Import your ConsultantPropositions component
 import ConsultantPropositions from "./Components/ConsultantPropositions";
 import Header from "./Components/Header";
 import VirtualAssistant from "./Components/VirtualAssistant";
@@ -28,8 +28,9 @@ import ProtectedRoute from "./Services/ProtectedRoute";
 import { AuthProvider } from "./Services/AuthContext";
 import AddCollaborator from "./Components/AddCollaborator";
 import CollaboratorsList from "./Components/CollaboratorsList";
-import EntrepriseProfilePage from "./Components/EntrepriseProfilePage"
-import VoirProfileEntreprise from "./Components/VoirProfileEntreprise"
+import EntrepriseProfilePage from "./Components/EntrepriseProfilePage";
+import VoirProfileEntreprise from "./Components/VoirProfileEntreprise";
+import Settings from "./Components/Settings";
 
 const App = () => {
   return (
@@ -40,43 +41,56 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/UserInformation" element={<UserInformation />} />
           <Route path="/Notification" element={<Notification />} />
-          <Route path="/consultant/:consultantId" element={<VoirProfileConsultant />} />
-          <Route path="/StatConsultant" element={<StatConsultant />} /> 
+          
           <Route
-           path="/entreprise/:entrepriseId"
+            path="/consultant/:consultantId"
             element={
-              <ProtectedRoute allowedRoles={["Entreprise" , "Consultant", "Admin" ]}>
-            <VoirProfileEntreprise />
-            <Header />
-             </ProtectedRoute>
-            } 
-            />
+              <ProtectedRoute allowedRoles={["Entreprise", "Consultant", "Admin"]}>
+                <Header />
+                <VirtualAssistant />
+                <VoirProfileConsultant />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="/StatConsultant" element={<StatConsultant />} />
+          
+          <Route
+            path="/entreprise/:entrepriseId"
+            element={
+              <ProtectedRoute allowedRoles={["Entreprise", "Consultant", "Admin"]}>
+                <Header />
+                <VirtualAssistant />
+                <VoirProfileEntreprise />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
-  path="/EntrepriseMission"
-  element={
-    <ProtectedRoute allowedRoles={["Entreprise"]}>
-      <Header />
-      <EntrepriseMission />
-    </ProtectedRoute>
-  }
-/>
+            path="/EntrepriseMission"
+            element={
+              <ProtectedRoute allowedRoles={["Entreprise", "Admin"]}>
+                <Header />
+                <EntrepriseMission />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Consultant routes */}
           <Route
             path="/SearchMission"
             element={
-              <ProtectedRoute allowedRoles={["Consultant", "Entreprise" , "Admin"]}>
-                <Header/>
+              <ProtectedRoute allowedRoles={["Consultant", "Entreprise", "Admin"]}>
+                <Header />
+                <VirtualAssistant />
                 <SearchMission />
-                < VirtualAssistant/>
               </ProtectedRoute>
             }
           />
           <Route
             path="/MissionTinder"
             element={
-              <ProtectedRoute allowedRoles={["Consultant"]}>
+              <ProtectedRoute allowedRoles={["Consultant", "Admin"]}>
                 <MissioinTinder />
               </ProtectedRoute>
             }
@@ -84,7 +98,7 @@ const App = () => {
           <Route
             path="/SignupSuccess"
             element={
-              <ProtectedRoute allowedRoles={["Consultant"]}>
+              <ProtectedRoute allowedRoles={["Consultant", "Admin"]}>
                 <SignupSuccess />
               </ProtectedRoute>
             }
@@ -92,7 +106,7 @@ const App = () => {
           <Route
             path="/CreateProfile"
             element={
-              <ProtectedRoute allowedRoles={["Consultant"]}>
+              <ProtectedRoute allowedRoles={["Consultant", "Admin"]}>
                 <CreateProfile />
               </ProtectedRoute>
             }
@@ -100,7 +114,7 @@ const App = () => {
           <Route
             path="/Experience"
             element={
-              <ProtectedRoute allowedRoles={["Consultant"]}>
+              <ProtectedRoute allowedRoles={["Consultant", "Admin"]}>
                 <Experience />
               </ProtectedRoute>
             }
@@ -108,7 +122,9 @@ const App = () => {
           <Route
             path="/Subscription"
             element={
-              <ProtectedRoute allowedRoles={["Consultant"]}>
+              <ProtectedRoute allowedRoles={["Consultant", "Admin"]}>
+                <Header />
+                <VirtualAssistant />
                 <Subscription />
               </ProtectedRoute>
             }
@@ -116,7 +132,7 @@ const App = () => {
           <Route
             path="/PaymentSuccess"
             element={
-              <ProtectedRoute allowedRoles={["Consultant"]}>
+              <ProtectedRoute allowedRoles={["Consultant","Entreprise", "Admin"]}>
                 <PaymentSuccess />
               </ProtectedRoute>
             }
@@ -124,7 +140,7 @@ const App = () => {
           <Route
             path="/PaymentFailed"
             element={
-              <ProtectedRoute allowedRoles={["Consultant"]}>
+              <ProtectedRoute allowedRoles={["Consultant", "Admin"]}>
                 <PaymentFailed />
               </ProtectedRoute>
             }
@@ -132,7 +148,7 @@ const App = () => {
           <Route
             path="/ProfessionalDetails"
             element={
-              <ProtectedRoute allowedRoles={["Consultant"]}>
+              <ProtectedRoute allowedRoles={["Consultant", "Admin"]}>
                 <ProfessionalDetails />
               </ProtectedRoute>
             }
@@ -140,30 +156,31 @@ const App = () => {
           <Route
             path="/ProfilePage"
             element={
-              <ProtectedRoute allowedRoles={["Consultant"]}>
+              <ProtectedRoute allowedRoles={["Consultant", "Admin"]}>
+                <Header />
+                <VirtualAssistant />
                 <ProfilePage />
-                <Header/>< VirtualAssistant/>
               </ProtectedRoute>
             }
           />
           <Route
             path="/transactions"
             element={
-              <ProtectedRoute allowedRoles={["Consultant" , "Entreprise"]}>
+              <ProtectedRoute allowedRoles={["Consultant", "Entreprise", "Admin"]}>
                 <TransactionsHistory />
-                < VirtualAssistant/>
+                <VirtualAssistant />
               </ProtectedRoute>
             }
           />
-          
+
           {/* NEW Protected Route for ConsultantPropositions */}
           <Route
             path="/ConsultantPropositions"
             element={
-              <ProtectedRoute allowedRoles={["Consultant"]}>
+              <ProtectedRoute allowedRoles={["Consultant", "Admin"]}>
+                <Header />
+                <VirtualAssistant />
                 <ConsultantPropositions />
-                < VirtualAssistant/>
-                <Header/>
               </ProtectedRoute>
             }
           />
@@ -172,20 +189,20 @@ const App = () => {
           <Route
             path="/PublierMission"
             element={
-              <ProtectedRoute allowedRoles={["Entreprise"]}>
-                <PublierMission />
+              <ProtectedRoute allowedRoles={["Entreprise", "Admin"]}>
                 <Header />
-                < VirtualAssistant/>
+                <VirtualAssistant />
+                <PublierMission />
               </ProtectedRoute>
             }
           />
           <Route
             path="/LandingEntreprise"
             element={
-              <ProtectedRoute allowedRoles={["Entreprise"]}>
+              <ProtectedRoute allowedRoles={["Entreprise", "Admin"]}>
+                <Header />
+                <VirtualAssistant />
                 <LandingEntreprise />
-                <Header/>
-                < VirtualAssistant/>
               </ProtectedRoute>
             }
           />
@@ -194,7 +211,7 @@ const App = () => {
           <Route
             path="/Messenger"
             element={
-              <ProtectedRoute allowedRoles={["Consultant", "Entreprise"]}>
+              <ProtectedRoute allowedRoles={["Consultant", "Entreprise", "Admin"]}>
                 <Messenger />
               </ProtectedRoute>
             }
@@ -202,33 +219,43 @@ const App = () => {
           <Route
             path="/AddCollaborator"
             element={
-              <ProtectedRoute allowedRoles={["Entreprise"]}>
+              <ProtectedRoute allowedRoles={["Entreprise", "Admin"]}>
+                <Header />
+                <VirtualAssistant />
                 <AddCollaborator />
-                < VirtualAssistant/>
-                <Header/>
               </ProtectedRoute>
             }
           />
           <Route
             path="/CollaboratorsList"
             element={
-              <ProtectedRoute allowedRoles={["Entreprise"]}>
+              <ProtectedRoute allowedRoles={["Entreprise", "Admin"]}>
+                <Header />
+                <VirtualAssistant />
                 <CollaboratorsList />
-                <Header/>
-                < VirtualAssistant/>
               </ProtectedRoute>
             }
-          />  
+          />
           <Route
             path="/EntrepriseProfilePage"
             element={
-              <ProtectedRoute allowedRoles={["Entreprise"]}>
+              <ProtectedRoute allowedRoles={["Entreprise", "Admin"]}>
+                <Header />
+                <VirtualAssistant />
                 <EntrepriseProfilePage />
-                <Header/>
-                < VirtualAssistant/>
               </ProtectedRoute>
             }
-          />        
+          />
+          <Route
+            path="/Settings"
+            element={
+              <ProtectedRoute allowedRoles={["Consultant", "Entreprise", "Admin"]}>
+                <Header />
+                <VirtualAssistant />
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </Router>
     </AuthProvider>

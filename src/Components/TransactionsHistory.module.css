@@ -1,11 +1,11 @@
 .container {
   max-width: 1200px;
   margin: 2rem auto;
-  padding: 1rem; /* Reduced from 1.5rem to 1rem */
-  font-family: 'Helvetica Neue', Arial, sans-serif;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
   margin-top: 80px;
 }
 
@@ -38,11 +38,6 @@
   font-weight: 600;
   color: #007bff;
 }
-
-.pendingLabel {
-  color: #999;
-}
-
 /* Filters row */
 .filters {
   display: grid;
@@ -176,4 +171,121 @@
   font-size: 4rem;
   color: #ccc;
   margin-bottom: 1rem;
+}
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+}
+
+.modal {
+  background: white;
+  width: 90%;
+  max-width: 500px;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: modalSlideIn 0.3s ease-out;
+}
+.inputLabel{
+  margin-bottom: 0.3rem;
+}
+.modal h3 {
+  font-size: 1.5rem;
+  color: #1a1a1a;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.modal input {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.modal input:focus {
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.modalActions button {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modalActions button:first-child {
+  background: #f8f9fa;
+  color: #444;
+  border: 1px solid #e0e0e0;
+}
+
+.modalActions button:first-child:hover {
+  background: #f1f1f1;
+}
+
+.modalActions button:last-child {
+  background: linear-gradient(135deg, #007bff, #0062cc);
+  color: white;
+  box-shadow: 0 4px 6px rgba(0, 123, 255, 0.1);
+}
+
+.modalActions button:last-child:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(0, 123, 255, 0.2);
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.addFundsButton {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+/* Add these to your CSS module */
+.receivedAmount {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.sentAmount {
+  color: #dc3545;
+  font-weight: 600;
+}
+.feeText {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 0.25rem;
 }

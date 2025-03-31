@@ -91,7 +91,7 @@
 
 .toggle-right button.hidden:hover {
     background-color: transparent;
-    color: #fff;
+    color: #fff ;
     border: 2px solid #E1FFBB;
 }
 
@@ -219,7 +219,7 @@
 .toggle {
     height: 100%;
     background: #074799;
-    color: #fff;
+    color: #fff ;
     position: relative;
     left: -100%;
     height: 100%;

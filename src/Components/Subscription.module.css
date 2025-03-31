@@ -1,128 +1,142 @@
-/* General Container */
 .container {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    width: 100vw;
-    padding: 20px;
-    text-align: center;
-    box-sizing: border-box;
-  }
-  
-  /* Title */
-  .title {
-    font-size: 32px;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 20px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-  
-  /* Subscription Plans */
-  .plans {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-    align-items: center;
-    margin-top: 30px;
-    
-  }
-  
-  .plan {
-    padding: 30px;
-    background: rgba(255, 255, 255, 0.2);
-    border: 2px solid rgba(255, 204, 0, 0.6);
-    border-radius: 12px;
-    backdrop-filter: blur(10px);
-    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
-    width: 250px;
-    text-align: center;
-    cursor: pointer;
-    transition: 0.3s ease-in-out;
-    font-weight: bold;
-    color: #333;
-  }
-  
-  .plan:hover {
-    background: rgba(255, 204, 0, 0.3);
-    transform: scale(1.05);
-  }
-  
-  /* Selected Plan */
-  .selected {
-    background: #ffcc00 !important;
-    color: #fff;
-    border-color: #ffdb4d;
-    transform: scale(1.1);
-  }
-  
-  /* Plan Titles */
-  .plan h3 {
-    font-size: 22px;
-    margin: 10px 0;
-  }
-  
-  /* Plan Descriptions */
-  .plan p {
-    font-size: 16px;
-    color: #555;
-  }
-  
-  /* Icons */
-  .plan i {
-    font-size: 40px;
-    margin-bottom: 10px;
-    color: #ffcc00;
-    transition: color 0.3s ease-in-out;
-  }
-  
-  /* Selected Plan Icons */
-  .selected i {
-    color: #fff !important;
-  }
-  
-  /* Subscription Button */
-  .subscribeButton {
-    margin-top: 30px;
-    padding: 12px 24px;
-    font-size: 18px;
-    font-weight: bold;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.3s ease-in-out;
-    background: #ffcc00;
-    color: #333;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-  }
-  
-  .subscribeButton:hover {
-    background: #e6b800;
-    transform: scale(1.05);
-  }
-  .spinner {
-    border: 3px solid transparent;
-    border-top: 3px solid #3498db;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    animation: spin 1s linear infinite;
-  }
-  
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2rem;
+  font-family: 'Arial', sans-serif;
+  margin-top: 50px;
+  position: relative; /* Ajoutez cette ligne */
 
-  .message {
-    margin-top: 20px; /* Adjust this value to control the distance from the top */
-    font-weight: bold; /* Makes the message bold */
-  }
-  
+}
+.backButton {
+  position: absolute;
+  top: 60px;
+  left: 40px;
+  padding: 8px 16px;
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.backButton:hover {
+  background-color: #f0f0f0;
+  border-color: #999;
+}
+.header {
+  text-align: center;
+  font-size: 2.5rem;
+  color: #2d3748;
+  margin-bottom: 1rem;
+}
+
+.subheader {
+  text-align: center;
+  color: #718096;
+  margin-bottom: 3rem;
+}
+
+.plansContainer {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.planCard {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 2rem;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.planCard.selected {
+  border-color: #4299e1;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.planHeader {
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.planHeader h3 {
+  font-size: 1.5rem;
+  color: #2d3748;
+  margin: 0;
+}
+
+.serviceFee {
+  color: #718096;
+  font-size: 0.9rem;
+}
+
+.priceSection {
+  margin: 1.5rem 0;
+}
+
+.currentPlan {
+  background: #48bb78;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  display: inline-block;
+  font-size: 0.9rem;
+}
+
+.selectButton {
+  background: #4299e1;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.featuresList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.featureItem {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  color: #4a5568;
+}
+
+.checkIcon {
+  color: #48bb78;
+  margin-right: 0.5rem;
+}
+
+.subscribeButton {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+  background: #4299e1;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.subscribeButton:hover {
+  background: #3182ce;
+}
+
+.message {
+  text-align: center;
+  margin-top: 1rem;
+  color: #48bb78;
+  font-weight: 500;
+}

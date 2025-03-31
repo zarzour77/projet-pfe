@@ -6,27 +6,38 @@ import 'react-toastify/dist/ReactToastify.css';
 import EntrepriseService from '../Services/EntrepriseService'; // Adjust the import as needed
 import styles from './EntrepriseProfilePage.module.css';
 
-
 const EntrepriseProfilePage = () => {
   const storedUser = JSON.parse(localStorage.getItem("user"));
-const entrepriseId = storedUser?.id;
-console.log(entrepriseId)
+  const entrepriseId = storedUser?.id;
+  const navigate = useNavigate();
+
   const [entreprise, setEntreprise] = useState(null);
   const [missions, setMissions] = useState([]);
   const [loading, setLoading] = useState(true);
+  // Use one modal for updating all basic info
   const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [updateField, setUpdateField] = useState('');
-  const [updateValue, setUpdateValue] = useState('');
+  const [updatedEntrepriseData, setUpdatedEntrepriseData] = useState({
+    nomEntreprise: '',
+    email: '',
+    telephone: '',
+    adresse: '',
+  });
   const [selectedMission, setSelectedMission] = useState(null);
   const fileInputRef = useRef(null);
-  const navigate = useNavigate();
+
+  // Fetch entreprise data
   useEffect(() => {
     const fetchEntrepriseData = async () => {
       try {
         setLoading(true);
         const data = await EntrepriseService.getEntrepriseById(entrepriseId);
-        console.log("Fetched entreprise data:", data);
         setEntreprise(data);
+        setUpdatedEntrepriseData({
+          nomEntreprise: data.nomEntreprise || '',
+          email: data.email || '',
+          telephone: data.telephone || '',
+          adresse: data.adresse || '',
+        });
       } catch (error) {
         console.error("Erreur lors du chargement du profil", error);
         toast.error("Erreur lors du chargement du profil");
@@ -40,12 +51,11 @@ console.log(entrepriseId)
     }
   }, [entrepriseId]);
 
-  // Fetch missions from the backend
+  // Fetch missions
   useEffect(() => {
     const fetchMissions = async () => {
       try {
         const missionsData = await EntrepriseService.getMissions(entrepriseId);
-        console.log("Fetched missions:", missionsData);
         setMissions(missionsData);
       } catch (error) {
         console.error("Erreur lors du chargement des missions", error);
@@ -59,9 +69,7 @@ console.log(entrepriseId)
   }, [entrepriseId]);
 
   const handleProfilePicClick = () => fileInputRef.current.click();
-  const handlePreviewMission = (mission) => {
-    setSelectedMission(mission);
-  };
+
   const handleProfilePicChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -76,11 +84,11 @@ console.log(entrepriseId)
       toast.error("Erreur lors du téléchargement de l'image de profil");
     }
   };
-  
+
   const handleDeleteMission = async (missionId) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer cette mission ?")) {
       try {
-        await EntrepriseService.deleteMission(entreprise.id,missionId);
+        await EntrepriseService.deleteMission(entreprise.id, missionId);
         const updatedMissions = missions.filter(m => m.id !== missionId);
         setMissions(updatedMissions);
         toast.success("Mission supprimée avec succès!");
@@ -90,21 +98,25 @@ console.log(entrepriseId)
       }
     }
   };
-  const openUpdateModal = (field, currentValue) => {
-    setUpdateField(field);
-    setUpdateValue(currentValue || '');
+
+  // Open the update modal for all basic info (instead of one field at a time)
+  const openUpdateModal = () => {
+    setUpdatedEntrepriseData({
+      nomEntreprise: entreprise.nomEntreprise || '',
+      email: entreprise.email || '',
+      telephone: entreprise.telephone || '',
+      adresse: entreprise.adresse || '',
+    });
     setShowUpdateModal(true);
   };
 
   const closeUpdateModal = () => {
     setShowUpdateModal(false);
-    setUpdateField('');
-    setUpdateValue('');
   };
 
   const handleUpdateSubmit = async () => {
     try {
-      const updatedData = { [updateField]: updateValue };
+      const updatedData = { ...updatedEntrepriseData };
       const updatedEntreprise = await EntrepriseService.updateEntreprise(entreprise.id, updatedData);
       setEntreprise(updatedEntreprise);
       localStorage.setItem("user", JSON.stringify(updatedEntreprise));
@@ -116,6 +128,10 @@ console.log(entrepriseId)
     }
   };
 
+  const handlePreviewMission = (mission) => {
+    setSelectedMission(mission);
+  };
+
   if (loading) return <div className={styles.loading}>Chargement du profil...</div>;
   if (!entreprise) return <div className={styles.error}>Erreur lors du chargement du profil</div>;
 
@@ -125,7 +141,6 @@ console.log(entrepriseId)
         <ToastContainer position="top-right" />
 
         <div className={styles.profileHeader}>
-          {/* Profile Photo with edit overlay */}
           <div className={styles.profilePhotoContainer}>
             <img
               src={entreprise.photoprofile || '/default-avatar.png'}
@@ -146,84 +161,42 @@ console.log(entrepriseId)
               onChange={handleProfilePicChange}
             />
           </div>
-
           <h1 className={styles.profileName}>{entreprise.nomEntreprise}</h1>
           <span className={`${styles.roleBadge} ${entreprise.role === 'ENTREPRISE' ? styles.entrepriseBadge : styles.consultantBadge}`}>
             {entreprise.role} {entreprise.typeEntreprise}
           </span>
         </div>
 
-        {/* Basic Information Section */}
+        {/* Informations de base Section with single edit button */}
         <div className={styles.profileSection}>
-          <h2 className={styles.sectionTitle}>Informations de base</h2>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>Informations de base</h2>
+            <button 
+              className={styles.editSectionButton}
+              onClick={openUpdateModal}
+              title="Modifier les informations de base"
+            >
+              <svg className={styles.editIcon} viewBox="0 0 24 24">
+                                              <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                            </svg>
+            </button>
+          </div>
           <div className={styles.infoGridP}>
-            <div className={styles.leftColumn}>
-              {/* Nom de l'entreprise */}
               <div className={styles.infoItem}>
-                <div className={styles.infoHeader}>
-                  <label className={styles.infoLabel}>Nom de l'entreprise</label>
-                  <button
-                    className={styles.editBtn}
-                    onClick={() => openUpdateModal('nomEntreprise', entreprise.nomEntreprise)}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-pencil-square" viewBox="0 1 16 16">
-                      <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                      <path fillRule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
-                    </svg>
-                  </button>
-                </div>
+                <label className={styles.infoLabel}>Nom de l'entreprise</label>
                 <p className={styles.infoValue}>{entreprise.nomEntreprise}</p>
               </div>
-
-              {/* E-mail */}
               <div className={styles.infoItem}>
-                <div className={styles.infoHeader}>
-                  <label className={styles.infoLabel}>E-mail</label>
-                  <button
-                    className={styles.editBtn}
-                    onClick={() => openUpdateModal('email', entreprise.email)}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-pencil-square" viewBox="0 1 16 16">
-                      <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                      <path fillRule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
-                    </svg>
-                  </button>
-                </div>
+                <label className={styles.infoLabel}>E-mail</label>
                 <p className={styles.infoValue}>{entreprise.email}</p>
               </div>
-
-              {/* Téléphone */}
               <div className={styles.infoItem}>
-                <div className={styles.infoHeader}>
-                  <label className={styles.infoLabel}>Téléphone</label>
-                  <button
-                    className={styles.editBtn}
-                    onClick={() => openUpdateModal('telephone', entreprise.telephone)}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-pencil-square" viewBox="0 1 16 16">
-                      <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                      <path fillRule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
-                    </svg>
-                  </button>
-                </div>
+                <label className={styles.infoLabel}>Téléphone</label>
                 <p className={styles.infoValue}>{entreprise.telephone || "Non fourni"}</p>
               </div>
-            </div>
           </div>
-          {/* Localisation Section (placed below the other info) */}
           <div className={styles.infoItem}>
-            <div className={styles.infoHeader}>
-              <label className={styles.infoLabel}>Localisation</label>
-              <button
-                className={styles.editBtn}
-                onClick={() => openUpdateModal('adresse', entreprise.adresse)}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-pencil-square" viewBox="0 1 16 16">
-                  <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                  <path fillRule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
-                </svg>
-              </button>
-            </div>
+            <label className={styles.infoLabel}>Localisation</label>
             <p className={styles.infoValue}>{entreprise.adresse ? entreprise.adresse : "Non renseignée"}</p>
           </div>
         </div>
@@ -280,8 +253,9 @@ console.log(entrepriseId)
           </div>
         </div>
       </div>
-{/* Mission Preview Modal */}
-{selectedMission && (
+
+      {/* Mission Preview Modal */}
+      {selectedMission && (
         <div className={styles.modalOverlay} onClick={() => setSelectedMission(null)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <button className={styles.modalCloseBtn} onClick={() => setSelectedMission(null)}>
@@ -307,28 +281,68 @@ console.log(entrepriseId)
           </div>
         </div>
       )}
-      {/* Update Modal */}
+
+      {/* Update Modal for Basic Information */}
       {showUpdateModal && (
         <div className={styles.modalOverlay} onClick={closeUpdateModal}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <button className={styles.modalCloseBtn} onClick={closeUpdateModal}>X</button>
-            <h2 className={styles.modalTitle}>
-              Mettre à jour {updateField === 'nomEntreprise' ? "Nom de l'entreprise" : updateField}
-            </h2>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>
-                {updateField === 'nomEntreprise' ? "Nom de l'entreprise" : updateField}
-              </label>
+            <button className={styles.modalCloseBtn} onClick={closeUpdateModal}>
+              &times;
+            </button>
+            <h2 className={styles.modalTitle}>Mettre à jour les informations de base</h2>
+            <div className={styles.modalFormGroup}>
+              <label className={styles.formLabel}>Nom de l'entreprise</label>
               <input 
                 type="text"
-                value={updateValue}
-                onChange={(e) => setUpdateValue(e.target.value)}
+                value={updatedEntrepriseData.nomEntreprise}
+                onChange={(e) => setUpdatedEntrepriseData({
+                  ...updatedEntrepriseData,
+                  nomEntreprise: e.target.value,
+                })}
                 className={styles.formControl}
               />
             </div>
+            <div className={styles.modalFormGroup}>
+              <label className={styles.formLabel}>E-mail</label>
+              <input 
+                type="email"
+                value={updatedEntrepriseData.email}
+                onChange={(e) => setUpdatedEntrepriseData({
+                  ...updatedEntrepriseData,
+                  email: e.target.value,
+                })}
+                className={styles.formControl}
+              />
+            </div>
+            <div className={styles.modalFormGroup}>
+              <label className={styles.formLabel}>Téléphone</label>
+              <input 
+                type="text"
+                value={updatedEntrepriseData.telephone}
+                onChange={(e) => setUpdatedEntrepriseData({
+                  ...updatedEntrepriseData,
+                  telephone: e.target.value,
+                })}
+                className={styles.formControl}
+              />
+            </div>
+            <div className={styles.modalFormGroup}>
+              <label className={styles.formLabel}>Localisation</label>
+              <input 
+                type="text"
+                value={updatedEntrepriseData.adresse}
+                onChange={(e) => setUpdatedEntrepriseData({
+                  ...updatedEntrepriseData,
+                  adresse: e.target.value,
+                })}
+                className={styles.formControl}
+              />
+            </div>
+            <div className={styles.modalActions}>
             <button className={styles.modalSubmitBtn} onClick={handleUpdateSubmit}>
               Enregistrer
             </button>
+            </div>
           </div>
         </div>
       )}

@@ -5,19 +5,18 @@ const BASE_URL = 'http://localhost:8181/api';
 // Retrieve all consultants
 export async function getById(entrepriseId) {
   const token = localStorage.getItem("token");
-  console.log(token);
   const response = await axios.get(`${BASE_URL}/entreprises/${entrepriseId}`, {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
   });
+  console.log(response)
   return response.data;
 }
 // Retrieve all consultants
 export async function getAllConsultants() {
   const token = localStorage.getItem("token");
-  console.log(token);
   const response = await axios.get(`${BASE_URL}/consultants`, {
     headers: {
       "Content-Type": "application/json",

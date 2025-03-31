@@ -1,109 +1,120 @@
+/* eslint-disable react/no-unescaped-entities */
 import { useState } from "react";
 import styles from "./Subscription.module.css";
 import PaymentService from "../Services/PaymentService";
-import UserService from "../Services/UserService";
 import { useNavigate } from "react-router-dom";
 
-
-
 const Subscription = () => {
-  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [selectedPlan, setSelectedPlan] = useState("Standard");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const storedConsultant = JSON.parse(localStorage.getItem("user"));
-  const consultantId = storedConsultant?.id;
-  // Define pricing for each plan
-  const planPrices = {
-    Silver: 0, // Free plan
-    Gold: 50000,
-    Platinum: 90000,
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+  const consultantId = storedUser?.id;
+
+  const plans = {
+    Standard: {
+      price: 0,
+      features: [
+        "Marché mondial des freelances d'Upwork",
+        "Fonctionnalités alimentées par l'IA",
+        "Outils de collaboration",
+        "Rapports standard",
+        "Paiement au fil du travail"
+      ],
+      fee: "Frais de service : 5%"
+    },
+    Premium: {
+      price: 30000, // Montant en centimes (30000 = 300.00€)
+      features: [
+        "Tout inclus dans Standard",
+        "Top 1% des talents présélectionnés",
+        "Appariement expert des talents",
+        "Support premium 24/7",
+        "Facturation mensuelle"
+      ],
+      fee: "Frais de service : 10%"
+    }
   };
 
-  const handleSelection = (plan) => {
-    setSelectedPlan(plan);
-    setMessage("");
-  };
-
-  // Handle subscription and payment creation/processing
-  const handleSubscribe = async () => {
-    if (!selectedPlan) return;
-
-    setLoading(true);
-
-    if (selectedPlan === "Silver") {
-      // For Silver plan, no payment processing is needed.
-      setMessage("Abonnement gratuit activé pour Silver.");
+  const handleSubscribe = async (planType) => {
+    if (planType === "Premium") {
+      setLoading(true);
       try {
-        await UserService.createSilverSubscription(consultantId);
-        setTimeout(() => {
-          navigate("/ProfilePage");
-          setLoading(false);
-        }, 2000);
+        const response = await PaymentService.initiateSubscription(consultantId, {
+          amount: 30000,
+          currency: "usd",
+          planType: "Premium",
+          quantity: 1,
+          name: "Subscription"
+        });
+  
+        // Sauvegarder toutes les données nécessaires pour le traitement ultérieur
+        localStorage.setItem("subscriptionData", JSON.stringify({
+          sessionId: response.sessionId,
+          consultantId,
+          planType: "Premium"
+        }));
       } catch (error) {
-        console.error("Erreur lors de la création de l'abonnement Silver:", error);
-        setMessage("Erreur lors de la création de l'abonnement. Veuillez réessayer.");
-        setLoading(false);
+        setMessage("Échec de l'initialisation du paiement");
       }
-    } else {
-      // For paid plans: create payment then process it.
-      const amount = planPrices[selectedPlan];
-      // Store selected plan and amount in localStorage for later use in PaymentSuccess
-      localStorage.setItem("SubscriptionType", JSON.stringify(selectedPlan));
-      localStorage.setItem("SubscriptionAmount", amount.toString());
-      try {
-        // Create payment and retrieve the payment details (including payment_id)
-        await PaymentService.createPayment(amount);
-        // PaymentService.createPayment will store the paymentId in localStorage and redirect the user.
-      } catch (error) {
-        console.error("Erreur lors du paiement:", error);
-        setMessage("Erreur lors du paiement. Veuillez réessayer.");
-        setLoading(false);
-      }
+      setLoading(false);
     }
   };
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.title}>Choisissez votre abonnement</h2>
-      <p className={styles.subtitle}>Sélectionnez le plan qui correspond le mieux à vos besoins.</p>
+      <button 
+        className={styles.backButton}
+        onClick={() => navigate("/profilePage")}
+      >
+        ← Retour au Profil
+      </button>
+      <h1 className={styles.header}>Plans d'abonnement</h1>
+      <p className={styles.subheader}>Choisissez le plan qui correspond à vos besoins</p>
       
-      <div className={styles.plans}>
-        {Object.keys(planPrices).map((plan) => (
-          <div
-            key={plan}
-            className={`${styles.plan} ${selectedPlan === plan ? styles.selected : ""}`}
-            onClick={() => handleSelection(plan)}
+      <div className={styles.plansContainer}>
+        {Object.entries(plans).map(([planKey, details]) => (
+          <div 
+            key={planKey}
+            className={`${styles.planCard} ${selectedPlan === planKey ? styles.selected : ""}`}
+            onClick={() => setSelectedPlan(planKey)}
           >
-            <i className={`bi ${plan === "Silver" ? "bi-award" : plan === "Gold" ? "bi-gem" : "bi-stars"}`}></i>
-            <h3>{plan.charAt(0).toUpperCase() + plan.slice(1)}</h3>
-            <p>
-              {plan === "Silver" && "Accès limité aux fonctionnalités de base"}
-              {plan === "Gold" && "Accès étendu avec plus de privilèges"}
-              {plan === "Platinum" && "Accès premium à toutes les fonctionnalités"}
-            </p>
-            <span className={styles.price}>
-              {plan === "Silver" ? "Gratuit" : `${planPrices[plan] / 1000}DT/mois`}
-            </span>
+            <div className={styles.planHeader}>
+              <h3>{planKey}</h3>
+              <span className={styles.serviceFee}>{details.fee}</span>
+            </div>
+            
+            <div className={styles.priceSection}>
+              {planKey === "Standard" ? (
+                <div className={styles.currentPlan}>Plan standard activé</div>
+              ) : (
+                <button 
+                  className={styles.selectButton}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSubscribe(planKey);
+                  }}
+                  disabled={loading}
+                >
+                  {loading ? "Traitement..." : "Sélectionner le plan"}
+                </button>
+              )}
+            </div>
+
+            <ul className={styles.featuresList}>
+              {details.features.map((feature, index) => (
+                <li key={index} className={styles.featureItem}>
+                  <span className={styles.checkIcon}>✓</span>
+                  {feature}
+                </li>
+              ))}
+            </ul>
           </div>
         ))}
       </div>
-      
-      <button
-        className={styles.subscribeButton}
-        disabled={!selectedPlan || loading}
-        onClick={handleSubscribe}
-      >
-        {loading ? (
-          <div className={styles.spinner}></div>
-        ) : (
-          selectedPlan 
-            ? `S'abonner à ${selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1)}`
-            : "Sélectionnez un plan"
-        )}
-      </button>
 
-      {message && <p className={styles.message}>{message}</p>}
+      {message && <div className={styles.message}>{message}</div>}
     </div>
   );
 };

@@ -1,15 +1,56 @@
-
-  /* ✅ Checkmark and Text Container */
-  .contentContainer {
-    display: flex;
+.container {
+  display: flex;
+  justify-content: center;
   align-items: center;
-  justify-content: center; /* Center everything */
-  height: 100vh; /* Full-screen height */
-  padding: 20px;
-  }
-  
-  /* ✅ Checkmark Icon */
-  .iconContainer {
-    margin-right: 30px; /* Add space between checkmark and text */
-  }
-  
+  min-height: 100vh;
+  background-color: #f7fafc;
+}
+
+.successCard {
+  background: white;
+  padding: 3rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 600px;
+  width: 90%;
+}
+
+.checkIcon {
+  color: #48bb78;
+  margin-bottom: 1.5rem;
+}
+
+
+
+.planDetails {
+  text-align: left;
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: #f7fafc;
+  border-radius: 8px;
+}
+
+.planDetails h2 {
+  color: #2d3748;
+  margin-bottom: 1rem;
+}
+
+.planDetails ul {
+  list-style: none;
+  padding: 0;
+}
+
+.planDetails li {
+  padding: 0.5rem 0;
+  color: #4a5568;
+  display: flex;
+  align-items: center;
+}
+
+.planDetails li:before {
+  content: "✓";
+  color: #48bb78;
+  margin-right: 0.75rem;
+}
+

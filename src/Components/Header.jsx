@@ -1,48 +1,47 @@
-/* eslint-disable react/no-unescaped-entities */
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import notificationService from "../Services/NotificationService";
-import EntrepriseService from "../Services/EntrepriseService"; // for Entreprise
-import ConsultantService from "../Services/ConsultantService"; // for Consultant (assumed)
+import UserService from "../Services/UserService"; // Updated import
 import styles from "./Header.module.css";
 
 const Header = () => {
   const navigate = useNavigate();
-
-  // Get basic user info from localStorage
+  const [fullUser, setFullUser] = useState(null);
   const storedUser = localStorage.getItem("user");
   const basicUser = storedUser ? JSON.parse(storedUser) : null;
+  const userId = fullUser?.id;
+  const role = fullUser?.role;
 
-  // State for full user details (will include extra info like typeEntreprise, etc.)
-  const [fullUser, setFullUser] = useState(basicUser);
-  const userId = fullUser ? fullUser.id : null;
-  const role = fullUser?.role; // e.g., "Consultant" or "Entreprise"
-
-  // Fetch full user details based on the role
+  // Fetch user data using UserService
   useEffect(() => {
-    if (basicUser && basicUser.id) {
-      const fetchFullUser = async () => {
-        try {
-          let fetchedData;
-          if (basicUser.role === "Entreprise") {
-            fetchedData = await EntrepriseService.getEntrepriseById(basicUser.id);
-          } else if (basicUser.role === "Consultant") {
-            fetchedData = await ConsultantService.getConsultantById(basicUser.id);
-          }
-          // Merge the basic user info with the full details from the API
+    let isMounted = true;
+    
+    const fetchUserData = async () => {
+      if (!basicUser?.id) return;
+      
+      try {
+        const fetchedData = await UserService.getById(basicUser.id);
+        
+        if (isMounted) {
           const updatedUser = { ...basicUser, ...fetchedData };
           setFullUser(updatedUser);
-          // Update localStorage so that subsequent pages use full details
-          localStorage.setItem("user", JSON.stringify(updatedUser));
-        } catch (error) {
-          console.error("Error fetching full user details:", error);
+          if (JSON.stringify(updatedUser) !== JSON.stringify(basicUser)) {
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+          }
         }
-      };
-      fetchFullUser();
+      } catch (error) {
+        console.error("Error fetching user details:", error);
+      }
+    };
+
+    if (basicUser?.id) {
+      fetchUserData();
     }
-  }, [basicUser]);
+
+    return () => { isMounted = false };
+  }, [basicUser?.id]);
 
   // State for notifications and dropdowns
   const [showNotifications, setShowNotifications] = useState(false);
@@ -227,64 +226,74 @@ const Header = () => {
 
           {/* Center: Nav links with new dropdown for "Manage Finances" */}
           <div className={styles.centerSection}>
-  <ul className={styles.navLinks}>
-    {role === "Entreprise" ? (
-      fullUser?.typeEntreprise === "CLIENTE" ? (
-        <li>
-          <Link to="/landingEntreprise">Find Talent</Link>
-        </li>
-      ) : (
-        <li>
-          <Link to="/SearchMission">Find Work</Link>
-        </li>
-      )
-    ) : (
-      <li>
-        <Link to="/SearchMission">Find Work</Link>
-      </li>
-    )}
+            <ul className={styles.navLinks}>
+              {role === "Admin" ? (
+                <>
+                  <li>
+                    <Link to="/admin-dashboard">Dashboard</Link>
+                  </li>
+                  <li className={styles.dropdown}>
+                    <span className={styles.dropdownTitle}>Management</span>
+                    <ul className={styles.dropdownMenu}>
+                      <li><Link to="/manage-users">Users</Link></li>
+                      <li><Link to="/manage-missions">Missions</Link></li>
+                    </ul>
+                  </li>
+                </>
+              ) : (
+                <>
+                  {role === "Entreprise" ? (
+                    fullUser?.typeEntreprise === "CLIENTE" ? (
+                      <li>
+                        <Link to="/landingEntreprise">Find Talent</Link>
+                      </li>
+                    ) : (
+                      <li>
+                        <Link to="/SearchMission">Find Work</Link>
+                      </li>
+                    )
+                  ) : (
+                    <li>
+                      <Link to="/SearchMission">Find Work</Link>
+                    </li>
+                  )}
 
-    {/* For Entreprises that are neither SSI nor Cliente, display "My Missions" dropdown */}
-    {role === "Entreprise" && fullUser?.typeEntreprise !== "SSI" && fullUser?.typeEntreprise !== "Cliente" && (
-      <li className={styles.dropdown}>
-        <span className={styles.dropdownTitle}>Missions</span>
-        <ul className={styles.dropdownMenu}>
-          <li>
-            <Link to="/publierMission">Publier une mission</Link>
-          </li>
-          {/* You may also add more options, such as a link to view current missions */}
-          <li>
-            <Link to="/EntrepriseMission">Mes Missions</Link>
-          </li>
-        </ul>
-      </li>
-    )}
+                  {role === "Entreprise" && fullUser?.typeEntreprise !== "SSI" && 
+                   fullUser?.typeEntreprise !== "Cliente" && (
+                    <li className={styles.dropdown}>
+                      <span className={styles.dropdownTitle}>Missions</span>
+                      <ul className={styles.dropdownMenu}>
+                        <li><Link to="/publierMission">Publier une mission</Link></li>
+                        <li><Link to="/EntrepriseMission">Mes Missions</Link></li>
+                      </ul>
+                    </li>
+                  )}
 
-    {/* For Entreprise type SSI, show Collaborators */}
-    {role === "Entreprise" && fullUser?.typeEntreprise === "SSI" && (
-      <li>
-        <Link to="/CollaboratorsList">Collaborators</Link>
-      </li>
-    )}
+                  {role === "Entreprise" && fullUser?.typeEntreprise === "SSI" && (
+                    <li>
+                      <Link to="/CollaboratorsList">Collaborators</Link>
+                    </li>
+                  )}
 
-    {role === "Consultant" && (
-      <li>
-        <Link to="/ConsultantPropositions">Mes Propositions</Link>
-      </li>
-    )}
+                  {role === "Consultant" && (
+                    <li>
+                      <Link to="/ConsultantPropositions">Mes Propositions</Link>
+                    </li>
+                  )}
+                </>
+              )}
 
-    {/* New Dropdown: Manage Finances */}
-    <li className={styles.dropdown}>
-      <span className={styles.dropdownTitle}>Manage Finances</span>
-      <ul className={styles.dropdownMenu}>
-        <li>
-          <Link to="/transactions">Transactions</Link>
-        </li>
-        {/* Additional finance-related options can be added here */}
-      </ul>
-    </li>
-  </ul>
-</div>
+              {/* Finance dropdown for all roles except Admin */}
+              
+                <li className={styles.dropdown}>
+                  <span className={styles.dropdownTitle}>Manage Finances</span>
+                  <ul className={styles.dropdownMenu}>
+                    <li><Link to="/transactions">Transactions</Link></li>
+                  </ul>
+                </li>
+             
+            </ul>
+          </div>
 
 
 
@@ -344,11 +353,12 @@ const Header = () => {
                   {fullUser?.prenom} {fullUser?.nom}
                 </h4>
                 <p className={styles.userRole}>
-                  {role === "Consultant" ? "Freelancer" : "Entreprise"}
-                </p>
+  {role === "Admin" ? "Admin" : role === "Consultant" ? "Freelancer" : "Entreprise"}
+</p>
               </div>
             </div>
             <div className={styles.dropdownDivider}></div>
+            {role !== "Admin" && (
             <button
               className={styles.dropdownItem}
               onClick={() => {
@@ -357,7 +367,7 @@ const Header = () => {
               }}
             >
               <i className="fa fa-user"></i> Your profile
-            </button>
+            </button> )}
             <button
               className={styles.dropdownItem}
               onClick={() => {

@@ -20,8 +20,6 @@ import CompetenceService from '../Services/CompetenceService';
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 
-// Instead of reading the user only once at the module level,
-// initialize a state variable inside the component.
 const UserInformation = () => {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(() => {
@@ -189,7 +187,6 @@ const UserInformation = () => {
   useEffect(() => {
     async function fetchUser() {
       try {
-        // Always use the currentUser state for id
         const userData = await UserService.getById(userId);
         setFetchedUser(userData);
       } catch (error) {
@@ -215,7 +212,7 @@ const UserInformation = () => {
     experienceYears: '',
     taux_horaire: '',
     nomentreprise: '',
-    typeEntreprise: 'CLIENTE' // Valeur par défaut
+    typeEntreprise: 'CLIENTE'
   };
 
   const [userRole, setUserRole] = useState('');
@@ -259,12 +256,11 @@ const UserInformation = () => {
     }
   }, [currentStep]);
 
+  // When a role is selected, update it on the backend then set local state.
   const handleRoleSelection = (role) => {
     console.log("Selected role:", role);
-    // Use currentUser.id from state
     UserService.updateUserRole(userId, role)
       .then((updatedUser) => {
-        // Update currentUser state with the new data
         setUserRole(updatedUser.role);
         setCurrentUser(updatedUser);
       })
@@ -288,6 +284,8 @@ const UserInformation = () => {
     setSubmitting(false);
   };
 
+  // Helper to capitalize the first letter
+
   const handleFinalSubmit = async (values) => {
     setLoading(true);
     try {
@@ -295,18 +293,23 @@ const UserInformation = () => {
         await UserService.uploadProfilePicture(userId, values.photoprofile);
       }
       
-      // Modifier la partie transformedCompetences dans handleFinalSubmit
+      // Transform competences using the same logic as for langues in ProfessionalDetails:
+      // If a competence with the exact same 'nom' and 'competenceNiveau' exists, reuse it.
+      // Otherwise, create a new competence object.
       const transformedCompetences = values.competences.map(comp => {
-        const existing = fetchedCompetences.find(c => c.nom.toLowerCase() === comp.nom.toLowerCase());
-        return existing ? { ...existing, competenceNiveau: comp.competenceNiveau } : comp;
+        const compName = comp.nom; // Use the value as-is (with correct capitalization)
+        const compLevel = comp.competenceNiveau; 
+        const existing = fetchedCompetences.find(c => 
+          c.nom === compName && c.competenceNiveau === compLevel
+        );
+        return existing ? existing : { nom: compName, competenceNiveau: compLevel };
       });
       
       const transformedDomaines = values.domaines.map(dom => {
-        const existing = fetchedDomaines.find(
-          d => d.nom.toLowerCase() === dom.toLowerCase()
-        );
+        const existing = fetchedDomaines.find(d => d.nom === dom);
         return existing ? existing : { nom: dom, category: null };
       });
+      
       const consultantData = {
         nom: values.nom,
         prenom: values.prenom,
@@ -324,7 +327,8 @@ const UserInformation = () => {
         longitude: values.longitude,
         workload: values.workload || 0,
       };
-      // Do NOT remove the stored "user" here so that the same user remains in localStorage.
+      
+      // Update consultant record.
       const newConsultant = await ConsultantService.updateConsultant(userId, consultantData);
       localStorage.setItem("user", JSON.stringify(newConsultant));
       console.log("Updated consultant:", newConsultant);
@@ -338,6 +342,10 @@ const UserInformation = () => {
     setLoading(false);
     setShowModal(false);
   };
+  
+  
+  
+
 
   const handleFinalSubmitEntreprise = async (values) => {
     setLoading(true);
@@ -355,7 +363,8 @@ const UserInformation = () => {
         role: userRole,
         longitude: values.longitude,
         latitude: values.latitude,
-        typeEntreprise: values.typeEntreprise  // Nouveau champ envoyé vers le backend
+        typeEntreprise: values.typeEntreprise,
+        frozen_balance: 0.0
       };
       const updatedEntreprise = await EntrepriseService.updateEntreprise(userId, entrepriseData);
       console.log("Réponse du backend:", updatedEntreprise);
@@ -520,9 +529,9 @@ const UserInformation = () => {
                         setFieldValue('competences', updatedCompetences);
                       }}
                     >
-                      <option value="débutant">Débutant</option>
-                      <option value="intermédiaire">Intermédiaire</option>
-                      <option value="expert">Expert</option>
+                      <option value="Débutant">Débutant</option>
+                      <option value="Intermédiaire">Intermédiaire</option>
+                      <option value="Expert">Expert</option>
                     </select>
                   </div>
                 ))}
@@ -682,19 +691,19 @@ const UserInformation = () => {
           </div>
         ) : (
           <Formik
-  innerRef={formikRef}
-  initialValues={initialValues}
-  validationSchema={currentStep === 1 ? Step1Schema : Step2Schema}
-  validateOnMount={true}
-  onSubmit={(values, { setSubmitting }) => {
-    if (userRole === 'Consultant') {
-      if (currentStep === 1) {
-        setCurrentStep(2);
-        setSubmitting(false);
-      } else {
-        handlePreviewSubmit(values, setSubmitting);
-      }
-    } else {
+            innerRef={formikRef}
+            initialValues={initialValues}
+            validationSchema={currentStep === 1 ? Step1Schema : Step2Schema}
+            validateOnMount={true}
+            onSubmit={(values, { setSubmitting }) => {
+              if (userRole === 'Consultant') {
+                if (currentStep === 1) {
+                  setCurrentStep(2);
+                  setSubmitting(false);
+                } else {
+                  handlePreviewSubmit(values, setSubmitting);
+                }
+              } else {
                 setLoading(true);
                 setTimeout(() => {
                   console.log({ ...values, role: userRole });
@@ -704,7 +713,7 @@ const UserInformation = () => {
                 }, 2000);
               }
             }}
-            >
+          >
             {({ values, setFieldValue, isSubmitting, isValid }) => (
               <Form className="mt-4">
                 {userRole === 'Consultant'

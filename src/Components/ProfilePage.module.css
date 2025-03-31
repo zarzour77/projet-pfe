@@ -4,6 +4,9 @@
   --color-blue: #074799;
   --color-teal: #009990;
   --color-light: #E1FFBB;
+  --modal-backdrop: rgba(0, 0, 0, 0.6);
+  --modal-radius: 12px;
+  --modal-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 /* Container & Header */
@@ -91,15 +94,49 @@
 .consultantBadge {
   background: var(--color-blue);
 }
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* Space between title and button */
+}
 
+.editIcon {
+  width: 24px;
+  height: 24px;
+  fill: #666;
+}
+.editSectionButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  margin-top: -12px;
+  transition: opacity 0.3s ease;
+  color: var(--color-blue);
+}
+.profileSection:hover .editSectionButton {
+  opacity: 1;
+  transform: scale(1);
+
+}
+
+.editSectionButton svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.2s ease;
+}
+
+.editSectionButton:hover svg {
+  transform: scale(1.1);
+  color: var(--color-dark-blue);
+}
 /* Profile Section Container */
 .profileSection {
   margin: 2rem 0;
-  padding: 1.5rem;
-  background: #FBFCF2; /* white background */
-  border: none;
-  border-radius: 10px;
-  box-shadow: 8px 14px 8px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 /* Section Title */
@@ -152,10 +189,9 @@ border-left: 1px solid #0000002c;
   gap: 0.5rem;
 }
 
-/* Labels & Values */
 .infoLabel {
-  font-weight: bold;
-  color: #000;
+  font-weight: 600;
+  color: #000000;
   margin-bottom: 0.3rem;
 }
 
@@ -286,7 +322,11 @@ border-left: 1px solid #0000002c;
   transition: opacity 0.3s ease, transform 0.3s ease;
   margin-top: 0.5rem;
 }
-
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
 .experienceCard:hover .descriptionContainer .viewBtn,
 .descriptionContainer:hover .viewBtn,
 .experienceCard:hover .descriptionContainer .deleteBtn,
@@ -368,6 +408,7 @@ border-left: 1px solid #0000002c;
   padding: 3rem;
   font-size: 1.2rem;
   color: var(--color-dark-blue);
+  margin-top: 50px;
 }
 
 /* Expériences professionnelles */
@@ -424,86 +465,150 @@ border-left: 1px solid #0000002c;
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 3000;
+  backdrop-filter: blur(3px);
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
 
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 .modalContent {
-  background: #fff;
-  padding: 2.5rem;
-  border-radius: 10px;
-  width: 70%;
-  max-width: 800px;
-  max-height: 90%;
-  overflow-y: auto;
-  animation: fadeIn 0.5s ease-out;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  position: relative;
+  position: relative; /* Add this */
+
+  background: white;
+  width: 90%;
+  max-width: 500px;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: modalSlideIn 0.3s ease-out;
+}
+/* Add this to your existing CSS */
+.cvModalContent {
+  width: 90vw !important;
+  max-width: 800px !important;
+  height: 90vh;
+  padding: 2rem;
 }
 
+.cvModalContent .pdfPreview {
+  height: calc(90vh - 200px) !important; /* Adjust height for button space */
+  width: 100%;
+}
+
+/* Update the existing PDF preview title */
+.pdfPreviewTitle {
+  margin-bottom: 1.5rem;
+  color: var(--color-dark-blue);
+}
+.modalContent h2{
+  font-size: 1.5rem;
+  color: #1a1a1a;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
 .modalCloseBtn {
   position: absolute;
-  top: 1rem;
+  top: 0.7rem;
   right: 1rem;
-  background: var(--color-blue);
-  color: #fff;
+  z-index: 1; /* Ensure it stays on top */
+  color: #333; /* Darker color for better visibility */
+  background: transparent;
   border: none;
-  border-radius: 50%;
-  width: 35px;
-  height: 35px;
-  font-size: 1.2rem;
+  font-size: 2.5rem;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: color 0.2s ease;
+}
+.modalHeader {
+  margin-bottom: 1.5rem;
+  text-align: center;
 }
 
 .modalCloseBtn:hover {
-  background: var(--color-dark-blue);
+  color: #333;
 }
-
+.experienceForm .formGroup input[type="date"] {
+  max-width: 200px;
+}
 /* Form Groups for the add experience modal */
 .formGroup {
-  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .formGroup label {
-  display: block;
-  margin-bottom: 0.3rem;
-  font-weight: bold;
+  font-size: 0.9rem;
+  color: #444;
+  font-weight: 500;
 }
 
-.formGroup input,
-.formGroup textarea {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+
+.formGroup input {
+  padding: 0.8rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
 }
+.formGroup textarea{
+  padding: 0.8rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.5rem;
+  transition: border-color 0.2s;
+}
+
+.modalInput {
+  padding: 0.8rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
 
 /* Button for submitting the add experience form */
 .modalSubmitBtn {
-  background: var(--color-teal);
-  color: #fff;
+  padding: 0.8rem 2rem; /* Adjust padding */
+  width: 150px;
+    background: linear-gradient(135deg, #28a745, #218838);
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
+  margin: 0 auto;
+}
+.selectInput {
+  padding: 0.8rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: white;
+  width: 100%;
 }
 
 .modalSubmitBtn:hover {
-  background: var(--color-blue);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.2);
 }
-
 /* Experiences Section - add scroll and max height */
 .experiencesGrid {
   max-height: 500px;
@@ -572,6 +677,19 @@ border-left: 1px solid #0000002c;
   width: 150px;
   margin-left: auto;
 }
+.cancelButton {
+  padding: 0.8rem 1.5rem;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  color: #444;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.cancelButton:hover {
+  background: #f1f1f1;
+}
 
 .progressBar {
   background-color: #4caf50;
@@ -628,26 +746,32 @@ border-left: 1px solid #0000002c;
   font-size: 1.2rem; /* Increase the icon size */
   opacity: 1;
 }/* Increase modal size for a better CV preview */
-.modalContent {
-  background: #fff;
-  padding: 2.5rem;
-  border-radius: 10px;
-  width: 90%;
-  max-width: 1000px; /* Increase max width */
-  max-height: 90%;
-  overflow-y: auto;
-  animation: fadeIn 0.5s ease-out;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  position: relative;
-}
 
-/* Center the 'Télécharger le CV' button under the PDF preview */
+
 .modalActions {
   display: flex;
-  justify-content: center;
-  margin-top: 1rem;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  justify-content: center; /* Center the button */
+}
+.formRow {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
 }
 
+.formRow .formGroup {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 480px) {
+  .formRow {
+    flex-direction: column;
+    gap: 0;
+  }
+}
 .downloadButton {
   background: var(--color-teal);
   color: #fff;
@@ -689,7 +813,6 @@ border-left: 1px solid #0000002c;
   border-radius: 5px;
   transition: background 0.3s ease;
 }
-
 
 
 /* Delete button for competence */
