@@ -18,6 +18,9 @@ import java.util.List;
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 
 public class Consultant extends User {
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = true)
+    private Date dateInscription;
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, }, fetch = FetchType.EAGER)
     @JoinTable(
             name = "consultant_competences",
@@ -142,6 +145,15 @@ public class Consultant extends User {
         this.typeConsultant = typeConsultant;
         this.entrepriseSsi = entrepriseSsi;
     }
+
+    public Date getDateInscription() {
+        return dateInscription;
+    }
+
+    public void setDateInscription(Date dateInscription) {
+        this.dateInscription = dateInscription;
+    }
+
     public Entreprise getEntrepriseSsi() {
         return entrepriseSsi;
     }

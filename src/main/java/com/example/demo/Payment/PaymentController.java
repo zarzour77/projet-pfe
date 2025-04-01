@@ -3,13 +3,20 @@ package com.example.demo.Payment;
 import com.example.demo.Payment.PaymentBusinessService;
 import com.example.demo.Payment.PaymentRequest;
 import com.example.demo.Payment.PaymentResponse;
+import com.example.demo.Service.PaymentDebugService;
 import com.example.demo.dto.BalanceDTO;
 import com.example.demo.exception.MissionNotFoundException;
+import com.example.demo.repository.PaymentTransactionRepository;
 import com.stripe.exception.StripeException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,7 +24,11 @@ import java.util.Map;
 @RequestMapping("/api/payments")
 @CrossOrigin(origins = "http://localhost:5173")
 public class PaymentController {
-
+    private static final Logger logger = LoggerFactory.getLogger(PaymentController.class);
+    @Autowired
+    private PaymentDebugService paymentDebugService;
+    @Autowired
+    private PaymentTransactionRepository paymentTransactionRepository;
     private final PaymentBusinessService paymentBusinessService;
     private final StripeService stripeService;
     public PaymentController(PaymentBusinessService paymentBusinessService,
@@ -25,6 +36,88 @@ public class PaymentController {
         this.paymentBusinessService = paymentBusinessService;
         this.stripeService = stripeService;
     }
+
+    // for dashboard consultant (earning)
+    @GetMapping("/{consultantId}")
+    public ResponseEntity<?> getEarnings(@PathVariable Long consultantId,
+                                         @RequestParam("period") String period) {
+        try {
+            ZoneId zone = ZoneId.systemDefault();
+            LocalDateTime now = LocalDateTime.now(zone);
+            LocalDateTime startDate;
+
+            if ("month".equalsIgnoreCase(period)) {
+                startDate = now.minusMonths(1);
+            } else if ("year".equalsIgnoreCase(period)) {
+                startDate = now.minusYears(1);
+            } else {
+                logger.error("Période invalide reçue pour consultantId {}: {}", consultantId, period);
+                return ResponseEntity.badRequest().body("Invalid period. Use 'month' or 'year'.");
+            }
+
+            logger.info("Calcul des earnings pour consultantId {}. Période: {}. Date de début: {}, Date de fin: {}",
+                    consultantId, period, startDate, now);
+
+            // Appel de la méthode de debug pour lister les transactions dans cet intervalle
+            paymentDebugService.debugTransactions(consultantId, startDate, now);
+
+            Long earnings = paymentTransactionRepository.findEarningsByConsultantAndDateRange(consultantId, startDate, now);
+            logger.info("Earnings calculés pour consultantId {}: {}", consultantId, earnings);
+            return ResponseEntity.ok(earnings);
+        } catch (Exception e) {
+            logger.error("Erreur lors de la récupération des earnings pour consultantId {}: {}", consultantId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal error");
+        }
+    }
+
+    //for dashboard consultants doghnut
+    // Nouvel endpoint pour récupérer les données du donut chart
+    @GetMapping("/donut/{consultantId}")
+    public ResponseEntity<?> getDonutData(@PathVariable Long consultantId,
+                                          @RequestParam("period") String period) {
+        try {
+            ZoneId zone = ZoneId.systemDefault();
+            LocalDateTime now = LocalDateTime.now(zone);
+            LocalDateTime startDate;
+
+            if ("month".equalsIgnoreCase(period)) {
+                startDate = now.minusMonths(1);
+            } else if ("year".equalsIgnoreCase(period)) {
+                startDate = now.minusYears(1);
+            } else {
+                logger.error("Période invalide reçue pour consultantId {}: {}", consultantId, period);
+                return ResponseEntity.badRequest().body("Invalid period. Use 'month' or 'year'.");
+            }
+
+            // Calcul de Frozen Funds : somme des "amount" où paymentType = "FROZEN_FUNDS" et status = "PENDING"
+            Long frozenFunds = paymentTransactionRepository.findSumByConsultantAndCriteria(
+                    consultantId, startDate, now, "FROZEN_FUNDS", "PENDING");
+            logger.info("Frozen Funds pour consultantId {}: {}", consultantId, frozenFunds);
+
+            // Calcul des Application Fee : somme des "applicationFee" pour les transactions du consultant
+            Long applicationFee = paymentTransactionRepository.findSumApplicationFeeByConsultantAndDateRange(
+                    consultantId, startDate, now);
+            logger.info("Application Fee pour consultantId {}: {}", consultantId, applicationFee);
+
+            // Amount Received : même calcul que l'earning
+            Long amountReceived = paymentTransactionRepository.findEarningsByConsultantAndDateRange(
+                    consultantId, startDate, now);
+            logger.info("Amount Received pour consultantId {}: {}", consultantId, amountReceived);
+
+            // Construction de la réponse
+            Map<String, Long> donutData = new HashMap<>();
+            donutData.put("frozenFunds", frozenFunds != null ? frozenFunds : 0L);
+            donutData.put("applicationFee", applicationFee != null ? applicationFee : 0L);
+            donutData.put("amountReceived", amountReceived != null ? amountReceived : 0L);
+
+            logger.info("Donut data envoyée pour consultantId {}: {}", consultantId, donutData);
+            return ResponseEntity.ok(donutData);
+        } catch (Exception e) {
+            logger.error("Erreur lors de la récupération des données du donut pour consultantId {}: {}", consultantId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal error");
+        }
+    }
+
 
     // Initiate a subscription payment (consultant-to-platform)
     @PostMapping("/subscription")
