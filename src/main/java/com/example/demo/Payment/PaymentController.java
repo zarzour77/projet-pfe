@@ -40,6 +40,61 @@ public class PaymentController {
         this.paymentBusinessService = paymentBusinessService;
         this.stripeService = stripeService;
     }
+    @GetMapping("/global/applicationFee")
+    public ResponseEntity<?> getGlobalApplicationFeeStats(@RequestParam("period") String period) {
+        try {
+            ZoneId zone = ZoneId.systemDefault();
+            LocalDateTime now = LocalDateTime.now(zone);
+            LocalDateTime startDate;
+            LocalDateTime endDate;
+
+            if ("6months".equalsIgnoreCase(period)) {
+                // Pour les 6 derniers mois (6 mois complets) : du mois de (now - 5 mois) à now
+                startDate = now.minusMonths(5).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+                endDate = now;
+            } else if ("year".equalsIgnoreCase(period)) {
+                // Pour l'année complète : du 1er janvier au 31 décembre de l'année en cours
+                int currentYear = now.getYear();
+                startDate = LocalDateTime.of(currentYear, 1, 1, 0, 0);
+                endDate = LocalDateTime.of(currentYear, 12, 31, 23, 59, 59);
+            } else {
+                logger.error("Période invalide reçue: {}", period);
+                return ResponseEntity.badRequest().body("Invalid period. Use '6months' or 'year'.");
+            }
+
+            List<Object[]> results = paymentTransactionRepository.findGlobalMonthlyApplicationFee(startDate, endDate);
+            List<String> labels = new ArrayList<>();
+            List<Long> fees = new ArrayList<>();
+
+            // Génération d'une liste de mois dans la période
+            YearMonth startYM = YearMonth.from(startDate);
+            YearMonth endYM = YearMonth.from(endDate);
+            Map<String, Long> map = new HashMap<>();
+            for (Object[] row : results) {
+                String month = (String) row[0]; // format "YYYY-MM"
+                Long sum = (Long) row[1];
+                map.put(month, sum);
+            }
+            YearMonth current = startYM;
+            while (!current.isAfter(endYM)) {
+                String key = current.toString(); // format "YYYY-MM"
+                labels.add(current.format(DateTimeFormatter.ofPattern("MMM yyyy")));
+                fees.add(map.getOrDefault(key, 0L));
+                current = current.plusMonths(1);
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("labels", labels);
+            response.put("data", fees);
+            logger.info("Global applicationFee stats: {}", response);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Erreur lors du calcul global de l'applicationFee: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal error");
+        }
+    }
+
+
     @GetMapping("/transactions/volume/all")
     public ResponseEntity<?> getTotalTransactionVolume(@RequestParam("period") String period) {
         try {

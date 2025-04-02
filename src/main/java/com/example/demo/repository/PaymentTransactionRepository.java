@@ -75,5 +75,11 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
             "WHERE pt.createdAt BETWEEN :startDate AND :endDate")
     Long findTotalTransactionVolume(@Param("startDate") LocalDateTime startDate,
                                     @Param("endDate") LocalDateTime endDate);
-
+    @Query("SELECT FUNCTION('DATE_FORMAT', pt.createdAt, '%Y-%m') as month, SUM(pt.applicationFee) " +
+            "FROM PaymentTransaction pt " +
+            "WHERE pt.createdAt BETWEEN :startDate AND :endDate " +
+            "GROUP BY month " +
+            "ORDER BY month")
+    List<Object[]> findGlobalMonthlyApplicationFee(@Param("startDate") LocalDateTime startDate,
+                                                   @Param("endDate") LocalDateTime endDate);
 }
