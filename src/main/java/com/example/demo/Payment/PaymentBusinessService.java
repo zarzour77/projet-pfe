@@ -200,7 +200,7 @@ public class PaymentBusinessService {
 
         // Create transaction records: record first slice payment and commission.
         createTransaction(entreprise, consultant, firstSlice, platformFee, admin, mission);
-        createFrozenRecord(entreprise, frozenAmount, mission);
+        createFrozenRecord(entreprise, consultant, frozenAmount, mission);
     }
 
     // Create a transaction record for the first slice of mission payment.
@@ -223,9 +223,10 @@ public class PaymentBusinessService {
     }
 
     // Create a transaction record for the frozen funds.
-    private void createFrozenRecord(Entreprise entreprise, double frozenAmount, Mission mission) {
+    private void createFrozenRecord(Entreprise entreprise, Consultant consultant, double frozenAmount, Mission mission) {
         PaymentTransaction frozenTransaction = new PaymentTransaction();
         frozenTransaction.setEntrepriseSender(entreprise);
+        frozenTransaction.setConsultantReceiver(consultant); // Set consultant receiver
         frozenTransaction.setAmount((long)(frozenAmount * 100));
         frozenTransaction.setCurrency("EUR");
         frozenTransaction.setPaymentType("FROZEN_FUNDS");
@@ -234,6 +235,7 @@ public class PaymentBusinessService {
         frozenTransaction.setCreatedAt(LocalDateTime.now());
         frozenTransaction.setMission(mission);
         transactionRepository.save(frozenTransaction);
+
     }
 
     /**
@@ -277,6 +279,17 @@ public class PaymentBusinessService {
         entrepriseRepository.save(entreprise);
 
         createFinalTransaction(entreprise, consultant, frozenAmount, mission);
+        List<PaymentTransaction> frozenTransactions = transactionRepository
+                .findByMissionIdAndPaymentTypeAndStatus(
+                        missionId,
+                        "FROZEN_FUNDS",
+                        "PENDING"
+                );
+
+        frozenTransactions.forEach(transaction -> {
+            transaction.setStatus("PROCESSED");
+            transactionRepository.save(transaction);
+        });
     }
 
     // Create a transaction record for the final mission payment.

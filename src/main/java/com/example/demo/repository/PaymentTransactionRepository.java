@@ -30,5 +30,9 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
     List<PaymentTransaction> findByPaymentType(String paymentType);
     List<PaymentTransaction> findByStatus(String status);
     List<PaymentTransaction> findByMissionIdAndPaymentType(Long missionId, String paymentType);
-
+    List<PaymentTransaction> findByMissionIdAndPaymentTypeAndStatus(
+            Long missionId,
+            String paymentType,
+            String status
+    );
 }
