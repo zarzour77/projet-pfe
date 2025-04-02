@@ -60,7 +60,6 @@ public class EntrepriseService {
         if (period.equalsIgnoreCase("week")) {
             // Dernier mois = 28 jours répartis sur 4 semaines
             LocalDate startDate = endDate.minusDays(27);
-            // Création des intervalles hebdomadaires
             for (int i = 0; i < 4; i++) {
                 labels.add("Semaine " + (i + 1));
             }
@@ -81,7 +80,6 @@ public class EntrepriseService {
                 Map<String, Object> dataset = new HashMap<>();
                 dataset.put("label", status);
                 dataset.put("data", data);
-                // Vous pouvez définir ici des couleurs spécifiques par statut
                 datasets.add(dataset);
             }
         } else if (period.equalsIgnoreCase("month")) {
@@ -111,12 +109,64 @@ public class EntrepriseService {
                 dataset.put("data", data);
                 datasets.add(dataset);
             }
+        } else if (period.equalsIgnoreCase("year")) {
+            // Toute l'année en cours : 12 mois
+            int currentYear = endDate.getYear();
+            List<YearMonth> months = new ArrayList<>();
+            for (int m = 1; m <= 12; m++) {
+                YearMonth ym = YearMonth.of(currentYear, m);
+                months.add(ym);
+                labels.add(ym.format(DateTimeFormatter.ofPattern("MMM yyyy")));
+            }
+            for (String status : statuses) {
+                List<Long> data = new ArrayList<>();
+                for (YearMonth ym : months) {
+                    long count = missions.stream()
+                            .filter(m -> {
+                                LocalDate pubDate = m.getPublishedAt().toInstant().atZone(zone).toLocalDate();
+                                YearMonth missionMonth = YearMonth.from(pubDate);
+                                return missionMonth.equals(ym) && m.calculerStatut().equalsIgnoreCase(status);
+                            })
+                            .count();
+                    data.add(count);
+                }
+                Map<String, Object> dataset = new HashMap<>();
+                dataset.put("label", status);
+                dataset.put("data", data);
+                datasets.add(dataset);
+            }
+        } else if (period.equalsIgnoreCase("day")) {
+            // Affichage par jour du mois courant
+            LocalDate startDate = endDate.withDayOfMonth(1);
+            int daysInMonth = endDate.lengthOfMonth();
+            for (int d = 1; d <= daysInMonth; d++) {
+                labels.add("Jour " + d);
+            }
+            for (String status : statuses) {
+                List<Long> data = new ArrayList<>();
+                for (int d = 1; d <= daysInMonth; d++) {
+                    LocalDate currentDay = startDate.withDayOfMonth(d);
+                    long count = missions.stream()
+                            .filter(m -> {
+                                LocalDate pubDate = m.getPublishedAt().toInstant().atZone(zone).toLocalDate();
+                                return pubDate.equals(currentDay) && m.calculerStatut().equalsIgnoreCase(status);
+                            })
+                            .count();
+                    data.add(count);
+                }
+                Map<String, Object> dataset = new HashMap<>();
+                dataset.put("label", status);
+                dataset.put("data", data);
+                datasets.add(dataset);
+            }
         }
         Map<String, Object> response = new HashMap<>();
         response.put("labels", labels);
         response.put("datasets", datasets);
         return response;
     }
+
+
     @Transactional
     public List<Mission> getMissionsByStatusForEntreprise(Long entrepriseId, String statutRecherche) {
         Optional<Entreprise> entrepriseOpt = entrepriseRepository.findById(entrepriseId);

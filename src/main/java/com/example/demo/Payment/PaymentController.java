@@ -16,8 +16,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -35,6 +39,94 @@ public class PaymentController {
                              StripeService stripeService) {
         this.paymentBusinessService = paymentBusinessService;
         this.stripeService = stripeService;
+    }
+    @GetMapping("/transactions/volume/all")
+    public ResponseEntity<?> getTotalTransactionVolume(@RequestParam("period") String period) {
+        try {
+            ZoneId zone = ZoneId.systemDefault();
+            LocalDateTime now = LocalDateTime.now(zone);
+            List<String> labels = new ArrayList<>();
+            List<Long> volumes = new ArrayList<>();
+
+            if ("month".equalsIgnoreCase(period)) {
+                // Derniers 28 jours répartis en 4 semaines
+                LocalDateTime startDate = now.minusDays(27);
+                for (int i = 0; i < 4; i++) {
+                    LocalDateTime weekStart = startDate.plusDays(i * 7);
+                    LocalDateTime weekEnd = weekStart.plusDays(6);
+                    labels.add("Semaine " + (i + 1));
+                    Long volume = paymentTransactionRepository.findTotalTransactionVolume(weekStart, weekEnd);
+                    volumes.add(volume != null ? volume : 0L);
+                }
+            } else if ("year".equalsIgnoreCase(period)) {
+                // Pour l'année en cours : 12 mois
+                int currentYear = now.getYear();
+                for (int m = 1; m <= 12; m++) {
+                    YearMonth ym = YearMonth.of(currentYear, m);
+                    LocalDateTime monthStart = ym.atDay(1).atStartOfDay();
+                    LocalDateTime monthEnd = ym.atEndOfMonth().atTime(23, 59, 59);
+                    labels.add(ym.format(DateTimeFormatter.ofPattern("MMM")));
+                    Long volume = paymentTransactionRepository.findTotalTransactionVolume(monthStart, monthEnd);
+                    volumes.add(volume != null ? volume : 0L);
+                }
+            } else {
+                return ResponseEntity.badRequest().body("Invalid period. Use 'month' or 'year'.");
+            }
+            Map<String, Object> response = new HashMap<>();
+            response.put("labels", labels);
+            Map<String, Object> dataset = new HashMap<>();
+            dataset.put("label", "Volume des transactions");
+            dataset.put("data", volumes);
+            response.put("datasets", new Object[] { dataset });
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Erreur lors du calcul du volume total des transactions: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal error");
+        }
+    }
+    @GetMapping("/donut/entreprise/{entrepriseId}")
+    public ResponseEntity<?> getDonutDataEntreprise(@PathVariable Long entrepriseId,
+                                                    @RequestParam("period") String period) {
+        try {
+            ZoneId zone = ZoneId.systemDefault();
+            LocalDateTime now = LocalDateTime.now(zone);
+            LocalDateTime startDate;
+
+            if ("month".equalsIgnoreCase(period)) {
+                startDate = now.minusMonths(1);
+            } else if ("year".equalsIgnoreCase(period)) {
+                startDate = now.minusYears(1);
+            } else {
+                logger.error("Période invalide reçue pour entrepriseId {}: {}", entrepriseId, period);
+                return ResponseEntity.badRequest().body("Invalid period. Use 'month' or 'year'.");
+            }
+
+            // Calcul pour chaque type
+            Long firstSlice = paymentTransactionRepository.findSumByEntrepriseAndPaymentType(
+                    entrepriseId, startDate, now, "MISSION_FIRST_SLICE", "PROCESSED");
+            logger.info("Première tranche de mission pour entrepriseId {}: {}", entrepriseId, firstSlice);
+
+            Long finalPayment = paymentTransactionRepository.findSumByEntrepriseAndPaymentType(
+                    entrepriseId, startDate, now, "MISSION_FINAL_PAYMENT", "PROCESSED");
+            logger.info("Deuxième tranche de mission pour entrepriseId {}: {}", entrepriseId, finalPayment);
+
+            Long frozenFunds = paymentTransactionRepository.findSumByEntrepriseAndPaymentType(
+                    entrepriseId, startDate, now, "FROZEN_FUNDS", "PENDING");
+            logger.info("Fonds gelés pour entrepriseId {}: {}", entrepriseId, frozenFunds);
+
+            // Construction de la réponse
+            Map<String, Long> donutData = new HashMap<>();
+            donutData.put("firstSlice", firstSlice != null ? firstSlice : 0L);
+            donutData.put("finalPayment", finalPayment != null ? finalPayment : 0L);
+            donutData.put("frozenFunds", frozenFunds != null ? frozenFunds : 0L);
+
+            logger.info("Donut data envoyée pour entrepriseId {}: {}", entrepriseId, donutData);
+            return ResponseEntity.ok(donutData);
+        } catch (Exception e) {
+            logger.error("Erreur lors de la récupération des données du donut pour entrepriseId {}: {}",
+                    entrepriseId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal error");
+        }
     }
 
     // for dashboard consultant (earning)

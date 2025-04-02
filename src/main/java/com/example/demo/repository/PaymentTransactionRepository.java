@@ -61,4 +61,19 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
                                                        @Param("startDate") LocalDateTime startDate,
                                                        @Param("endDate") LocalDateTime endDate);
 
+    @Query("SELECT SUM(pt.amount) FROM PaymentTransaction pt " +
+            "WHERE pt.entrepriseSender.id = :entrepriseId " +
+            "AND pt.paymentType = :paymentType " +
+            "AND pt.status = :status " +
+            "AND pt.createdAt BETWEEN :startDate AND :endDate")
+    Long findSumByEntrepriseAndPaymentType(@Param("entrepriseId") Long entrepriseId,
+                                           @Param("startDate") LocalDateTime startDate,
+                                           @Param("endDate") LocalDateTime endDate,
+                                           @Param("paymentType") String paymentType,
+                                           @Param("status") String status);
+    @Query("SELECT COALESCE(SUM(pt.amount), 0) FROM PaymentTransaction pt " +
+            "WHERE pt.createdAt BETWEEN :startDate AND :endDate")
+    Long findTotalTransactionVolume(@Param("startDate") LocalDateTime startDate,
+                                    @Param("endDate") LocalDateTime endDate);
+
 }
