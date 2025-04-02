@@ -5,8 +5,26 @@ const API_URL = "http://localhost:8081/api"; // adapter l'URL de base de votre A
 
 
 const StatEntrepriseService = {
+  getDonutExpenseData: async (entrepriseId, period) => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await axios.get(
+        `${API_URL}/payments/donut/entreprise/${entrepriseId}?period=${period}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Erreur lors de la récupération des données du donut expense:", error);
+      throw error;
+    }
+  },
 
-
+  
     getProfileViews: async (entrepriseId, periodDays) => {
         const token = localStorage.getItem("token");
         try {

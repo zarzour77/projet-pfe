@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; 
 import { motion } from 'framer-motion';
 import { Line, Bar, Pie } from 'react-chartjs-2';
 import {
@@ -19,7 +19,8 @@ import {
   fetchTopTalents, 
   fetchUserRoleStats, 
   fetchCountryStats,
-  fetchConnectionStats
+  fetchConnectionStats,
+  fetchTransactionsVolume
 } from '../services/StatAdminService';
 
 ChartJS.register(
@@ -67,6 +68,11 @@ function StatAdmin() {
   });
   const [heatmapData, setHeatmapData] = useState(null);
   const [connectionStatsData, setConnectionStatsData] = useState(null);
+  // Nouvel état pour le volume des transactions
+  const [transactionsVolumeData, setTransactionsVolumeData] = useState({
+    labels: [],
+    datasets: []
+  });
 
   // Animation pour les cartes
   const cardVariants = {
@@ -295,20 +301,22 @@ function StatAdmin() {
     getConnectionStats();
   }, []);
 
-  // Données statiques pour les transactions et revenus (exemple)
-  const transactionsData = {
-    labels: ['Semaine 1', 'Semaine 2', 'Semaine 3', 'Semaine 4'],
-    datasets: [
-      {
-        label: 'Volume des transactions',
-        data: [150, 200, 170, 220],
-        backgroundColor: '#2ecc71',
-        borderColor: '#2ecc71',
-        borderWidth: 1
+  // Récupération du volume des transactions via fetchTransactionsVolume
+  // Ici, nous utilisons la période "month". Vous pouvez l'adapter selon vos besoins.
+  useEffect(() => {
+    const getTransactionsVolume = async () => {
+      try {
+        const data = await fetchTransactionsVolume("month");
+        console.log("Volume des transactions:", data);
+        setTransactionsVolumeData(data);
+      } catch (error) {
+        console.error("Erreur lors de la récupération du volume des transactions:", error);
       }
-    ]
-  };
+    };
+    getTransactionsVolume();
+  }, []);
 
+  // Données statiques pour les revenus (exemple)
   const revenueData = {
     labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'],
     datasets: [
@@ -422,7 +430,7 @@ function StatAdmin() {
               transition={{ duration: 0.5, delay: 0.4 }}
             >
               <h3 className={styles.cardTitle}>Volume des transactions</h3>
-              <Bar data={transactionsData} />
+              <Bar data={transactionsVolumeData} />
             </motion.div>
           </div>
           <div className={styles.column}>

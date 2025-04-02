@@ -6,7 +6,25 @@ const TOP_TALENTS_API_URL = 'http://localhost:8081/api/missions/top-talents';
 const USER_ROLE_STATS_API_URL = 'http://localhost:8081/api/users/role-stats';
 const CONSULTANT_COUNTRY_STATS_API_URL = 'http://localhost:8081/api/consultants/countrystats';
 const CONNECTION_STATS_API_URL = 'http://localhost:8081/api/users/connection-stats';
+const TRANSACTIONS_VOLUME_API_URL = 'http://localhost:8081/api/payments/transactions/volume/all';
 
+
+
+export const fetchTransactionsVolume = async (period = "month") => {
+  const token = localStorage.getItem("token");
+  try {
+    const response = await axios.get(`${TRANSACTIONS_VOLUME_API_URL}?period=${period}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Erreur lors de la récupération du volume des transactions :", error);
+    throw error;
+  }
+};
 export const fetchInscriptions = async (filter = "all") => {
   const token = localStorage.getItem("token");
   try {

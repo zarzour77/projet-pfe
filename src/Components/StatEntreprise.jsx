@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; 
 import { motion } from 'framer-motion';
-import { Bar } from 'react-chartjs-2';
+import { Bar, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend
@@ -13,25 +14,30 @@ import {
 import StatEntrepriseService from '../services/StatEntrepriseService';
 import styles from './StatEntreprise.module.css';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
 function StatEntreprise() {
   // Données statiques pour d'autres cartes
-  const expenseData = "€15,000";
   const performanceScore = "88%";
 
   // Récupération de l'ID de l'entreprise
   const user = JSON.parse(localStorage.getItem("user"));
   const entrepriseId = user?.id || 0;
 
-  // États pour les périodes et les données du graphique des missions agrégées
-  const [period, setPeriod] = useState("week");
+  // États pour le donut chart des dépenses et son sélecteur (donutPeriod)
+  const [donutPeriod, setDonutPeriod] = useState("month"); // "month" ou "year"
+  const [donutExpenseData, setDonutExpenseData] = useState(null);
+  // Total des dépenses calculé à partir des données du donut (en centimes)
+  const [totalExpense, setTotalExpense] = useState(null);
+
+  // États pour le graphique des missions agrégées (Statut des projets)
+  const [projectsPeriod, setProjectsPeriod] = useState("month"); // On ajoute la valeur "day"
   const [aggregatedData, setAggregatedData] = useState({
     labels: [],
     datasets: []
   });
 
-  // État pour la période des profile views
+  // États pour la période des profile views
   const [profilePeriod, setProfilePeriod] = useState("Last 7 days");
   const [profileChartData, setProfileChartData] = useState({
     labels: [],
@@ -64,16 +70,62 @@ function StatEntreprise() {
     }
   };
 
+  // Options pour le donut chart des dépenses avec tooltip formaté
+  const donutExpenseOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom' },
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const value = context.raw || 0;
+            return (value / 100).toFixed(2) + "€";
+          }
+        }
+      }
+    }
+  };
+
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 }
   };
 
-  // Chargement des missions agrégées (existant)
+  // Chargement dynamique des données du donut chart pour les dépenses via l'API
+  useEffect(() => {
+    async function fetchDonutExpenseData() {
+      try {
+        const data = await StatEntrepriseService.getDonutExpenseData(entrepriseId, donutPeriod);
+        // La réponse doit contenir firstSlice, finalPayment et frozenFunds (en centimes)
+        const firstSlice = data.firstSlice || 0;
+        const finalPayment = data.finalPayment || 0;
+        const frozenFunds = data.frozenFunds || 0;
+        setDonutExpenseData({
+          labels: ["Première tranche de mission", "Deuxième tranche de mission", "Fonds gelés"],
+          datasets: [
+            {
+              data: [firstSlice, finalPayment, frozenFunds],
+              backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56"]
+            }
+          ]
+        });
+        // Calcul du total des dépenses en centimes
+        setTotalExpense(firstSlice + finalPayment + frozenFunds);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des données du donut chart des dépenses :", error);
+      }
+    }
+    if (entrepriseId) {
+      fetchDonutExpenseData();
+    }
+  }, [entrepriseId, donutPeriod]);
+
+  // Chargement des missions agrégées pour "Statut des projets"
   useEffect(() => {
     async function fetchAggregatedMissions() {
       try {
-        const data = await StatEntrepriseService.getAggregatedMissions(entrepriseId, period);
+        const data = await StatEntrepriseService.getAggregatedMissions(entrepriseId, projectsPeriod);
         // Forcer des couleurs pour chaque dataset
         const forcedDatasets = data.datasets.map((dataset, index) => {
           const borderColors = ["#0C68FF", "#F39C12", "#2ecc71", "#FF0000"];
@@ -100,9 +152,9 @@ function StatEntreprise() {
     if (entrepriseId) {
       fetchAggregatedMissions();
     }
-  }, [entrepriseId, period]);
+  }, [entrepriseId, projectsPeriod]);
 
-  // Mappez la sélection de la période en nombre de jours
+  // Mappez la sélection de la période en nombre de jours pour les profile views
   const getPeriodDays = (period) => {
     switch (period) {
       case "Last 7 days":
@@ -122,7 +174,6 @@ function StatEntreprise() {
       try {
         const periodDays = getPeriodDays(profilePeriod);
         const data = await StatEntrepriseService.getProfileViews(entrepriseId, periodDays);
-        // Supposons que l'API renvoie un objet avec 'labels' et 'data'
         setProfileChartData({
           labels: data.labels,
           datasets: [
@@ -180,11 +231,35 @@ function StatEntreprise() {
             animate="visible"
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <h2 className={styles.cardTitle}>Dépenses</h2>
+            {/* Header avec titre et sélecteur indépendant en haut à droite */}
+            <div className={styles.cardHeader}>
+              <h2 className={styles.cardTitle}>Dépenses</h2>
+              <div className={styles.periodSelect}>
+                <select
+                  className={styles.select}
+                  value={donutPeriod}
+                  onChange={(e) => setDonutPeriod(e.target.value)}
+                >
+                  <option value="month">Last Month</option>
+                  <option value="year">Last Year</option>
+                </select>
+              </div>
+            </div>
             <a href="#expense-history" className={styles.link}>
               Historique des dépenses
             </a>
-            <div className={styles.earningsAmount}>{expenseData}</div>
+            {/* Affichage du total des dépenses converti en euros */}
+            <div className={styles.earningsAmount}>
+              {totalExpense !== null ? (totalExpense / 100).toFixed(2) + "€" : "Loading..."}
+            </div>
+            {/* Donut chart dynamique pour les dépenses */}
+            <div className={styles.donutChart}>
+              {donutExpenseData ? (
+                <Doughnut data={donutExpenseData} options={donutExpenseOptions} />
+              ) : (
+                <p>Loading donut chart...</p>
+              )}
+            </div>
           </motion.div>
 
           <motion.div 
@@ -247,11 +322,14 @@ function StatEntreprise() {
               <h2 className={styles.cardTitle}>Statut des projets</h2>
               <select 
                 className={styles.select} 
-                value={period} 
-                onChange={(e) => setPeriod(e.target.value)}
+                value={projectsPeriod}
+                onChange={(e) => setProjectsPeriod(e.target.value)}
               >
-                <option value="week">Dernier mois (4 semaines)</option>
+                <option value="day">Ce Mois (par jour)</option>
+                <option value="week">Dernier mois (par semaine)</option>
                 <option value="month">Derniers 4 mois</option>
+                <option value="year">Dernière année</option>
+
               </select>
             </div>
             <div className={styles.proposalsChart}>

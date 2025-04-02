@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Bar } from 'react-chartjs-2';
+import { Bar, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend
@@ -17,7 +18,7 @@ import axios from 'axios';
 import styles from './StatConsultant.module.css';
 import StatConsultantService from '../services/StatConsultantService';
 import ProfileViewService from '../services/ProfileViewService';
-import ConsultantService from '../Services/ConsultantService';
+import ConsultantService from '../services/ConsultantService';
 
 // Imports des SVG comme images
 import RisingTalent from '../assets/icons/RisingTalent.svg';
@@ -32,6 +33,7 @@ ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend
@@ -147,14 +149,21 @@ function StatConsultant() {
   const [profilePeriod, setProfilePeriod] = useState('Last 7 days');
   const [profileStats, setProfileStats] = useState(null);
 
-  // État pour la modal des badges et le badge sélectionné
+  // États pour les earnings et la période de filtrage (month/year)
+  const [earnings, setEarnings] = useState(null);
+  const [earningsPeriod, setEarningsPeriod] = useState('year');
+
+  // Nouvel état pour stocker les données du donut chart
+  const [donutData, setDonutData] = useState(null);
+
+  // États pour la modal des badges et le badge sélectionné
   const [showModal, setShowModal] = useState(false);
   const [selectedBadgeIndex, setSelectedBadgeIndex] = useState(0);
 
   // Stocker les données actualisées du consultant
   const [consultantData, setConsultantData] = useState(null);
   
-  // Nouvel état pour le nombre de conversations
+  // État pour le nombre de conversations
   const [conversationCount, setConversationCount] = useState(0);
 
   // Récupération de l'ID et du token du consultant depuis le localStorage
@@ -162,8 +171,8 @@ function StatConsultant() {
   const consultantId = storedUser?.user?.id || storedUser?.id;
   const token = storedUser?.token;
 
-  // Extraction des méthodes nécessaires depuis le service
-  const { getConsultantStats, updateBadge, getConversationCount } = StatConsultantService;
+  // Extraction des méthodes du service
+  const { getConsultantStats, getConsultantEarnings, updateBadge, getConversationCount } = StatConsultantService;
 
   // Récupération des statistiques de propositions
   useEffect(() => {
@@ -181,7 +190,7 @@ function StatConsultant() {
         );
     }
   }, [consultantId, proposalPeriod, getConsultantStats]);
-console.log(proposalsStats)
+
   // Récupération des statistiques des vues de profil
   useEffect(() => {
     if (consultantId) {
@@ -199,7 +208,7 @@ console.log(proposalsStats)
     }
   }, [consultantId, profilePeriod]);
 
-  // Récupération des données actualisées du consultant pour vérifier la complétude
+  // Récupération des données du consultant
   useEffect(() => {
     if (consultantId) {
       ConsultantService.getConsultantById(consultantId)
@@ -210,10 +219,10 @@ console.log(proposalsStats)
     }
   }, [consultantId]);
 
-  // Récupération du nombre de conversations du consultant en passant le token dans l'appel
+  // Récupération du nombre de conversations
   useEffect(() => {
-    if (consultantId ) {
-      getConversationCount(consultantId )
+    if (consultantId) {
+      getConversationCount(consultantId)
         .then(response => {
           setConversationCount(response.count);
         })
@@ -223,12 +232,61 @@ console.log(proposalsStats)
     }
   }, [consultantId, getConversationCount]);
 
+  // Récupération dynamique des earnings selon la période choisie
+  useEffect(() => {
+    if (consultantId) {
+      getConsultantEarnings(consultantId, earningsPeriod)
+        .then((data) => setEarnings(data))
+        .catch((error) =>
+          console.error("Erreur lors de la récupération des earnings :", error)
+        );
+    }
+  }, [consultantId, earningsPeriod, getConsultantEarnings]);
+
+  // Récupération dynamique des données du donut chart via l'API
+  useEffect(() => {
+    if (consultantId) {
+      const token = localStorage.getItem("token");
+      axios.get(`http://localhost:8081/api/payments/donut/${consultantId}?period=${earningsPeriod}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        }
+      })
+      .then(response => {
+        // La réponse est un objet contenant frozenFunds, applicationFee et amountReceived
+        const data = response.data;
+        // Préparation des données pour le Doughnut chart
+        setDonutData({
+          labels: ["Frozen Funds", "Application Fee", "Amount Received"],
+          datasets: [
+            {
+              data: [data.frozenFunds, data.applicationFee, data.amountReceived],
+              backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56"]
+            }
+          ]
+        });
+      })
+      .catch(error => {
+        console.error("Erreur lors de la récupération des données du donut chart :", error);
+      });
+    }
+  }, [consultantId, earningsPeriod]);
+
+  const donutOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom' }
+    }
+  };
+
   // Vérifie si le consultant a plus de 10 conversations
   const isExcellentCommunicatorFulfilled = () => {
     return conversationCount > 10;
   };
 
-  // Construction du graphique pour les vues de profil
+  // Graphique des vues de profil
   const profileChartData = profileStats
     ? {
         labels: profileStats.labels,
@@ -252,21 +310,13 @@ console.log(proposalsStats)
     }
   };
 
-  // Configuration des graphiques pour les propositions
+  // Configuration du graphique des propositions
   const statusDesignMapping = {
     sent: { label: "Proposals sent", borderColor: "#0C68FF", backgroundColor: "rgba(12,104,255,0.2)" },
     invited: { label: "Invited", borderColor: "#FFA500", backgroundColor: "rgba(255,165,0,0.2)" },
     inProgress: { label: "In Progress", borderColor: "#2ecc71", backgroundColor: "rgba(46,204,113,0.2)" },
     terminated: { label: "Terminated", borderColor: "#FF0000", backgroundColor: "rgba(255,0,0,0.2)" },
     refused: { label: "Refused", borderColor: "#8e44ad", backgroundColor: "rgba(142,68,173,0.2)" }
-  };
-
-  const statusIconMapping = {
-    sent: <FaEnvelope className={styles.statusIcon} />,
-    invited: <FaBell className={styles.statusIcon} />,
-    inProgress: <FaSpinner className={`${styles.statusIcon} ${styles.spin}`} />,
-    terminated: <FaStop className={styles.statusIcon} />,
-    refused: <FaTimes className={styles.statusIcon} />
   };
 
   const proposalsChartData = proposalsStats
@@ -314,7 +364,7 @@ console.log(proposalsStats)
     );
   };
 
-  // Calcule le total des vues de profil (pour le badge Top Viewed)
+  // Total des vues de profil (pour le badge Top Viewed)
   const getTotalProfileViews = () => {
     if (profileStats && profileStats.data) {
       return profileStats.data.reduce((sum, value) => sum + value, 0);
@@ -322,12 +372,12 @@ console.log(proposalsStats)
     return 0;
   };
 
-  // Détermine si le badge Top Viewed est rempli (≥ 1 vue ici)
+  // Vérifie si le badge Top Viewed est rempli
   const isTopViewedFulfilled = () => {
     return getTotalProfileViews() >= 1;
   };
 
-  // Attribue le badge après vérification (affiche un toast en cas de succès ou d'erreur)
+  // Gestion de l'attribution du badge
   const handleEarnBadge = async () => {
     try {
       if (badges[selectedBadgeIndex].name === "Rising Talent" && !isProfileComplete(consultantData)) {
@@ -351,9 +401,9 @@ console.log(proposalsStats)
     }
   };
 
-  // Rendu dynamique d'un requirement
+  // Rendu d'un requirement
   const renderRequirement = (req) => {
-    let fulfilled = req.status; // Par défaut pour les badges statiques
+    let fulfilled = req.status;
     if (badges[selectedBadgeIndex].name === "Rising Talent") {
       fulfilled = isProfileComplete(consultantData);
     }
@@ -425,11 +475,33 @@ console.log(proposalsStats)
             animate="visible"
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <h2 className={styles.cardTitle}>12-month earnings</h2>
+            <div className={styles.earningsHeader}>
+              <h2 className={styles.cardTitle}>Earnings</h2>
+              <div className={styles.earningsPeriodSelect}>
+                <select
+                  className={styles.select}
+                  value={earningsPeriod}
+                  onChange={(e) => setEarningsPeriod(e.target.value)}
+                >
+                  <option value="month">Last Month</option>
+                  <option value="year">Last Year</option>
+                </select>
+              </div>
+            </div>
             <a href="#transaction-history" className={styles.link}>
               Transaction history
             </a>
-            <div className={styles.earningsAmount}>$12,345</div>
+            <div className={styles.earningsAmount}>
+              {earnings !== null ? `${(earnings / 100).toFixed(2)} EUR` : 'Loading...'}
+            </div>
+            {/* Donut chart dynamique */}
+            <div className={styles.donutChart}>
+              {donutData ? (
+                <Doughnut data={donutData} options={donutOptions} />
+              ) : (
+                <p>Loading donut chart...</p>
+              )}
+            </div>
           </motion.div>
 
           <motion.div 
@@ -452,7 +524,6 @@ console.log(proposalsStats)
             </div>
           </motion.div>
 
-          {/* Profile Views (dynamique) */}
           <motion.div 
             className={styles.profileMetrics}
             variants={cardVariants}
@@ -511,7 +582,6 @@ console.log(proposalsStats)
                 <p>Loading chart...</p>
               )}
             </div>
-
             <a href="/ConsultantPropositions" className={styles.link}>My proposals</a>
             <p className={styles.searchJobs}>
               Upwork has thousands of available jobs. Browse the ones that best suit you and then send your proposal.{' '}
@@ -546,7 +616,6 @@ console.log(proposalsStats)
             </div>
           </motion.div>
 
-          {/* Rising Talent + Modal */}
           <motion.div 
             className={styles.risingTalentBox}
             variants={cardVariants}
@@ -576,7 +645,6 @@ console.log(proposalsStats)
         </div>
       </div>
 
-      {/* Modal pour afficher les badges */}
       {showModal && (
         <div className={styles.modalOverlay} onClick={() => setShowModal(false)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -584,11 +652,8 @@ console.log(proposalsStats)
             <p style={{ fontSize: '14px', color: '#555', marginBottom: '20px' }}>
               Badges are attached to your profile after you have completed jobs.
               Select a badge to learn more about the requirements for each.
-
             </p>
-
             <div className={styles.modalBody}>
-              {/* Colonne de gauche : liste de badges */}
               <div className={styles.badgesColumn}>
                 {badges.map((badge, index) => (
                   <div
@@ -601,8 +666,6 @@ console.log(proposalsStats)
                   </div>
                 ))}
               </div>
-
-              {/* Colonne de droite : description + Requirements du badge sélectionné et bouton Earn */}
               <div className={styles.requirementsColumn}>
                 <p className={styles.badgeDescription}>
                   {badges[selectedBadgeIndex].description}
@@ -630,7 +693,6 @@ console.log(proposalsStats)
                 </div>
               </div>
             </div>
-
             <button className={styles.closeButton} onClick={() => setShowModal(false)}>
               Close
             </button>
