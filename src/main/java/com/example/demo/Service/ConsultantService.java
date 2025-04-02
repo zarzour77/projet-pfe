@@ -1,22 +1,25 @@
 package com.example.demo.Service;
 
-import com.example.demo.model.Consultant;
-import com.example.demo.model.Experience;
-import com.example.demo.model.Competence;
-import com.example.demo.model.Domaine;
-import com.example.demo.model.Mission;
-import com.example.demo.model.Formation;
-import com.example.demo.model.Langue;
-import com.example.demo.model.Certification;
+import com.example.demo.model.*;
 import com.example.demo.repository.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+
+import java.util.*;
+
 
 @Service
 public class ConsultantService {
@@ -28,8 +31,13 @@ public class ConsultantService {
     private final FormationRepository formationRepository;
     private final LangueRepository langueRepository;
     private final CertificationRepository certificationRepository;
+
     private final PropositionRepository propositionRepository;
     private final CompetenceRepository competenceRepository;
+
+    @Autowired
+    private EntrepriseRepository entrepriseRepository;
+
     @Autowired
     public ConsultantService(ConsultantRepository consultantRepository,
                              ExperienceRepository experienceRepository,
@@ -48,6 +56,51 @@ public class ConsultantService {
         this.propositionRepository = propositionRepository;
         this.competenceRepository = competenceRepository;
     }
+    public Map<String, Long> getGeographicActivityStats() {
+        Map<String, Long> countryCounts = new HashMap<>();
+
+        // Récupérer tous les consultants et entreprises
+        List<Consultant> consultants = consultantRepository.findAll();
+        List<Entreprise> entreprises = entrepriseRepository.findAll();
+
+        // Traiter les consultants
+        for (Consultant c : consultants) {
+            String adresse = c.getAdresse();
+            String country = extractCountryFromAddress(adresse);
+            if (country != null && !country.isEmpty()) {
+                countryCounts.put(country, countryCounts.getOrDefault(country, 0L) + 1);
+            }
+        }
+        // Traiter les entreprises
+        for (Entreprise e : entreprises) {
+            String adresse = e.getAdresse();
+            String country = extractCountryFromAddress(adresse);
+            if (country != null && !country.isEmpty()) {
+                countryCounts.put(country, countryCounts.getOrDefault(country, 0L) + 1);
+            }
+        }
+        return countryCounts;
+    }
+
+    /**
+     * Extrait le nom du pays à partir d'une adresse sous la forme "Ville, Code, Pays".
+     * Si l'adresse est null ou ne respecte pas le format attendu, retourne null.
+     */
+    private String extractCountryFromAddress(String adresse) {
+        if (adresse == null || adresse.isEmpty()) {
+            return null;
+        }
+        // On suppose que le pays est le dernier élément après la virgule
+        String[] parts = adresse.split(",");
+        if (parts.length < 2) {
+            return null;
+        }
+        // Le pays se trouve à la dernière position, on le trim pour enlever les espaces
+        return parts[parts.length - 1].trim();
+    }
+
+
+    ////////
     @Transactional
     public List<Consultant> getAllConsultants() {
         return consultantRepository.findAll();
@@ -143,6 +196,7 @@ public class ConsultantService {
             if (updatedConsultant.getCertifications() != null) {
                 consultant.setCertifications(updatedConsultant.getCertifications());
             }
+
             if (updatedConsultant.getTypeConsultant() != null) {
                 consultant.setTypeConsultant(updatedConsultant.getTypeConsultant());
             }
@@ -151,6 +205,11 @@ public class ConsultantService {
             }
             if (updatedConsultant.getDateRecrutement() != null) {
                 consultant.setDateRecrutement(updatedConsultant.getDateRecrutement());
+            }
+
+
+            if (consultant.getDateInscription() == null) {
+                consultant.setDateInscription(new Date());
             }
 
 

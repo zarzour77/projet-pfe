@@ -5,7 +5,9 @@ import com.example.demo.Service.ConversationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/conversations")
@@ -16,6 +18,11 @@ public class ConversationController {
     @Autowired
     public ConversationController(ConversationService conversationService) {
         this.conversationService = conversationService;
+    }
+    @GetMapping("/count/{userId}")
+    public Map<String, Long> getConversationCount(@PathVariable Long userId) {
+        long count = conversationService.getConversationCount(userId);
+        return Collections.singletonMap("count", count);
     }
 
     /**

@@ -15,9 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Base64;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class UserService {
@@ -39,7 +37,17 @@ public class UserService {
         this.entityManager = entityManager;
         this.passwordEncoder = passwordEncoder;
     }
+    public Map<String, Long> getUserRoleStats() {
+        Map<String, Long> stats = new HashMap<>();
+        long entrepriseCount = userRepository.countByRole("Entreprise");
+        long consultantCount = userRepository.countByRole("Consultant");
+        long adminCount = userRepository.countByRole("Admin");
+        stats.put("Entreprise", entrepriseCount);
+        stats.put("Consultant", consultantCount);
+        stats.put("Admin", adminCount);
 
+        return stats;
+    }
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }

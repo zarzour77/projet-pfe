@@ -8,4 +8,6 @@ import java.util.List;
 @Repository
 public interface ProfileViewRepository extends JpaRepository<ProfileView, Long> {
     List<ProfileView> findByConsultantId(Long consultantId);
+
+    List<ProfileView> findByEntrepriseId(Long entrepriseId);
 }

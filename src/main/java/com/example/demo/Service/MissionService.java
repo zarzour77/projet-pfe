@@ -1,5 +1,6 @@
 package com.example.demo.Service;
 
+
 import com.example.demo.Payment.PaymentBusinessService;
 import com.example.demo.Payment.PaymentIntentRequest;
 import com.example.demo.Payment.PaymentTransaction;
@@ -10,17 +11,29 @@ import com.example.demo.exception.MissionNotFoundException;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 import com.stripe.model.PaymentIntent;
+
+import com.example.demo.model.*;
+import com.example.demo.repository.ConsultantRepository;
+import com.example.demo.repository.EntrepriseRepository;
+import com.example.demo.repository.MissionRepository;
+import com.example.demo.exception.MissionNotFoundException;
+
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import java.util.*;
+
 import java.util.stream.Collectors;
 
 @Service
@@ -53,11 +66,30 @@ public class MissionService {
         this.missionRepository = missionRepository;
     }
 
-    public void markAsReviewed(Long missionId) {
-        Mission mission = missionRepository.findById(missionId)
-                .orElseThrow(() -> new MissionNotFoundException(missionId));
-        mission.setStatut("REVIEWED");
-        missionRepository.save(mission);
+    @Transactional
+    public Map<String, Integer> getTopTalentsBadgeData() {
+        List<Mission> missions = missionRepository.findAll();
+        Map<String, Integer> badgeCounts = new HashMap<>();
+        // Initialisation des badges recherchés
+        badgeCounts.put("Rising Talent", 0);
+        badgeCounts.put("Top Rated", 0);
+        badgeCounts.put("Top Rated Plus", 0);
+        badgeCounts.put("Expert-Vetted", 0);
+
+        for (Mission mission : missions) {
+            if (mission.getPropositions() != null) {
+                for (Proposition prop : mission.getPropositions()) {
+                    // On ne considère que les propositions terminées
+                    if ("terminée".equalsIgnoreCase(prop.getStatut()) && prop.getConsultant() != null) {
+                        String badge = prop.getConsultant().getBadge();
+                        if (badge != null && badgeCounts.containsKey(badge)) {
+                            badgeCounts.put(badge, badgeCounts.get(badge) + 1);
+                        }
+                    }
+                }
+            }
+        }
+        return badgeCounts;
     }
 
     public Mission updateMission(Long id, Mission updatedMission) {
@@ -87,7 +119,7 @@ public class MissionService {
         mission.setStatut(newStatus);
         return missionRepository.save(mission);
     }
-    // Seuil à définir selon vos tests (par exemple 0.8)
+    // Seuil à définir selon vos tests (par exemple 0.6)
     private static final double MATCH_THRESHOLD = 0.6;
     public Mission ajoutermission(Mission mission) {
         Long entrepriseId = mission.getEntreprise().getId();
@@ -110,7 +142,12 @@ public class MissionService {
 
         Mission savedMission = missionRepository.save(mission);
 
-        // Recherche de tous les consultants dans la base
+        // Lancer le traitement en arrière-plan
+        processNotificationsAsync(savedMission);
+        return savedMission;
+    }
+    @Async
+    public void processNotificationsAsync(Mission savedMission) {
         List<Consultant> consultants = consultantRepository.findAll();
         for (Consultant consultant : consultants) {
             double score = matchingService.computeGlobalMatchScore(consultant, savedMission);
@@ -128,9 +165,7 @@ public class MissionService {
                 emailService.sendInvitationEmail(consultant.getEmail(), subject, content);
             }
         }
-        return savedMission;
     }
-
     public List<Mission> getAllMissions() {
         return missionRepository.findAll();
     }

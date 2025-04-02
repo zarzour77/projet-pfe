@@ -11,8 +11,12 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class EntrepriseService {
@@ -35,6 +39,148 @@ public class EntrepriseService {
         this.notificationService = notificationService;
     }
 
+    @Transactional
+    public Map<String, Object> getAggregatedMissionsStats(Long entrepriseId, String period) {
+        Optional<Entreprise> entrepriseOpt = entrepriseRepository.findById(entrepriseId);
+        if (!entrepriseOpt.isPresent()) {
+            throw new RuntimeException("Entreprise non trouvée avec l'id " + entrepriseId);
+        }
+        // On considère ici uniquement les missions ayant une date de publication
+        List<Mission> missions = entrepriseOpt.get().getMissions()
+                .stream()
+                .filter(m -> m.getPublishedAt() != null)
+                .collect(Collectors.toList());
+
+        ZoneId zone = ZoneId.systemDefault();
+        LocalDate endDate = LocalDate.now(zone);
+        List<String> labels = new ArrayList<>();
+        List<Map<String, Object>> datasets = new ArrayList<>();
+        String[] statuses = {"Publié", "En cours", "Terminé", "En retard"};
+
+        if (period.equalsIgnoreCase("week")) {
+            // Dernier mois = 28 jours répartis sur 4 semaines
+            LocalDate startDate = endDate.minusDays(27);
+            for (int i = 0; i < 4; i++) {
+                labels.add("Semaine " + (i + 1));
+            }
+            for (String status : statuses) {
+                List<Long> data = new ArrayList<>();
+                for (int i = 0; i < 4; i++) {
+                    LocalDate weekStart = startDate.plusDays(i * 7);
+                    LocalDate weekEnd = weekStart.plusDays(6);
+                    long count = missions.stream()
+                            .filter(m -> {
+                                LocalDate pubDate = m.getPublishedAt().toInstant().atZone(zone).toLocalDate();
+                                return !pubDate.isBefore(weekStart) && !pubDate.isAfter(weekEnd)
+                                        && m.calculerStatut().equalsIgnoreCase(status);
+                            })
+                            .count();
+                    data.add(count);
+                }
+                Map<String, Object> dataset = new HashMap<>();
+                dataset.put("label", status);
+                dataset.put("data", data);
+                datasets.add(dataset);
+            }
+        } else if (period.equalsIgnoreCase("month")) {
+            // Derniers 4 mois
+            LocalDate startDate = endDate.minusMonths(3);
+            YearMonth startMonth = YearMonth.from(startDate);
+            List<YearMonth> months = new ArrayList<>();
+            for (int i = 0; i < 4; i++) {
+                YearMonth ym = startMonth.plusMonths(i);
+                months.add(ym);
+                labels.add(ym.format(DateTimeFormatter.ofPattern("MMM yyyy")));
+            }
+            for (String status : statuses) {
+                List<Long> data = new ArrayList<>();
+                for (YearMonth ym : months) {
+                    long count = missions.stream()
+                            .filter(m -> {
+                                LocalDate pubDate = m.getPublishedAt().toInstant().atZone(zone).toLocalDate();
+                                YearMonth missionMonth = YearMonth.from(pubDate);
+                                return missionMonth.equals(ym) && m.calculerStatut().equalsIgnoreCase(status);
+                            })
+                            .count();
+                    data.add(count);
+                }
+                Map<String, Object> dataset = new HashMap<>();
+                dataset.put("label", status);
+                dataset.put("data", data);
+                datasets.add(dataset);
+            }
+        } else if (period.equalsIgnoreCase("year")) {
+            // Toute l'année en cours : 12 mois
+            int currentYear = endDate.getYear();
+            List<YearMonth> months = new ArrayList<>();
+            for (int m = 1; m <= 12; m++) {
+                YearMonth ym = YearMonth.of(currentYear, m);
+                months.add(ym);
+                labels.add(ym.format(DateTimeFormatter.ofPattern("MMM yyyy")));
+            }
+            for (String status : statuses) {
+                List<Long> data = new ArrayList<>();
+                for (YearMonth ym : months) {
+                    long count = missions.stream()
+                            .filter(m -> {
+                                LocalDate pubDate = m.getPublishedAt().toInstant().atZone(zone).toLocalDate();
+                                YearMonth missionMonth = YearMonth.from(pubDate);
+                                return missionMonth.equals(ym) && m.calculerStatut().equalsIgnoreCase(status);
+                            })
+                            .count();
+                    data.add(count);
+                }
+                Map<String, Object> dataset = new HashMap<>();
+                dataset.put("label", status);
+                dataset.put("data", data);
+                datasets.add(dataset);
+            }
+        } else if (period.equalsIgnoreCase("day")) {
+            // Affichage par jour du mois courant
+            LocalDate startDate = endDate.withDayOfMonth(1);
+            int daysInMonth = endDate.lengthOfMonth();
+            for (int d = 1; d <= daysInMonth; d++) {
+                labels.add("Jour " + d);
+            }
+            for (String status : statuses) {
+                List<Long> data = new ArrayList<>();
+                for (int d = 1; d <= daysInMonth; d++) {
+                    LocalDate currentDay = startDate.withDayOfMonth(d);
+                    long count = missions.stream()
+                            .filter(m -> {
+                                LocalDate pubDate = m.getPublishedAt().toInstant().atZone(zone).toLocalDate();
+                                return pubDate.equals(currentDay) && m.calculerStatut().equalsIgnoreCase(status);
+                            })
+                            .count();
+                    data.add(count);
+                }
+                Map<String, Object> dataset = new HashMap<>();
+                dataset.put("label", status);
+                dataset.put("data", data);
+                datasets.add(dataset);
+            }
+        }
+        Map<String, Object> response = new HashMap<>();
+        response.put("labels", labels);
+        response.put("datasets", datasets);
+        return response;
+    }
+
+
+    @Transactional
+    public List<Mission> getMissionsByStatusForEntreprise(Long entrepriseId, String statutRecherche) {
+        Optional<Entreprise> entrepriseOpt = entrepriseRepository.findById(entrepriseId);
+        if (entrepriseOpt.isPresent()) {
+            Entreprise entreprise = entrepriseOpt.get();
+            // Filtrer les missions dont le statut dynamique correspond au statut recherché
+            return entreprise.getMissions()
+                    .stream()
+                    .filter(mission -> mission.calculerStatut().equalsIgnoreCase(statutRecherche))
+                    .collect(Collectors.toList());
+        } else {
+            throw new RuntimeException("Entreprise non trouvée avec l'id " + entrepriseId);
+        }
+    }
     @Transactional
     public Proposition applyWithConsultant(Long entrepriseId, Long missionId, Long consultantId, Double montant, String dureeEstime, String message) {
         // Retrieve the enterprise
@@ -160,6 +306,9 @@ public class EntrepriseService {
             }
             if (updatedEntreprise.getTypeEntreprise() != null) {
                 entreprise.setTypeEntreprise(updatedEntreprise.getTypeEntreprise());
+            }
+            if (entreprise.getDateInscription() == null) {
+                entreprise.setDateInscription(new Date());
             }
             return entrepriseRepository.save(entreprise);
         }).orElseThrow(() -> new RuntimeException("Entreprise not found with id " + id));

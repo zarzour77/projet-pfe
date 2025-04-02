@@ -18,6 +18,9 @@ import java.util.List;
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 
 public class Consultant extends User {
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = true)
+    private Date dateInscription;
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, }, fetch = FetchType.EAGER)
     @JoinTable(
             name = "consultant_competences",
@@ -142,6 +145,15 @@ public class Consultant extends User {
         this.typeConsultant = typeConsultant;
         this.entrepriseSsi = entrepriseSsi;
     }
+
+    public Date getDateInscription() {
+        return dateInscription;
+    }
+
+    public void setDateInscription(Date dateInscription) {
+        this.dateInscription = dateInscription;
+    }
+
     public Entreprise getEntrepriseSsi() {
         return entrepriseSsi;
     }
@@ -262,58 +274,6 @@ public class Consultant extends User {
                 ", domaines=" + domaines +
                 '}';
     }
-
-    public boolean isAvailableDuring(Date startDate, Date endDate) {
-        if (propositions == null || propositions.isEmpty()) {
-            return true; // Aucun engagement, donc disponible
-        }
-
-        for (Proposition proposition : propositions) {
-            if ("ACCEPTEE".equalsIgnoreCase(proposition.getStatut())) { // Vérifier si la proposition est acceptée
-                Mission mission = proposition.getMission();
-                if (mission != null) {
-                    Date missionStart = mission.getStartdate();
-                    Date missionEnd = mission.getEnddate();
-
-                    // Vérifier si la mission chevauche la période demandée
-                    if ((missionStart.before(endDate) || missionStart.equals(endDate)) &&
-                            (missionEnd.after(startDate) || missionEnd.equals(startDate))) {
-                        return false; // Le consultant a déjà une mission durant cette période
-                    }
-                }
-            }
-        }
-        return true; // Pas de conflits avec des missions acceptées
-    }
-    public boolean hasWorkedWithClient(Entreprise entreprise) {
-        if (propositions == null || propositions.isEmpty()) {
-            return false;
-        }
-
-        for (Proposition proposition : propositions) {
-            if ("ACCEPTEE".equalsIgnoreCase(proposition.getStatut())) { // Vérifie si la proposition a été acceptée
-                Mission mission = proposition.getMission();
-                if (mission != null && mission.getEntreprise() != null) {
-                    if (mission.getEntreprise().getId().equals(entreprise.getId())) {
-                        return true; // Le consultant a déjà travaillé avec cette entreprise
-                    }
-                }
-            }
-        }
-        return false;
-    }
-    public Double getAcceptanceRate() {
-        if (propositions == null || propositions.isEmpty()) {
-            return 1.0; // Par défaut, si le consultant n'a pas encore reçu de missions, son taux est considéré comme parfait.
-        }
-
-        long acceptedCount = propositions.stream()
-                .filter(p -> "ACCEPTEE".equalsIgnoreCase(p.getStatut()))
-                .count();
-
-        return (double) acceptedCount / propositions.size();
-    }
-
     // Getters and setters for new field
     public byte[] getCv() {
         return cv;

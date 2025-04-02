@@ -3,6 +3,8 @@ package com.example.demo.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+
+import java.util.Date;
 import java.util.List;
 
 
@@ -37,8 +39,13 @@ public class Entreprise extends User {
         CLIENTE,  // Entreprise cliente : peut publier des missions
         SSI       // Entreprise SSI : ne publie pas de missions, gère des consultants
     }
+
     @Column(name = "frozen_balance", columnDefinition = "double default 0.0")
     private Double frozenBalance = 0.0;
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = true)
+    private Date dateInscription;
+
     // Constructeur par défaut
     public Entreprise() {}
 
@@ -52,6 +59,14 @@ public class Entreprise extends User {
     }
 
     // Getters et setters
+
+    public Date getDateInscription() {
+        return dateInscription;
+    }
+
+    public void setDateInscription(Date dateInscription) {
+        this.dateInscription = dateInscription;
+    }
 
     public List<Consultant> getConsultants() {
         return consultants;

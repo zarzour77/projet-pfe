@@ -2,6 +2,7 @@ package com.example.demo.Controller;
 
 import com.example.demo.Service.UserService;
 import com.example.demo.model.User;
+import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.HttpStatus;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,12 +21,39 @@ import java.util.Optional;
 @CrossOrigin(origins = "http://localhost:5173")
 public class UserController {
     private final UserService userService;
-
+    private final UserRepository userRepository;
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, UserRepository userRepository) {
         this.userService = userService;
+        this.userRepository = userRepository;
     }
 
+    @GetMapping("/connection-stats")
+    public ResponseEntity<Map<String, Long>> getConnectionStats() {
+        List<User> users = userRepository.findAll();
+        Map<String, Long> hourCounts = new HashMap<>();
+
+        // Initialiser pour chaque heure de 00 à 23 à zéro.
+        for (int i = 0; i < 24; i++) {
+            hourCounts.put(String.format("%02d", i), 0L);
+        }
+
+        // Parcourir les utilisateurs et compter ceux qui ont une connexion enregistrée.
+        for (User user : users) {
+            LocalDateTime lastConnection = user.getLastConnection();
+            if (lastConnection != null) {
+                int hour = lastConnection.getHour();
+                String hourStr = String.format("%02d", hour);
+                hourCounts.put(hourStr, hourCounts.get(hourStr) + 1);
+            }
+        }
+        return ResponseEntity.ok(hourCounts);
+    }
+    @GetMapping("/role-stats")
+    public ResponseEntity<Map<String, Long>> getUserRoleStats() {
+        Map<String, Long> stats = userService.getUserRoleStats();
+        return ResponseEntity.ok(stats);
+    }
     @GetMapping
     public List<User> getAllUsers() {
         return userService.getAllUsers();
