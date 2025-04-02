@@ -3,7 +3,6 @@ package com.example.demo.Payment;
 import com.example.demo.Payment.PaymentBusinessService;
 import com.example.demo.Payment.PaymentRequest;
 import com.example.demo.Payment.PaymentResponse;
-import com.example.demo.Service.PaymentDebugService;
 import com.example.demo.dto.BalanceDTO;
 import com.example.demo.exception.MissionNotFoundException;
 import com.example.demo.repository.PaymentTransactionRepository;
@@ -29,8 +28,6 @@ import java.util.Map;
 @CrossOrigin(origins = "http://localhost:5173")
 public class PaymentController {
     private static final Logger logger = LoggerFactory.getLogger(PaymentController.class);
-    @Autowired
-    private PaymentDebugService paymentDebugService;
     @Autowired
     private PaymentTransactionRepository paymentTransactionRepository;
     private final PaymentBusinessService paymentBusinessService;
@@ -206,7 +203,6 @@ public class PaymentController {
                     consultantId, period, startDate, now);
 
             // Appel de la méthode de debug pour lister les transactions dans cet intervalle
-            paymentDebugService.debugTransactions(consultantId, startDate, now);
 
             Long earnings = paymentTransactionRepository.findEarningsByConsultantAndDateRange(consultantId, startDate, now);
             logger.info("Earnings calculés pour consultantId {}: {}", consultantId, earnings);

@@ -28,7 +28,11 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
     List<PaymentTransaction> findByEntrepriseSenderIdAndPaymentType(Long enterpriseId, String paymentType);
     List<PaymentTransaction> findByConsultantSenderIdAndPaymentType(Long consultantId, String paymentType);
     List<PaymentTransaction> findByAdminSenderIdAndPaymentType(Long adminId, String paymentType);
-
+    List<PaymentTransaction> findByMissionIdAndPaymentTypeAndStatus(
+            Long missionId,
+            String paymentType,
+            String status
+    );
     // General queries
     List<PaymentTransaction> findByPaymentType(String paymentType);
     List<PaymentTransaction> findByStatus(String status);
@@ -78,8 +82,9 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
     @Query("SELECT FUNCTION('DATE_FORMAT', pt.createdAt, '%Y-%m') as month, SUM(pt.applicationFee) " +
             "FROM PaymentTransaction pt " +
             "WHERE pt.createdAt BETWEEN :startDate AND :endDate " +
-            "GROUP BY month " +
-            "ORDER BY month")
+            "GROUP BY FUNCTION('DATE_FORMAT', pt.createdAt, '%Y-%m') " +
+            "ORDER BY FUNCTION('DATE_FORMAT', pt.createdAt, '%Y-%m')")
     List<Object[]> findGlobalMonthlyApplicationFee(@Param("startDate") LocalDateTime startDate,
                                                    @Param("endDate") LocalDateTime endDate);
+
 }
