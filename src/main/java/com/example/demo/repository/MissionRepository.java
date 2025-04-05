@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface MissionRepository extends JpaRepository<Mission, Long> {
@@ -28,4 +29,6 @@ public interface MissionRepository extends JpaRepository<Mission, Long> {
     List<Mission> findDistinctByDureeEstimeIgnoreCase(String dureeEstime);
 
     List<Mission> findByStatut(String statut);
+    @Query("SELECT m FROM Mission m LEFT JOIN FETCH m.propositions WHERE m.id = ?1")
+    Optional<Mission> findByIdWithPropositions(Long missionId);
 }

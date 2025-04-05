@@ -118,7 +118,8 @@ public class Consultant extends User {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "entreprise_ssi_id")
     private Entreprise entrepriseSsi;
-
+    @Column(nullable = true)
+    private Double jobSuccess;
 
     public enum TypeConsultant {
         FREE,           // Consultant indépendant
@@ -321,5 +322,11 @@ public class Consultant extends User {
     public void setBadge(String badge) {
         this.badge = badge;
     }
+    public Double getJobSuccess() {
+        return jobSuccess;
+    }
 
+    public void setJobSuccess(Double jobSuccess) {
+        this.jobSuccess = jobSuccess;
+    }
 }

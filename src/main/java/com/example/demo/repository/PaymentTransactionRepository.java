@@ -28,7 +28,8 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
     List<PaymentTransaction> findByEntrepriseSenderIdAndPaymentType(Long enterpriseId, String paymentType);
     List<PaymentTransaction> findByConsultantSenderIdAndPaymentType(Long consultantId, String paymentType);
     List<PaymentTransaction> findByAdminSenderIdAndPaymentType(Long adminId, String paymentType);
-
+    List<PaymentTransaction> findByEntrepriseReceiverId(Long enterpriseId);
+    List<PaymentTransaction> findByPaymentTypeAndEntrepriseReceiverId(String paymentType, Long enterpriseId);
     // General queries
     List<PaymentTransaction> findByPaymentType(String paymentType);
     List<PaymentTransaction> findByStatus(String status);
