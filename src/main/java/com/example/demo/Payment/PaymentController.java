@@ -361,9 +361,7 @@ public class PaymentController {
             boolean isFinalPaymentPaid = paymentBusinessService.isFinalPaymentPaid(id);
 
             Map<String, Object> response = new HashMap<>();
-            response.put("firstSlice", paymentDetails.get("firstSlice"));
-            response.put("frozenAmount", paymentDetails.get("frozenAmount"));
-            response.put("applicationFee", paymentDetails.get("applicationFee"));
+            response.putAll(paymentDetails);
             response.put("isFirstSlicePaid", isFirstSlicePaid);
             response.put("isFinalPaymentPaid", isFinalPaymentPaid);
 

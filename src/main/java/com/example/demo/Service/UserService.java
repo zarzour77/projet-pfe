@@ -112,21 +112,6 @@ public class UserService {
     }
 
     @Transactional
-    public void updateUserRating(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
-        Double averageRating = avisRepository.calculateAverageRatingByUserId(userId);
-        if (averageRating != null) {
-            user.setRating(Math.round(averageRating * 10.0) / 10.0);
-        } else {
-            user.setRating(0.0);
-        }
-        userRepository.save(user);
-    }
-
-
-
-    @Transactional
     public User updateUserRole(Long id, String role) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));

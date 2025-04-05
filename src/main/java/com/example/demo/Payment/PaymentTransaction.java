@@ -21,7 +21,9 @@ public class PaymentTransaction {
     @ManyToOne
     @JoinColumn(name = "entreprise_sender_id")
     private Entreprise entrepriseSender;
-
+    @ManyToOne
+    @JoinColumn(name = "entreprise_receiver_id")
+    private Entreprise entrepriseReceiver;
     @ManyToOne
     @JoinColumn(name = "consultant_receiver_id")
     private Consultant consultantReceiver;
@@ -64,7 +66,10 @@ public class PaymentTransaction {
     // References to internal IDs or Stripe IDs
     private String customerId;          // The enterprise or consultant making the payment
     private String consultantAccountId; // Consultant’s Stripe Account ID for mission payments
-
+    private Long ssiCommission;  // Commission for SSI partner in cents
+    @ManyToOne
+    @JoinColumn(name = "ssi_entreprise_id")
+    private Entreprise ssiEnterprise;
     private LocalDateTime createdAt;
     @ManyToOne
     @JoinColumn(name = "mission_id")
@@ -125,4 +130,27 @@ public class PaymentTransaction {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public Mission getMission() { return mission; }
     public void setMission(Mission mission) { this.mission = mission; }
+    public Long getSsiCommission() {
+        return ssiCommission;
+    }
+
+    public void setSsiCommission(Long ssiCommission) {
+        this.ssiCommission = ssiCommission;
+    }
+
+    public Entreprise getSsiEnterprise() {
+        return ssiEnterprise;
+    }
+
+    public void setSsiEnterprise(Entreprise ssiEnterprise) {
+        this.ssiEnterprise = ssiEnterprise;
+    }
+
+    public Entreprise getEntrepriseReceiver() {
+        return entrepriseReceiver;
+    }
+
+    public void setEntrepriseReceiver(Entreprise entrepriseReceiver) {
+        this.entrepriseReceiver = entrepriseReceiver;
+    }
 }

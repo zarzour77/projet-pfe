@@ -1,15 +1,19 @@
 package com.example.demo.Payment;
 
 import com.example.demo.dto.BalanceDTO;
+import com.example.demo.exception.MissionNotFoundException;
 import com.example.demo.model.Consultant;
 import com.example.demo.model.Entreprise;
 import com.example.demo.model.Mission;
-import com.example.demo.model.Notification;
 import com.example.demo.model.Proposition;
 import com.example.demo.model.Subscription;
 import com.example.demo.model.User;
-import com.example.demo.repository.*;
-import com.example.demo.exception.MissionNotFoundException;
+import com.example.demo.repository.ConsultantRepository;
+import com.example.demo.repository.EntrepriseRepository;
+import com.example.demo.repository.MissionRepository;
+import com.example.demo.repository.PaymentTransactionRepository;
+import com.example.demo.repository.SubscriptionRepository;
+import com.example.demo.repository.UserRepository;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 import com.stripe.model.checkout.Session;
@@ -17,13 +21,12 @@ import com.stripe.param.CustomerUpdateParams;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class PaymentBusinessService {
@@ -34,7 +37,7 @@ public class PaymentBusinessService {
     private final MissionRepository missionRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final UserRepository userRepository;
-    private EntrepriseRepository entrepriseRepository;
+    private final EntrepriseRepository entrepriseRepository;
 
     public PaymentBusinessService(StripeService stripeService,
                                   PaymentTransactionRepository transactionRepository,
@@ -42,8 +45,7 @@ public class PaymentBusinessService {
                                   MissionRepository missionRepository,
                                   SubscriptionRepository subscriptionRepository,
                                   UserRepository userRepository,
-                                  EntrepriseRepository entrepriseRepository
-                                  ) {
+                                  EntrepriseRepository entrepriseRepository) {
         this.stripeService = stripeService;
         this.transactionRepository = transactionRepository;
         this.consultantRepository = consultantRepository;
@@ -109,23 +111,53 @@ public class PaymentBusinessService {
     /**
      * Calculate payment details for a mission.
      * @param missionId the mission's ID
-     * @return a map with keys "firstSlice", "frozenAmount", and "applicationFee"
+     * @return a map with keys "firstSlice", "frozenAmount", "applicationFee", and "ssiCommission"
      */
     public Map<String, Double> calculatePaymentDetails(Long missionId) {
         Mission mission = missionRepository.findById(missionId)
                 .orElseThrow(() -> new MissionNotFoundException(missionId));
 
+        // Try to find an accepted proposition first.
+        Optional<Proposition> acceptedPropOpt = mission.getPropositions().stream()
+                .filter(p -> "ACCEPTED".equalsIgnoreCase(p.getStatut()))
+                .findFirst();
+
+        Proposition proposition;
+        if (acceptedPropOpt.isPresent()) {
+            proposition = acceptedPropOpt.get();
+        } else {
+            // If no accepted proposition exists, try to use a proposition made by an SSI enterprise.
+            proposition = mission.getPropositions().stream()
+                    .filter(p -> "APPLIED".equalsIgnoreCase(p.getOrigine()) && p.getEntreprise() != null)
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("No accepted proposition found"));
+        }
+
         double totalBudget = mission.getBudget();
         double firstSlice = totalBudget * 0.20;
-        double frozenAmount = totalBudget * 0.70;
         double applicationFee = totalBudget * 0.10;
+
+        // Check if the proposition is made by an SSI enterprise.
+        boolean isSSIProposition = false;
+        if (proposition.getEntreprise() != null) {
+            Entreprise entreprise = proposition.getEntreprise();
+            if (entreprise.getTypeEntreprise() != null &&
+                    entreprise.getTypeEntreprise() == Entreprise.TypeEntreprise.SSI) {
+                isSSIProposition = true;
+            }
+        }
+
+        double ssiCommission = isSSIProposition ? totalBudget * 0.05 : 0;
+        double frozenAmount = totalBudget - firstSlice - applicationFee - ssiCommission;
 
         return Map.of(
                 "firstSlice", firstSlice,
                 "frozenAmount", frozenAmount,
-                "applicationFee", applicationFee
+                "applicationFee", applicationFee,
+                "ssiCommission", ssiCommission
         );
     }
+
     public boolean isFirstSlicePaid(Long missionId) {
         List<PaymentTransaction> transactions = transactionRepository.findByMissionIdAndPaymentType(
                 missionId,
@@ -133,6 +165,7 @@ public class PaymentBusinessService {
         );
         return !transactions.isEmpty();
     }
+
     public boolean isFinalPaymentPaid(Long missionId) {
         List<PaymentTransaction> transactions = transactionRepository.findByMissionIdAndPaymentType(
                 missionId,
@@ -140,40 +173,47 @@ public class PaymentBusinessService {
         );
         return !transactions.isEmpty();
     }
+
     /**
      * Process the first slice of a mission payment.
-     * The enterprise pays the full mission budget; funds are distributed to the consultant (first slice)
-     * and to the platform (commission), and the remaining is frozen.
+     * The enterprise pays the full mission budget; funds are distributed to the consultant (first slice),
+     * to the platform (application fee), and to the SSI enterprise (commission) if applicable,
+     * while the remaining amount is frozen.
      */
     @Transactional
     public void initiateFirstSlicePayment(Long missionId) throws StripeException {
         Mission mission = missionRepository.findById(missionId)
                 .orElseThrow(() -> new MissionNotFoundException(missionId));
 
+        // Get the proposition to use (either accepted or SSI-applied)
+        Proposition proposition = mission.getPropositions().stream()
+                .filter(p -> "ACCEPTED".equalsIgnoreCase(p.getStatut()))
+                .findFirst()
+                .orElseGet(() -> mission.getPropositions().stream()
+                        .filter(p -> "APPLIED".equalsIgnoreCase(p.getOrigine()) && p.getEntreprise() != null)
+                        .findFirst()
+                        .orElseThrow(() -> new RuntimeException("No accepted proposition found")));
+
         double missionBudget = mission.getBudget();
         Map<String, Double> paymentDetails = calculatePaymentDetails(missionId);
         double firstSlice = paymentDetails.get("firstSlice");
         double platformFee = paymentDetails.get("applicationFee");
+        double ssiCommission = paymentDetails.get("ssiCommission");
         double frozenAmount = paymentDetails.get("frozenAmount");
 
         Entreprise entreprise = mission.getEntreprise();
-        Consultant consultant = mission.getPropositions().stream()
-                .findFirst()
-                .map(Proposition::getConsultant)
-                .orElseThrow(() -> new RuntimeException("No consultant found"));
+        Consultant consultant = proposition.getConsultant();
+        Entreprise ssiEntreprise = proposition.getEntreprise();
+
         User admin = userRepository.findByRole("Admin")
                 .orElseThrow(() -> new RuntimeException("Admin account not found"));
 
-        if (entreprise.getStripeCustomerId() == null || admin.getStripeCustomerId() == null) {
-            throw new RuntimeException("Stripe customer ID missing");
-        }
-
-        // Check enterprise balance for full mission budget
+        // Check enterprise balance
         Customer enterpriseCustomer = stripeService.getCustomerBalance(entreprise.getStripeCustomerId());
         double enterpriseBalance = enterpriseCustomer.getBalance() != null ?
                 enterpriseCustomer.getBalance() / 100.0 : 0.0;
         if (enterpriseBalance < missionBudget) {
-            throw new RuntimeException("Enterprise balance insufficient for mission budget");
+            throw new RuntimeException("Enterprise balance insufficient");
         }
 
         // Process full payment from enterprise
@@ -183,50 +223,82 @@ public class PaymentBusinessService {
         );
 
         // Distribute funds:
-        // a) Consultant receives the first slice
+        // a) Consultant receives first slice
         stripeService.adjustCustomerBalance(
                 consultant.getStripeCustomerId(),
                 (long)(firstSlice * 100)
         );
-        // b) Platform (admin) receives the commission fee
+
+        // b) Platform fee goes to admin
         stripeService.adjustCustomerBalance(
                 admin.getStripeCustomerId(),
                 (long)(platformFee * 100)
         );
 
-        // Update frozen balance for remaining funds
+        // c) If proposition is made by an SSI enterprise, process SSI commission
+        if (ssiCommission > 0 && ssiEntreprise != null) {
+            stripeService.adjustCustomerBalance(
+                    ssiEntreprise.getStripeCustomerId(),
+                    (long)(ssiCommission * 100)
+            );
+            createSSICommissionTransaction(entreprise, ssiEntreprise, ssiCommission, mission);
+        }
+
+        // Update frozen balance
         entreprise.setFrozenBalance(entreprise.getFrozenBalance() + frozenAmount);
         entrepriseRepository.save(entreprise);
 
-        // Create transaction records: record first slice payment and commission.
-        createTransaction(entreprise, consultant, firstSlice, platformFee, admin, mission);
+        // Create transactions
+        createTransaction(entreprise, consultant, firstSlice, platformFee,
+                ssiCommission, ssiEntreprise, admin, mission);
         createFrozenRecord(entreprise, consultant, frozenAmount, mission);
     }
 
     // Create a transaction record for the first slice of mission payment.
     private void createTransaction(Entreprise entreprise, Consultant consultant,
-                                   double amount, double fee, User admin,Mission mission) {
+                                   double amount, double fee, double ssiCommission,
+                                   Entreprise ssiEntreprise, User admin, Mission mission) {
         PaymentTransaction transaction = new PaymentTransaction();
         transaction.setEntrepriseSender(entreprise);
         transaction.setConsultantReceiver(consultant);
         transaction.setAmount((long)(amount * 100));
         transaction.setApplicationFee((long)(fee * 100));
+        transaction.setSsiCommission((long)(ssiCommission * 100));
+        if (ssiEntreprise != null) {
+            transaction.setSsiEnterprise(ssiEntreprise);
+        }
         transaction.setCurrency("EUR");
         transaction.setPaymentType("MISSION_FIRST_SLICE");
         transaction.setStatus("PROCESSED");
         transaction.setCustomerId(entreprise.getStripeCustomerId());
         transaction.setConsultantAccountId(consultant.getStripeCustomerId());
         transaction.setCreatedAt(LocalDateTime.now());
-        transaction.setAdminReceiver(admin); // Admin receives the commission fee
+        transaction.setAdminReceiver(admin);
         transaction.setMission(mission);
         transactionRepository.save(transaction);
+    }
+
+    private void createSSICommissionTransaction(Entreprise payer, Entreprise ssiEnterprise,
+                                                double commissionAmount, Mission mission) {
+        PaymentTransaction commissionTransaction = new PaymentTransaction();
+        commissionTransaction.setEntrepriseSender(payer);
+        commissionTransaction.setEntrepriseReceiver(ssiEnterprise);  // Crucial for SSI tracking
+        commissionTransaction.setSsiEnterprise(ssiEnterprise);
+        commissionTransaction.setSsiCommission((long)(commissionAmount * 100));
+        commissionTransaction.setCurrency("EUR");
+        commissionTransaction.setPaymentType("SSI_COMMISSION");
+        commissionTransaction.setStatus("PROCESSED");
+        commissionTransaction.setCustomerId(payer.getStripeCustomerId());
+        commissionTransaction.setCreatedAt(LocalDateTime.now());
+        commissionTransaction.setMission(mission);
+        transactionRepository.save(commissionTransaction);
     }
 
     // Create a transaction record for the frozen funds.
     private void createFrozenRecord(Entreprise entreprise, Consultant consultant, double frozenAmount, Mission mission) {
         PaymentTransaction frozenTransaction = new PaymentTransaction();
         frozenTransaction.setEntrepriseSender(entreprise);
-        frozenTransaction.setConsultantReceiver(consultant); // Set consultant receiver
+        frozenTransaction.setConsultantReceiver(consultant);
         frozenTransaction.setAmount((long)(frozenAmount * 100));
         frozenTransaction.setCurrency("EUR");
         frozenTransaction.setPaymentType("FROZEN_FUNDS");
@@ -235,7 +307,6 @@ public class PaymentBusinessService {
         frozenTransaction.setCreatedAt(LocalDateTime.now());
         frozenTransaction.setMission(mission);
         transactionRepository.save(frozenTransaction);
-
     }
 
     /**
@@ -332,15 +403,12 @@ public class PaymentBusinessService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Add debug logging
-
         Customer customer = stripeService.getCustomerBalance(user.getStripeCustomerId());
         double stripeBalance = customer.getBalance() != null ?
                 customer.getBalance() / 100.0 : 0.0;
 
         double frozenBalance = 0.0;
         if (user instanceof Entreprise) {
-            // Explicitly cast and fetch from database
             Entreprise entreprise = entrepriseRepository.findById(userId)
                     .orElseThrow(() -> new RuntimeException("Entreprise not found"));
             frozenBalance = entreprise.getFrozenBalance();

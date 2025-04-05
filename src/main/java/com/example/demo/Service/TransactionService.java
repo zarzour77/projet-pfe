@@ -9,7 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,31 +27,34 @@ public class TransactionService {
         this.paymentTransactionRepository = paymentTransactionRepository;
     }
 
+    // TransactionService.java
     public List<TransactionDTO> getUserTransactions(Long userId) {
-        List<PaymentTransaction> transactions = new ArrayList<>();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         String stripeCustomerId = user.getStripeCustomerId();
-        // Get all possible transactions where the user is involved.
-        transactions.addAll(paymentTransactionRepository.findByEntrepriseSenderId(userId));
-        transactions.addAll(paymentTransactionRepository.findByConsultantSenderId(userId));
-        transactions.addAll(paymentTransactionRepository.findByAdminSenderId(userId));
-        transactions.addAll(paymentTransactionRepository.findByConsultantReceiverId(userId));
-        transactions.addAll(paymentTransactionRepository.findByAdminReceiverId(userId));
 
-        // Add FUND_ADDITION transactions explicitly.
-        // (Assumes that FUND_ADDITION transactions are associated with the consultant receiver.)
-        if (stripeCustomerId != null) {
-            List<PaymentTransaction> fundAdditions = paymentTransactionRepository
-                    .findByPaymentTypeAndCustomerId("FUND_ADDITION", stripeCustomerId);
-            transactions.addAll(fundAdditions);
+        // Use LinkedHashSet to maintain order while preventing duplicates
+        Set<PaymentTransaction> transactionSet = new LinkedHashSet<>();
+
+        // Add all transactions where user is involved in any role
+        transactionSet.addAll(paymentTransactionRepository.findByEntrepriseSenderId(userId));
+        transactionSet.addAll(paymentTransactionRepository.findByEntrepriseReceiverId(userId));
+        transactionSet.addAll(paymentTransactionRepository.findByConsultantSenderId(userId));
+        transactionSet.addAll(paymentTransactionRepository.findByAdminSenderId(userId));
+        transactionSet.addAll(paymentTransactionRepository.findByConsultantReceiverId(userId));
+        transactionSet.addAll(paymentTransactionRepository.findByAdminReceiverId(userId));
+
+        // Add special cases using safe conditional checks
+        if (stripeCustomerId != null && !stripeCustomerId.isEmpty()) {
+            transactionSet.addAll(paymentTransactionRepository
+                    .findByPaymentTypeAndCustomerId("FUND_ADDITION", stripeCustomerId));
         }
-        return transactions.stream()
-                .map(TransactionDTO::convertToDto)  // Use static conversion method
-                .distinct()
+
+        // Convert to DTO list without duplicates
+        return transactionSet.stream()
+                .map(TransactionDTO::convertToDto)
                 .collect(Collectors.toList());
     }
-
     public List<PaymentTransaction> getSubscriptionPayments(Long userId) {
         return paymentTransactionRepository.findByConsultantSenderIdAndPaymentType(
                 userId,

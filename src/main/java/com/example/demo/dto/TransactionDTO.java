@@ -22,7 +22,9 @@ public class TransactionDTO {
     // Receiver information
     private Long receiverId;
     private String receiverType; // CONSULTANT, ADMIN, SYSTEM
-
+    private Long ssiCommission;  // Add this field
+    private Long ssiEnterpriseId;  // Add this field
+    private Long missionId;
     // Conversion method
     public static TransactionDTO convertToDto(PaymentTransaction transaction) {
         TransactionDTO dto = new TransactionDTO();
@@ -38,7 +40,20 @@ public class TransactionDTO {
         dto.setNetAmount(transaction.getNetAmount());
         dto.setCustomerId(transaction.getCustomerId());
         dto.setConsultantAccountId(transaction.getConsultantAccountId());
-
+        dto.setSsiCommission(transaction.getSsiCommission());
+        if (transaction.getSsiEnterprise() != null) {
+            dto.setSsiEnterpriseId(transaction.getSsiEnterprise().getId());
+        }
+        if (transaction.getMission() != null) {
+            dto.setMissionId(transaction.getMission().getId());
+        }
+        // Enhanced receiver handling for SSI commissions
+        if ("SSI_COMMISSION".equals(transaction.getPaymentType())) {
+            if (transaction.getEntrepriseReceiver() != null) {
+                dto.setReceiverId(transaction.getEntrepriseReceiver().getId());
+                dto.setReceiverType("ENTERPRISE");
+            }
+        }
         // Handle sender
         if (transaction.getEntrepriseSender() != null) {
             dto.setSenderId(transaction.getEntrepriseSender().getId());
@@ -100,4 +115,10 @@ public class TransactionDTO {
     public void setReceiverId(Long receiverId) { this.receiverId = receiverId; }
     public String getReceiverType() { return receiverType; }
     public void setReceiverType(String receiverType) { this.receiverType = receiverType; }
+    public Long getSsiCommission() { return ssiCommission; }
+    public void setSsiCommission(Long ssiCommission) { this.ssiCommission = ssiCommission; }
+    public Long getSsiEnterpriseId() { return ssiEnterpriseId; }
+    public void setSsiEnterpriseId(Long ssiEnterpriseId) { this.ssiEnterpriseId = ssiEnterpriseId; }
+    public Long getMissionId() { return missionId; }
+    public void setMissionId(Long missionId) { this.missionId = missionId; }
 }
