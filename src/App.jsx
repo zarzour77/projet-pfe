@@ -33,6 +33,8 @@ import CollaboratorsList from "./components/CollaboratorsList";
 import EntrepriseProfilePage from "./components/EntrepriseProfilePage";
 import VoirProfileEntreprise from "./components/VoirProfileEntreprise";
 import Settings from "./components/Settings";
+import Dispute from "./components/Dispute";
+import AdminDispute from "./components/Admindispute";
 import { AuthProvider } from "./Services/AuthContext";
 
 const App = () => {
@@ -47,6 +49,10 @@ const App = () => {
           <Route path="/StatConsultant" element={<StatConsultant />} /> 
           <Route path="/StatEntreprise" element={<StatEntreprise />} />
           <Route path="/StatAdmin" element={<StatAdmin />} />
+          <Route path="/Dispute" element={<Dispute />} />
+          <Route path="/Admindispute" element={<AdminDispute />} />
+
+          {/* Public routes */}
           <Route
             path="/consultant/:consultantId"
             element={

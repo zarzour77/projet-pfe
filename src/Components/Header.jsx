@@ -1,63 +1,67 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import notificationService from "../Services/NotificationService";
-import UserService from "../Services/UserService"; // Updated import
+// Instead of fetching generic user data, we use these based on role
+import EntrepriseService from "../Services/EntrepriseService";
+import ConsultantService from "../Services/ConsultantService";
 import styles from "./Header.module.css";
+import UserService from "../Services/UserService";
+import logo from '../assets/TradeForTalentIcon.svg'
 
 const Header = () => {
   const navigate = useNavigate();
-  const [fullUser, setFullUser] = useState(null);
+
+  // Initialize state with basicUser data immediately so the header can render
   const storedUser = localStorage.getItem("user");
   const basicUser = storedUser ? JSON.parse(storedUser) : null;
-  const userId = fullUser?.id;
-  const role = fullUser?.role;
+  const [user, setUser] = useState(basicUser);
+  const userId = user?.id;
+  const role = basicUser?.role; // role from basic data is used for initial render
 
-  // Fetch user data using UserService
+  // Fetch extended user data in background and update state when available
   useEffect(() => {
     let isMounted = true;
-    
-    const fetchUserData = async () => {
+    const fetchExtendedUser = async () => {
       if (!basicUser?.id) return;
-      
       try {
-        const fetchedData = await UserService.getById(basicUser.id);
-        
-        if (isMounted) {
-          const updatedUser = { ...basicUser, ...fetchedData };
-          setFullUser(updatedUser);
-          if (JSON.stringify(updatedUser) !== JSON.stringify(basicUser)) {
-            localStorage.setItem("user", JSON.stringify(updatedUser));
-          }
+        let fetchedUser = null;
+        if (basicUser.role === "Entreprise") {
+          fetchedUser = await EntrepriseService.getEntrepriseById(basicUser.id);
+        } else if (basicUser.role === "Consultant") {
+          fetchedUser = await ConsultantService.getConsultantById(basicUser.id);
+        } else if (basicUser.role === "Admin") {
+          fetchedUser = await UserService.getById(basicUser.id);
+        }
+        if (isMounted && fetchedUser) {
+          setUser(fetchedUser);
+          localStorage.setItem("user", JSON.stringify(fetchedUser));
         }
       } catch (error) {
-        console.error("Error fetching user details:", error);
+        console.error("Error fetching extended user details:", error);
       }
     };
 
-    if (basicUser?.id) {
-      fetchUserData();
-    }
-
-    return () => { isMounted = false };
+    fetchExtendedUser();
+    return () => {
+      isMounted = false;
+    };
   }, [basicUser?.id]);
 
-  // State for notifications and dropdowns
+  // Notification state and fetching
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [visibleCount, setVisibleCount] = useState(5);
   const [filter, setFilter] = useState("all"); // "all" or "unread"
-  const [openMenuId, setOpenMenuId] = useState(null); // which notification menu is open
+  const [openMenuId, setOpenMenuId] = useState(null);
   const [showMarkAllMenu, setShowMarkAllMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-  // Fetch notifications from the API
   const fetchNotifications = async () => {
     if (userId) {
       try {
         const data = await notificationService.getNotifications(userId);
-        // Sort notifications in descending order by date
         const sortedData = data.sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         );
@@ -68,24 +72,26 @@ const Header = () => {
     }
   };
 
-  useEffect(() => {
-    if (showNotifications && userId) {
-      fetchNotifications();
-    }
-  }, [showNotifications, userId]);
-
+  // Fetch notifications when userId is available or when notifications dropdown opens.
   useEffect(() => {
     if (userId) {
       fetchNotifications();
     }
   }, [userId]);
 
-  // Mark all notifications as read
+  useEffect(() => {
+    if (showNotifications) {
+      fetchNotifications();
+      setOpenMenuId(null);
+    }
+  }, [showNotifications, userId]);
+
+  // Handlers for marking and deleting notifications
   const handleMarkAllAsRead = async () => {
     try {
-      const unreadNotifications = notifications.filter(n => !n.readStatus);
+      const unreadNotifications = notifications.filter((n) => !n.readStatus);
       await Promise.all(
-        unreadNotifications.map(n => notificationService.markAsRead(n.id))
+        unreadNotifications.map((n) => notificationService.markAsRead(n.id))
       );
       fetchNotifications();
       setShowMarkAllMenu(false);
@@ -94,18 +100,16 @@ const Header = () => {
     }
   };
 
-  // Mark individual notification as read
   const handleMarkAsRead = async (id) => {
     try {
       await notificationService.markAsRead(id);
       fetchNotifications();
-      setOpenMenuId(null); // close the options menu
+      setOpenMenuId(null);
     } catch (error) {
       console.error("Erreur lors du marquage comme lu", error);
     }
   };
 
-  // Delete a notification
   const handleDeleteNotification = async (id) => {
     try {
       await notificationService.deleteNotification(id);
@@ -116,7 +120,6 @@ const Header = () => {
     }
   };
 
-  // Format date for display
   const formatDate = (dateString) => {
     const options = {
       year: "numeric",
@@ -128,33 +131,23 @@ const Header = () => {
     return new Date(dateString).toLocaleDateString("fr-FR", options);
   };
 
-  // Filter notifications based on readStatus
   const filteredNotifications =
-    filter === "all"
-      ? notifications
-      : notifications.filter((n) => !n.readStatus);
-
-  // Paginate notifications
+    filter === "all" ? notifications : notifications.filter((n) => !n.readStatus);
   const visibleNotifications = filteredNotifications.slice(0, visibleCount);
 
-  // Toggle notifications dropdown
   const toggleNotifications = () => {
     setShowNotifications((prev) => !prev);
-    if (showNotifications) {
-      setOpenMenuId(null);
-    }
+    if (showNotifications) setOpenMenuId(null);
   };
 
-  // Toggle profile dropdown
-  const toggleProfileMenu = () => setShowProfileMenu(prev => !prev);
+  const toggleProfileMenu = () => setShowProfileMenu((prev) => !prev);
 
-  // Logout function
   const handleLogout = () => {
     localStorage.removeItem("user");
     navigate("/login");
   };
 
-  // Close notifications when clicking outside
+  // Close dropdowns when clicking outside
   const notificationsRef = useRef(null);
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -170,10 +163,11 @@ const Header = () => {
     if (showNotifications) {
       document.addEventListener("mousedown", handleClickOutside);
     }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, [showNotifications]);
 
-  // Close options menu or "mark all" menu if clicked outside
   useEffect(() => {
     const handleMenuClickOutside = (e) => {
       if (
@@ -188,11 +182,12 @@ const Header = () => {
         setShowMarkAllMenu(false);
       }
     };
-    document.addEventListener('mousedown', handleMenuClickOutside);
-    return () => document.removeEventListener('mousedown', handleMenuClickOutside);
+    document.addEventListener("mousedown", handleMenuClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleMenuClickOutside);
+    };
   }, [openMenuId, showMarkAllMenu]);
 
-  // Close profile dropdown when clicking outside
   const profileMenuRef = useRef(null);
   useEffect(() => {
     const handleClickOutsideProfile = (e) => {
@@ -205,133 +200,159 @@ const Header = () => {
       }
     };
     if (showProfileMenu) {
-      document.addEventListener('mousedown', handleClickOutsideProfile);
+      document.addEventListener("mousedown", handleClickOutsideProfile);
     }
-    return () => document.removeEventListener('mousedown', handleClickOutsideProfile);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutsideProfile);
+    };
   }, [showProfileMenu]);
 
   return (
     <>
       <header className={styles.header}>
         <nav className={styles.navbar}>
-
           {/* Left: Logo */}
           <div className={styles.leftSection}>
-            <div className={styles.logo}>
-              <Link to={role === "Entreprise" ? "/EntrepriseMission" : "/SearchMission"}>
-                Trade for talent
-              </Link>
-            </div>
+          <div className={styles.logo}>
+  <Link to={role === "Entreprise" ? "/landingEntreprise" : "/SearchMission"}>
+    <img 
+      src={logo}
+      alt="Trade for Talent Logo"
+      className={styles.logoImage}
+    />
+  </Link>
+</div>
           </div>
 
-          {/* Center: Nav links with new dropdown for "Manage Finances" */}
+          {/* Center: Navigation links */}
           <div className={styles.centerSection}>
             <ul className={styles.navLinks}>
               {role === "Admin" ? (
                 <>
                   <li>
-                    <Link to="/admin-dashboard">Dashboard</Link>
+                    <Link to="/StatAdmin">Dashboard</Link>
                   </li>
                   <li className={styles.dropdown}>
                     <span className={styles.dropdownTitle}>Management</span>
                     <ul className={styles.dropdownMenu}>
-                      <li><Link to="/manage-users">Users</Link></li>
-                      <li><Link to="/manage-missions">Missions</Link></li>
+                      <li>
+                        <Link to="/manage-users">Utilisateurs</Link>
+                      </li>
+                      <li>
+                        <Link to="/manage-missions">Missions</Link>
+                      </li>
+                      <li>
+                        <Link to="/transactions">Transactions</Link>
+                      </li>
                     </ul>
                   </li>
                 </>
-              ) : (
+              ) : role === "Entreprise" ? (
                 <>
-                  {role === "Entreprise" ? (
-                    fullUser?.typeEntreprise === "CLIENTE" ? (
-                      <li>
-                        <Link to="/landingEntreprise">Find Talent</Link>
+                  <li>
+                    <Link to="/StatEntreprise">Dashboard</Link>
+                  </li>
+                  {user?.typeEntreprise === "CLIENTE" ? (
+                    <>
+                      <li className={styles.dropdown}>
+                        <span className={styles.dropdownTitle}>Missions</span>
+                        <ul className={styles.dropdownMenu}>
+                          <li>
+                            <Link to="/publierMission">Publier une mission</Link>
+                          </li>
+                          <li>
+                            <Link to="/EntrepriseMission">Mes Missions</Link>
+                          </li>
+                        </ul>
                       </li>
-                    ) : (
                       <li>
-                        <Link to="/SearchMission">Find Work</Link>
+                        <Link to="/landingEntreprise">Trouver des talents</Link>
                       </li>
-                    )
+                    </>
+                  ) : user?.typeEntreprise === "SSI" ? (
+                    <>
+                      <li className={styles.dropdown}>
+                        <span className={styles.dropdownTitle}>Consultants</span>
+                        <ul className={styles.dropdownMenu}>
+                          <li>
+                            <Link to="/collaboratorsList">Collaborateurs</Link>
+                          </li>
+                          <li>
+                            <Link to="/landingEntreprise">Voir les consultants</Link>
+                          </li>
+                          <li>
+                            <Link to="/SearchMission">Attribuer des missions</Link>
+                          </li>
+                        </ul>
+                      </li>
+                    </>
                   ) : (
                     <li>
-                      <Link to="/SearchMission">Find Work</Link>
-                    </li>
-                  )}
-
-                  {role === "Entreprise" && fullUser?.typeEntreprise !== "SSI" && 
-                   fullUser?.typeEntreprise !== "Cliente" && (
-                    <li className={styles.dropdown}>
-                      <span className={styles.dropdownTitle}>Missions</span>
-                      <ul className={styles.dropdownMenu}>
-                        <li><Link to="/publierMission">Publier une mission</Link></li>
-                        <li><Link to="/EntrepriseMission">Mes Missions</Link></li>
-                      </ul>
-                    </li>
-                  )}
-
-                  {role === "Entreprise" && fullUser?.typeEntreprise === "SSI" && (
-                    <li>
-                      <Link to="/CollaboratorsList">Collaborators</Link>
-                    </li>
-                  )}
-
-                  {role === "Consultant" && (
-                    <li>
-                      <Link to="/ConsultantPropositions">Mes Propositions</Link>
+                      <Link to="/landingEntreprise">Trouver des talents</Link>
                     </li>
                   )}
                 </>
+              ) : role === "Consultant" ? (
+                <>
+                  <li>
+                    <Link to="/StatConsultant">Dashboard</Link>
+                  </li>
+                  <li>
+                    <Link to="/SearchMission">Trouver un emploi</Link>
+                  </li>
+                  <li>
+                    <Link to="/ConsultantPropositions">Mes Propositions</Link>
+                  </li>
+                </>
+              ) : (
+                <li>
+                  <Link to="/SearchMission">Trouver un emploi</Link>
+                </li>
               )}
 
-              {/* Finance dropdown for all roles except Admin */}
-              
-                <li className={styles.dropdown}>
-                  <span className={styles.dropdownTitle}>Manage Finances</span>
-                  <ul className={styles.dropdownMenu}>
-                    <li><Link to="/transactions">Transactions</Link></li>
-                  </ul>
-                </li>
-             
+              {/* Finance Dropdown for all non-admin roles */}
+              <li className={styles.dropdown}>
+                <span className={styles.dropdownTitle}>Gestion Finances</span>
+                <ul className={styles.dropdownMenu}>
+                  <li>
+                    <Link to="/transactions">Transactions</Link>
+                  </li>
+                  {role === "Admin" && (
+                    <li>
+                      <Link to="/financial-reports">Rapports</Link>
+                    </li>
+                  )}
+                </ul>
+              </li>
             </ul>
           </div>
-
-
 
           {/* Right: Search, Messages, Notifications, Profile */}
           <div className={styles.rightSection}>
             <div className={styles.searchContainer}>
-              <input type="text" placeholder="Search missions..." />
-              <button className={styles.searchButton}>Search</button>
+              <input type="text" placeholder="Rechercher des missions..." />
+              <button className={styles.searchButton}>Rechercher</button>
             </div>
 
-            {/* Messages */}
-            <button
-              className={styles.iconButton}
-              onClick={() => navigate("/Messenger")}
-            >
+            <button className={styles.iconButton} onClick={() => navigate("/Messenger")}>
               <i className="fa fa-comment"></i>
             </button>
 
-            {/* Notifications */}
             <button className={styles.iconButton} onClick={toggleNotifications}>
               <div className={styles.notificationIconContainer}>
                 <i className="fa fa-bell"></i>
-                {notifications.filter(n => !n.readStatus).length > 0 && (
+                {notifications.filter((n) => !n.readStatus).length > 0 && (
                   <span className={styles.notificationBadge}>
-                    {Math.min(notifications.filter(n => !n.readStatus).length, 9)}
-                    {notifications.filter(n => !n.readStatus).length > 9 && "+"}
+                    {Math.min(notifications.filter((n) => !n.readStatus).length, 9)}
+                    {notifications.filter((n) => !n.readStatus).length > 9 && "+"}
                   </span>
                 )}
               </div>
             </button>
 
-            {/* Profile */}
-            <button
-              className={styles.profileButton}
-              onClick={toggleProfileMenu}
-            >
+            <button className={styles.profileButton} onClick={toggleProfileMenu}>
               <img
-                src={fullUser?.photoprofile || "default-avatar.png"}
+                src={user?.photoprofile || "default-avatar.png"}
                 alt="Profile"
                 className={styles.profileIcon}
               />
@@ -344,30 +365,29 @@ const Header = () => {
           <div className={styles.profileDropdown} ref={profileMenuRef}>
             <div className={styles.profileHeader}>
               <img
-                src={fullUser?.photoprofile || "default-avatar.png"}
+                src={user?.photoprofile || "default-avatar.png"}
                 alt="Profile"
                 className={styles.profileHeaderImage}
               />
               <div className={styles.profileHeaderInfo}>
-                <h4 className={styles.userName}>
-                  {fullUser?.prenom} {fullUser?.nom}
-                </h4>
+                <h4 className={styles.userName}>{user?.prenom} {user?.nom}</h4>
                 <p className={styles.userRole}>
-  {role === "Admin" ? "Admin" : role === "Consultant" ? "Freelancer" : "Entreprise"}
-</p>
+                  {role === "Admin" ? "Admin" : role === "Consultant" ? "Freelancer" : "Entreprise"}
+                </p>
               </div>
             </div>
             <div className={styles.dropdownDivider}></div>
             {role !== "Admin" && (
-            <button
-              className={styles.dropdownItem}
-              onClick={() => {
-                setShowProfileMenu(false);
-                navigate(role === "Entreprise" ? "/EntrepriseProfilePage" : "/ProfilePage");
-              }}
-            >
-              <i className="fa fa-user"></i> Your profile
-            </button> )}
+              <button
+                className={styles.dropdownItem}
+                onClick={() => {
+                  setShowProfileMenu(false);
+                  navigate(role === "Entreprise" ? "/EntrepriseProfilePage" : "/ProfilePage");
+                }}
+              >
+                <i className="fa fa-user"></i> Votre profil
+              </button>
+            )}
             <button
               className={styles.dropdownItem}
               onClick={() => {
@@ -375,7 +395,7 @@ const Header = () => {
                 navigate("/settings");
               }}
             >
-              <i className="fa fa-cog"></i> Account settings
+              <i className="fa fa-cog"></i> Paramètres
             </button>
             <button
               className={styles.dropdownItem}
@@ -384,7 +404,7 @@ const Header = () => {
                 handleLogout();
               }}
             >
-              <i className="fa fa-sign-out-alt"></i> Log out
+              <i className="fa fa-sign-out-alt"></i> Déconnexion
             </button>
           </div>
         )}
@@ -405,16 +425,16 @@ const Header = () => {
                   <div className={styles.markAllOptionsMenu}>
                     <button onClick={handleMarkAllAsRead}>
                       <i className="fas fa-check me-2"></i>
-                      Mark all as read
+                      Tout marquer comme lu
                     </button>
                     <button
                       onClick={() => {
-                        navigate('/notification');
+                        navigate("/notification");
                         setShowMarkAllMenu(false);
                       }}
                     >
                       <i className="fas fa-list me-2"></i>
-                      See notifications
+                      Voir toutes les notifications
                     </button>
                   </div>
                 )}
@@ -438,9 +458,7 @@ const Header = () => {
 
             <div className={styles.notificationsContent}>
               {visibleNotifications.length === 0 ? (
-                <div className={styles.noNotifications}>
-                  Aucune notification.
-                </div>
+                <div className={styles.noNotifications}>Aucune notification.</div>
               ) : (
                 visibleNotifications.map((notification) => (
                   <div
@@ -459,7 +477,6 @@ const Header = () => {
                           {formatDate(notification.createdAt)}
                         </small>
                       </div>
-                      {/* Ellipsis button */}
                       <button
                         className={styles.optionsButton}
                         onClick={() =>
@@ -470,8 +487,6 @@ const Header = () => {
                       >
                         <i className="fa fa-ellipsis-h"></i>
                       </button>
-
-                      {/* Options menu */}
                       {openMenuId === notification.id && (
                         <div className={styles.notificationOptionsMenu}>
                           {!notification.readStatus && (
@@ -493,10 +508,7 @@ const Header = () => {
             </div>
             {filteredNotifications.length > visibleCount && (
               <div className={styles.loadMoreContainer}>
-                <button
-                  className={styles.loadMoreButton}
-                  onClick={() => setVisibleCount(visibleCount + 5)}
-                >
+                <button className={styles.loadMoreButton} onClick={() => setVisibleCount(visibleCount + 5)}>
                   Voir plus
                 </button>
               </div>

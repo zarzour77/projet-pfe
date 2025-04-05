@@ -6,6 +6,8 @@ import { motion } from 'framer-motion';
 import Typography from '@mui/material/Typography';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import Divider from '@mui/material/Divider';
+import AvisService from '../Services/AvisService';
+
 import {
   Autocomplete,
   TextField,
@@ -19,7 +21,6 @@ import {
   Box,
 } from '@mui/material';
 import Rating from '@mui/material/Rating';
-import LinearProgress from '@mui/material/LinearProgress';
 import MUITooltip from '@mui/material/Tooltip';
 import styles from './EntrepriseMission.module.css';
 
@@ -77,6 +78,9 @@ const EntrepriseMission = () => {
     firstSlice: false,
     finalPayment: false
   });
+  const [showRatingModal, setShowRatingModal] = useState(false);
+const [rating, setRating] = useState(0);
+const [comment, setComment] = useState('');
   // Load published missions
   useEffect(() => {
     const fetchMissions = async () => {
@@ -182,11 +186,7 @@ const EntrepriseMission = () => {
     }
   };
 
-  // Open/close mission detail modal
-  const handleOpenDetail = (mission) => {
-    setSelectedMission(mission);
-    setOpenDetail(true);
-  };
+
 
   const handleCloseDetail = () => {
     setSelectedMission(null);
@@ -334,8 +334,29 @@ const handleFinalPayment = async () => {
 
     alert("Paiement final effectué avec succès!");
     setOpenPaymentOptionsModal(false);
+    setShowRatingModal(true);
   } catch (error) {
     alert(`Erreur de paiement: ${error.response?.data || error.message}`);
+  }
+};
+const handleSubmitRating = async () => {
+  try {
+    await AvisService.createAvis(
+      entrepriseId,
+      selectedConsultant.id,
+      rating,
+      comment,
+      selectedMission.id
+    );
+
+    setShowRatingModal(false);
+    alert('Merci pour votre évaluation!');
+    // Refresh consultant data
+    const updatedConsultants = await getConsultantsForMission(selectedMission.id);
+    setConsultants(updatedConsultants);
+  } catch (error) {
+    console.error('Error submitting rating:', error);
+    alert('Erreur lors de la soumission de l\'évaluation');
   }
 };
   const handleRefuseConsultant = (consultant) => {
@@ -471,10 +492,6 @@ const handleFinalPayment = async () => {
                     );
                     const isRefused = propositionForConsultant?.statut === 'refused';
                     const isAccepted = propositionForConsultant?.statut === 'accepted';
-                    const isInvited = propositionForConsultant?.origine?.toLowerCase() === 'invited';
-
-                    const ratingValue = consultant.rating || 0;
-                    const jobSuccessValue = Math.round(ratingValue * 20);
 
                     let expLabel = 'Débutant';
                     if (consultant.experienceYears) {
@@ -483,150 +500,191 @@ const handleFinalPayment = async () => {
 
                     return (
                       <motion.div
-                        key={consultant.id}
-                        className={styles.talentItem}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: idx * 0.1 }}
-                      >
-                        <div className={styles.talentHeader} style={{ position: 'relative' }}>
-                          <div>
-                            <h2>{consultant.nom} {consultant.prenom}</h2>
-                            <div className={styles.originBadge}>
-                              {propositionForConsultant?.entreprise ? (
-                                <span className={styles.entrepriseBadge}>
-                                  🏢 Proposition par Entreprise SSI
-                                </span>
-                              ) : (
-                                <span className={styles.freelanceBadge}>
-                                  🧑💻 Proposition indépendante
-                                </span>
-                              )}
-                            </div>
-                            <Rating
-                              name={`rating-${consultant.id}`}
-                              value={ratingValue}
-                              precision={0.5}
-                              readOnly
-                              size="small"
-                            />
-                          </div>
-                          {isRefused && (
-                            <span className={`${styles.statusLabel} ${styles.refusedLabel}`}>
-                              Refusé
-                            </span>
-                          )}
-                          {isAccepted && (
-                            <span className={`${styles.statusLabel} ${styles.acceptedLabel}`}>
-                              En cours
-                            </span>
-                          )}
-                        </div>
+  key={consultant.id}
+  className={styles.talentItem}
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.3, delay: idx * 0.1 }}
+>
+  <div className={styles.talentHeader} style={{ position: 'relative' }}>
+    <div>
+      <h2>{consultant.nom} {consultant.prenom}</h2>
+      <div className={styles.originBadge}>
+        {propositionForConsultant?.origine === 'INVITED' ? (
+          <span className={styles.invitedBadge}>
+            📩 Proposition par invitation
+          </span>
+        ) : propositionForConsultant?.entreprise ? (
+          <span className={styles.entrepriseBadge}>
+            🏢 Proposition par Entreprise SSI
+          </span>
+        ) : (
+          <span className={styles.freelanceBadge}>
+            🧑💻 Proposition indépendante
+          </span>
+        )}
+      </div>
+    </div>
+    {isRefused && (
+      <span className={`${styles.statusLabel} ${styles.refusedLabel}`}>
+        Refusé
+      </span>
+    )}
+    {isAccepted && (
+      <span className={`${styles.statusLabel} ${styles.acceptedLabel}`}>
+        En cours
+      </span>
+    )}
+  </div>
 
-                        <div className={styles.talentInfo}>
-                          <span>{expLabel}</span>
-                          <span>{consultant.adresse || 'Localisation inconnue'}</span>
-                          <span>{`$${Number(consultant.taux_horaire) || 0}/h`}</span>
-                        </div>
-                        <MUITooltip title={`Job Success: ${jobSuccessValue}%`} arrow>
-                          <LinearProgress
-                            variant="determinate"
-                            value={jobSuccessValue}
-                            style={{ width: '100%', height: '8px', borderRadius: '4px' }}
-                          />
-                        </MUITooltip>
-                        <div className={styles.talentSkills}>
-                          {consultant.domaines?.map((dom) => (
-                            <span key={dom.id} className={styles.skillTag}>
-                              {dom.nom}
-                            </span>
-                          ))}
-                        </div>
-                        <div className={styles.talentSkills}>
-                          {consultant.competences?.map((comp) => (
-                            <span key={comp.id} className={styles.skillTag}>
-                              {comp.nom}
-                            </span>
-                          ))}
-                        </div>
-                        <p className={styles.talentBio}>
-                          {consultant.statut || 'Disponible'}
-                        </p>
+  <div className={styles.talentInfo}>
+    <span>{expLabel}</span>
+    <span>{consultant.adresse || 'Localisation inconnue'}</span>
+    <span>{`$${Number(consultant.taux_horaire) || 0}/h`}</span>
+  </div>
 
-                        {!isRefused && !isAccepted && (
-                          <div className={styles.actionButtons}>
-                            <div className={styles.leftActions}>
-                              <MUITooltip title="Voir le profil" arrow>
-                                <Button 
-                                  variant="contained" 
-                                  size="small"
-                                  onClick={() => handleViewProfile(consultant)}
-                                >
-                                  Profil
-                                </Button>
-                              </MUITooltip>
-                              <MUITooltip title="Contacter" arrow>
-                                <Button
-                                  variant="outlined"
-                                  size="small"
-                                  onClick={() => handleContacter(consultant)}
-                                >
-                                  Contacter
-                                </Button>
-                              </MUITooltip>
-                              <MUITooltip title="Voir Proposition" arrow>
-                                <Button 
-                                  variant="outlined" 
-                                  size="small"
-                                  onClick={() => handleOpenPropositionModal(consultant)}
-                                >
-                                  Voir Proposition
-                                </Button>
-                              </MUITooltip>
-                            </div>
-                            {!(propositionForConsultant && (propositionForConsultant.origine?.toLowerCase() === 'invited' || propositionForConsultant.statut === "ACCEPTED" || propositionForConsultant.statut === "terminée" )) && (
-  <div className={styles.rightActions}>
-    <MUITooltip title="Accepter" arrow>
+  {/* Job Success Circular Progress */}
+  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, mb: 1 }}>
+    <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+      {/* Background track */}
+      <CircularProgress
+        variant="determinate"
+        value={100}
+        size={40}
+        thickness={4}
+        sx={{ color: '#f0f0f0' }}
+      />
+      {/* Actual progress */}
+      <CircularProgress
+        variant="determinate"
+        value={consultant.jobSuccess || 0}
+        size={40}
+        thickness={4}
+        sx={{ 
+          color: '#00796b',
+          position: 'absolute',
+          left: 0
+        }}
+      />
+      {/* Centered percentage text */}
+      <Box
+        sx={{
+          top: 0,
+          left: 0,
+          bottom: 0,
+          right: 0,
+          position: 'absolute',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        <Typography variant="caption" component="div" sx={{ fontWeight: 'bold' }}>
+          {`${consultant.jobSuccess || 0}%`}
+        </Typography>
+      </Box>
+    </Box>
+
+    <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary', minWidth: 70 }}>
+  Score de Succès
+</Typography>
+
+  </Box>
+
+  <div className={styles.talentSkills}>
+    {consultant.domaines?.map((dom) => (
+      <span key={dom.id} className={styles.skillTag}>
+        {dom.nom}
+      </span>
+    ))}
+  </div>
+  <div className={styles.talentSkills}>
+    {consultant.competences?.map((comp) => (
+      <span key={comp.id} className={styles.skillTag}>
+        {comp.nom}
+      </span>
+    ))}
+  </div>
+  <p className={styles.talentBio}>
+    {consultant.workload === 0 ? 'Disponible' : 'En travail'}
+  </p>
+
+  {!isRefused && !isAccepted && (
+    <div className={styles.actionButtons}>
+      <div className={styles.leftActions}>
+        <MUITooltip title="Voir le profil" arrow>
+          <Button 
+            variant="contained" 
+            size="small"
+            onClick={() => handleViewProfile(consultant)}
+          >
+            Profil
+          </Button>
+        </MUITooltip>
+        <MUITooltip title="Contacter" arrow>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => handleContacter(consultant)}
+          >
+            Contacter
+          </Button>
+        </MUITooltip>
+        <MUITooltip title="Voir Proposition" arrow>
+          <Button 
+            variant="outlined" 
+            size="small"
+            onClick={() => handleOpenPropositionModal(consultant)}
+          >
+            Voir Proposition
+          </Button>
+        </MUITooltip>
+      </div>
+      {!(propositionForConsultant && (propositionForConsultant.origine?.toLowerCase() === 'invited' || propositionForConsultant.statut === "ACCEPTED" || propositionForConsultant.statut === "terminée" )) && (
+        <div className={styles.rightActions}>
+          <MUITooltip title="Accepter" arrow>
+            <Button 
+              variant="contained" 
+              size="small"
+              color="success"
+              onClick={() => handleConfirmAccept(consultant)}
+            >
+              Accepter
+            </Button>
+          </MUITooltip>
+          <MUITooltip title="Refuser" arrow>
+            <Button 
+              variant="outlined" 
+              size="small"
+              color="error"
+              onClick={() => handleRefuseConsultant(consultant)}
+            >
+              Refuser
+            </Button>
+          </MUITooltip>
+        </div>
+      )}
+    </div>
+  )}
+  {/* If the consultant's proposition status is accepted, display the "Payer" button */}
+  {(propositionForConsultant?.statut === "ACCEPTED" || 
+    selectedMission?.statut.toLowerCase() === 'terminée' || 
+    propositionForConsultant?.origine === 'INVITED') && (
+    <div className={styles.payButtonContainer}>
       <Button 
         variant="contained" 
-        size="small"
-        color="success"
-        onClick={() => handleConfirmAccept(consultant)}
+        color="primary" 
+        onClick={() => {
+          setSelectedConsultant(consultant);
+          setOpenPaymentOptionsModal(true);
+        }}
       >
-        Accepter
+        Payer
       </Button>
-    </MUITooltip>
-    <MUITooltip title="Refuser" arrow>
-      <Button 
-        variant="outlined" 
-        size="small"
-        color="error"
-        onClick={() => handleRefuseConsultant(consultant)}
-      >
-        Refuser
-      </Button>
-    </MUITooltip>
-  </div>
-)}
+    </div>
+  )}
+</motion.div>
 
-                          </div>
-                        )}
-                        {/* If the consultant's proposition status is accepted, display the "Payer" button at the bottom right */}
-                        {(propositionForConsultant?.statut === "ACCEPTED" || selectedMission?.statut.toLowerCase() === 'terminée') && (
-  <div className={styles.payButtonContainer}>
-    <Button 
-      variant="contained" 
-      color="primary" 
-      onClick={() => {
-        setSelectedConsultant(consultant);
-        setOpenPaymentOptionsModal(true);
-      }}
-    >
-      Payer
-    </Button>
-  </div>
-)}
-                      </motion.div>
                     );
                   })}
                 </div>
@@ -786,22 +844,39 @@ const handleFinalPayment = async () => {
       </Dialog>
 
       {/* Payment Options Modal */}
-      <Dialog open={openPaymentOptionsModal} onClose={() => setOpenPaymentOptionsModal(false)} fullWidth maxWidth="sm">
-  <DialogTitle sx={{ borderBottom: '1px solid #eee', paddingBottom: '12px' }}>
+      {/* Payment Options Modal */}
+<Dialog open={openPaymentOptionsModal} onClose={() => setOpenPaymentOptionsModal(false)} className={styles.paymentModal} fullWidth maxWidth="sm">
+  <DialogTitle >
     <Box display="flex" alignItems="center" gap={1}>
-    <i className="bi bi-credit-card-2-back"></i> 
-         <span>Processus de Paiement</span>
+      <i className="bi bi-credit-card-2-back"></i> 
+      <span>Processus de Paiement</span>
     </Box>
   </DialogTitle>
+  <button className={styles.modalCloseBtn} onClick={() =>  setOpenPaymentOptionsModal(false)}>
+                &times;
+              </button>
   <DialogContent dividers>
     <div className={styles.paymentDetails}>
       {paymentDetails ? (
         <>
           <div className={styles.paymentExplanation}>
-          <Typography variant="body2" color="textSecondary" paragraph>
-  Pour finaliser la mission {selectedMission?.titre} avec {selectedConsultant?.prenom || acceptedConsultant?.prenom || 'le consultant sélectionné'}, 
-  veuillez procéder au paiement selon le modèle de paiement sécurisé en deux étapes :
-</Typography>
+            <Typography variant="body2" color="textSecondary" paragraph>
+              {missionPropositions.find(
+                prop => prop.origine === 'APPLIED' && prop.entreprise
+              ) ? (
+                <>
+                  Cette proposition a été faite par une entreprise partenaire SSI.
+                  <br />
+                  5% du budget total sera reversé à l'entreprise partenaire.
+                </>
+              ) : (
+                <>
+                  Pour finaliser la mission {selectedMission?.titre} avec{' '}
+                  {selectedConsultant?.prenom || acceptedConsultant?.prenom || 'le consultant sélectionné'},
+                  veuillez procéder au paiement selon le modèle de paiement sécurisé en deux étapes.
+                </>
+              )}
+            </Typography>
           </div>
 
           <div className={styles.paymentSection}>
@@ -823,6 +898,28 @@ const handleFinalPayment = async () => {
             </Typography>
           </div>
 
+          {/* SSI Commission Section */}
+          {paymentDetails.ssiCommission > 0 && (
+            <div className={styles.paymentSection}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.stepBadge}>*</span>
+                <Typography variant="subtitle2">Commission Partenaire SSI</Typography>
+              </div>
+              <div className={styles.paymentRow}>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <span className={styles.infoText}>Montant commission:</span>
+                  <HelpOutlineIcon fontSize="small" color="action" />
+                </Box>
+                <strong className={styles.secondaryAmount}>
+                  {paymentDetails.ssiCommission.toFixed(2)}€
+                </strong>
+              </div>
+              <Typography variant="caption" color="textSecondary">
+                (5% du budget total - Commission pour l'entreprise partenaire SSI)
+              </Typography>
+            </div>
+          )}
+
           <div className={styles.paymentSection}>
             <div className={styles.sectionHeader}>
               <span className={styles.stepBadge}>2</span>
@@ -838,7 +935,9 @@ const handleFinalPayment = async () => {
               </strong>
             </div>
             <Typography variant="caption" color="textSecondary">
-              (70% du budget total - Libéré après validation de la mission)
+              {paymentDetails.ssiCommission > 0 
+                ? "(65% du budget total - Libéré après validation de la mission)"
+                : "(70% du budget total - Libéré après validation de la mission)"}
             </Typography>
           </div>
 
@@ -859,7 +958,7 @@ const handleFinalPayment = async () => {
             <div className={styles.paymentRow}>
               <Typography variant="subtitle1">Budget total : </Typography>
               <Typography variant="h6" color="primary">
-                 {selectedMission.budget.toFixed(2)}€
+                {selectedMission.budget.toFixed(2)}€
               </Typography>
             </div>
           </div>
@@ -878,35 +977,130 @@ const handleFinalPayment = async () => {
     </div>
   </DialogContent>
   <DialogActions sx={{ padding: '16px 24px', borderTop: '1px solid #eee' }}>
-  <Button 
-    variant="outlined" 
-    color="primary"
-    onClick={handleFirstPayment}
-    disabled={paymentProcessed.firstSlice || !paymentDetails}
-  >
-    {paymentProcessed.firstSlice ? 
-      "Acompte payé" : 
-      `Payer l'acompte (${paymentDetails?.firstSlice?.toFixed(2)}€)`
-    }
-  </Button>
+    <Button 
+      variant="outlined" 
+      color="primary"
+      onClick={handleFirstPayment}
+      disabled={paymentProcessed.firstSlice || !paymentDetails}
+    >
+      {paymentProcessed.firstSlice ? 
+        "Acompte payé" : 
+        `Payer l'acompte (${paymentDetails?.firstSlice?.toFixed(2)}€) + ${paymentDetails?.applicationFee?.toFixed(2)}€`
+      }
+    </Button>
 
-  <Button 
-  variant="contained" 
-  color="primary" 
-  onClick={handleFinalPayment}
-  disabled={
-    paymentProcessed.finalPayment ||  // Check if final payment is already paid
-    !paymentProcessed.firstSlice ||   // First payment must be completed
-    selectedMission?.statut?.toLowerCase() !== 'terminée'  // Mission must be terminated
-  }
->
-  {paymentProcessed.finalPayment ?
-    "Solde payé" :
-    `Payer le solde (${paymentDetails?.frozenAmount?.toFixed(2)}€)`
-  }
-</Button>
-</DialogActions>
+    <Button 
+      variant="contained" 
+      color="primary" 
+      onClick={handleFinalPayment}
+      disabled={
+        paymentProcessed.finalPayment ||  // Check if final payment is already paid
+        !paymentProcessed.firstSlice ||   // First payment must be completed
+        selectedMission?.statut?.toLowerCase() !== 'terminée'  // Mission must be terminated
+      }
+    >
+      {paymentProcessed.finalPayment ?
+        "Solde payé" :
+        `Payer le solde (${paymentDetails?.frozenAmount?.toFixed(2)}€)`
+      }
+    </Button>
+    <Button 
+    variant="contained" 
+    color="secondary" 
+    onClick={() => {
+      setOpenPaymentOptionsModal(false);  // Close payment modal
+      setShowRatingModal(true);          // Open rating modal
+    }}  >
+    Noter la mission
+  </Button>
+  </DialogActions>
 </Dialog>
+{showRatingModal && (
+      <div className={styles.modalOverlay} onClick={() => setShowRatingModal(false)}>
+        <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+          <button className={styles.modalCloseBtn} onClick={() => setShowRatingModal(false)}>
+            &times;
+          </button>
+          
+          <h2 className={styles.modalTitle}>
+            <i className="bi bi-star-fill" style={{ color: 'gold', marginRight: '8px' }}></i> 
+            Évaluation du Consultant
+          </h2>
+
+          <div className={styles.modalBody}>
+  <p>Comment s'est déroulée la mission avec {selectedConsultant?.prenom} ?</p>
+
+  <div className={styles.ratingContainer}>
+    <Rating
+      value={rating}
+      onChange={(e, newValue) => {
+        setRating(newValue);
+        console.log('Current rating:', newValue);
+      }}
+      size="large"
+      sx={{
+        '& .MuiRating-iconFilled': { color: '#ffb400' },
+        fontSize: '2.5rem'
+      }}
+    />
+    <small className={styles.ratingLabel}>
+      {['Très mauvais', 'Mauvais', 'Moyen', 'Bon', 'Excellent'][rating - 1] || 'Sélectionnez de 1 à 5 étoiles'}
+    </small>
+  </div>
+
+  <div>
+    <label className={styles.formLabel}>Votre commentaire (optionnel)</label>
+    <div className={styles.modalFormGroup}>          
+      <textarea
+        className={styles.modalTextarea}
+        placeholder="Décrivez votre expérience avec ce consultant..."
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        rows={4}
+      />
+      {/* Moved the Typography here */}
+      <Typography 
+  variant="caption" 
+  color="textSecondary" 
+  sx={{ 
+    mt: 1, 
+    mb: 2,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center', // Added this line for horizontal centering
+    gap: '8px',
+    textAlign: 'center' // Ensures text wraps properly when centered
+  }}
+>
+  <FaInfoCircle style={{ 
+    fontSize: '16px', 
+    color: 'grey',
+    flexShrink: 0
+  }} />
+  Cette évaluation sera visible sur le profil du consultant
+</Typography>
+      {/* Submit button container */}
+      <div className={styles.modalActions}> 
+        <button 
+          className={styles.modalSubmitBtn}
+          onClick={handleSubmitRating}
+          disabled={rating === 0}
+          style={{ 
+            opacity: rating === 0 ? 0.6 : 1,
+            cursor: rating === 0 ? 'not-allowed' : 'pointer',
+            background: rating === 0 ? '#cccccc' : 'linear-gradient(135deg, #28a745, #218838)'
+          }}
+        >
+          <i className="fas fa-check"></i> Soumettre
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+        </div>
+      </div>
+    )
+}
     </div>
   );
 };

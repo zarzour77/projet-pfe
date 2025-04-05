@@ -1,0 +1,249 @@
+/* Conteneur principal et titre */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    background-color: #f5f7fa;
+  }
+  
+  .title {
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 2.2rem;
+    color: #2c3e50;
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  /* Layout en deux colonnes */
+  .content {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+  
+  /* Panneau gauche : Liste des tickets */
+  .leftPanel {
+    flex: 1 1 350px;
+    background-color: #fff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+  }
+  
+  .leftPanel h2 {
+    margin-bottom: 1rem;
+    color: #34495e;
+    border-bottom: 2px solid #e1e8ed;
+    padding-bottom: 0.5rem;
+  }
+  
+  .ticketList {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .ticketItem {
+    padding: 1rem;
+    border: 1px solid #e1e1e1;
+    border-radius: 8px;
+    background-color: #fff;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  
+  .ticketItem:hover {
+    background-color: #f9f9f9;
+    transform: translateY(-2px);
+  }
+  
+  .activeTicket {
+    border: 2px solid #007bff;
+  }
+  
+  .ticketDate {
+    font-size: 0.85rem;
+    color: #777;
+  }
+  
+  .responseStatus {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #007bff;
+  }
+  
+  /* Boutons de statut dans chaque ticket */
+  .statusButtons {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  
+  .statusButton {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 0.8rem;
+    font-size: 0.85rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  
+  .statusButton:hover {
+    background-color: #0056b3;
+    transform: translateY(-1px);
+  }
+  
+  /* Panneau droit : Détails et réponse */
+  .rightPanel {
+    flex: 1 1 350px;
+    background-color: #fff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+  }
+  
+  .disputeDetail h2 {
+    margin-bottom: 1rem;
+    color: #34495e;
+    border-bottom: 2px solid #e1e8ed;
+    padding-bottom: 0.5rem;
+  }
+  
+  .detailDescription {
+    margin: 1rem 0;
+  }
+  
+  .detailEvidence {
+    margin: 1rem 0;
+  }
+  
+  .evidenceImage {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 4px;
+    object-fit: cover;
+    transition: transform 0.2s ease;
+  }
+  
+  .evidenceImage:hover {
+    transform: scale(1.05);
+  }
+  
+  .detailTransaction {
+    margin: 1rem 0;
+    padding: 0.5rem;
+    background: #e8f4fd;
+    border-left: 4px solid #007bff;
+    border-radius: 4px;
+  }
+  
+  .detailResponse {
+    margin-top: 1.5rem;
+  }
+  
+  .responseForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .responseForm textarea {
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    min-height: 100px;
+    font-size: 1rem;
+    transition: border 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .responseForm textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  }
+  
+  .submitResponseButton {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 0.75rem 1.2rem;
+    font-size: 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  
+  .submitResponseButton:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+  }
+  
+  .noSelection {
+    text-align: center;
+    color: #777;
+    font-size: 1.1rem;
+    margin-top: 2rem;
+  }
+  
+  /* Animation d'apparition */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .content {
+      flex-direction: column;
+    }
+  }
+  .modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* Assurez-vous qu'il est supérieur à tous les autres éléments */
+    backdrop-filter: blur(3px);
+  }
+  
+
+.pdfModal {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 8px;
+  max-width: 90%;
+  max-height: 90%;
+  overflow: hidden;
+  position: relative;
+}
+
+.pdfIframe {
+  width: 100%;
+  height: 80vh;
+  border: none;
+}
+
+.closeModalButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  line-height: 1;
+}

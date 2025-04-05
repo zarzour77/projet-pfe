@@ -2,7 +2,6 @@
 import { useEffect, useState, useMemo } from "react";
 import TransactionService from "../Services/TransactionService";
 import styles from "./TransactionsHistory.module.css";
-import ConsultantHeader from "./Header";
 import PaymentService from "../Services/PaymentService";
 import EntrepriseService from "../Services/EntrepriseService"; // Adjust path as needed
 
@@ -16,6 +15,7 @@ const TransactionsHistory = () => {
   const [amount, setAmount] = useState("");
   const [availableBalance, setAvailableBalance] = useState(0);
   const [frozenBalance, setFrozenBalance] = useState(0);
+  const [entrepriseType, setEntrepriseType] = useState('');
 
   const storedUser = JSON.parse(localStorage.getItem("user"));
   const userId = storedUser?.id;
@@ -26,13 +26,21 @@ const TransactionsHistory = () => {
       try {
         const balanceResponse = await PaymentService.getCustomerBalance(userId);
         setAvailableBalance(balanceResponse?.available ?? 0);
-  
+
         if (userRole === "Entreprise") {
           try {
-            const frozenResponse = await EntrepriseService.getFrozenBalance(userId);
-            setFrozenBalance(frozenResponse);
-          } catch (frozenError) {
-            console.error("Error fetching frozen balance:", frozenError);
+            const entrepriseDetails = await EntrepriseService.getEntrepriseById(userId);
+            setEntrepriseType(entrepriseDetails.typeEntreprise || '');
+            if (entrepriseDetails.typeEntreprise !== 'SSI') {
+              const frozenResponse = await EntrepriseService.getFrozenBalance(userId);
+              setFrozenBalance(frozenResponse);
+            } else {
+              setFrozenBalance(0);
+            }
+          } catch (error) {
+            console.error("Error fetching entreprise details:", error);
+            setFrozenBalance(0);
+            setEntrepriseType('');
           }
         }
       } catch (error) {
@@ -41,18 +49,32 @@ const TransactionsHistory = () => {
         setFrozenBalance(0);
       }
     };
-  
-    if (userId) {
-      fetchBalances();
-    }
+
+    if (userId) fetchBalances();
   }, [userId, userRole]);
 
   useEffect(() => {
     if (userId) {
       TransactionService.getUserTransactions(userId)
-        .then((data) => {
-          console.log(data);
-          setTransactions(data);
+        .then(async (data) => {
+          console.log(data)
+          // For each transaction with a missionId, fetch the mission details to get its titre
+          const transactionsWithMission = await Promise.all(
+            data.map(async (tx) => {
+              if (tx.missionName === "" && tx.missionId) {
+                try {
+                  const mission = await TransactionService.getMissionById(tx.missionId);
+                  // Use mission.titre if available; otherwise, use a fallback string
+                  return { ...tx, missionName: mission.titre || `Mission ${tx.missionId}` };
+                } catch (error) {
+                  console.error("Error fetching mission for transaction", tx.id, error);
+                  return { ...tx, missionName: `Mission ${tx.missionId}` };
+                }
+              }
+              return tx;
+            })
+          );
+          setTransactions(transactionsWithMission);
           setLoading(false);
         })
         .catch((error) => {
@@ -63,6 +85,58 @@ const TransactionsHistory = () => {
       setLoading(false);
     }
   }, [userId]);
+
+  const pendingBalance = useMemo(() => {
+    if (userRole !== "Consultant") return 0;
+    return transactions
+      .filter(tx => tx.type === "Fonds gelés")
+      .reduce((sum, tx) => sum + parseFloat(tx.montant), 0);
+  }, [transactions, userRole]);
+
+  const displayedTransactions = useMemo(() => {
+    if (userRole === "Consultant") {
+      return transactions.filter(tx => tx.type !== "Fonds gelés");
+    }
+    return transactions;
+  }, [transactions, userRole]);
+
+  const filteredTransactions = useMemo(() => {
+    let filtered = [...displayedTransactions];
+    if (typeFilter !== "Tous les types") {
+      filtered = filtered.filter(tx => tx.type === typeFilter);
+    }
+    if (dateFilter !== "Toutes") {
+      const now = new Date();
+      if (dateFilter === "Ce mois") {
+        filtered = filtered.filter((tx) => {
+          const txDate = new Date(tx.date);
+          return (txDate.getMonth() === now.getMonth() && txDate.getFullYear() === now.getFullYear());
+        });
+      } else if (dateFilter === "6 derniers mois") {
+        const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+        filtered = filtered.filter((tx) => new Date(tx.date) >= sixMonthsAgo);
+      }
+    }
+    return filtered;
+  }, [displayedTransactions, typeFilter, dateFilter]);
+
+  const sortedTransactions = useMemo(() => {
+    let sortable = [...filteredTransactions];
+    if (sortConfig.key !== null) {
+      sortable.sort((a, b) => {
+        let aVal = a[sortConfig.key];
+        let bVal = b[sortConfig.key];
+        if (sortConfig.key === "date") {
+          aVal = new Date(a.date);
+          bVal = new Date(b.date);
+        }
+        if (aVal < bVal) return sortConfig.direction === "ascending" ? -1 : 1;
+        if (aVal > bVal) return sortConfig.direction === "ascending" ? 1 : -1;
+        return 0;
+      });
+    }
+    return sortable;
+  }, [filteredTransactions, sortConfig]);
 
   const handleAddFunds = async () => {
     if (!amount || isNaN(amount)) {
@@ -82,53 +156,6 @@ const TransactionsHistory = () => {
       alert("Failed to initiate payment");
     }
   };
-
-  // Filter transactions based on type and date
-  const filteredTransactions = useMemo(() => {
-    let filtered = [...transactions];
-
-    if (typeFilter !== "Tous les types") {
-      filtered = filtered.filter(tx => tx.type === typeFilter);
-    }
-
-    if (dateFilter !== "Toutes") {
-      const now = new Date();
-      if (dateFilter === "Ce mois") {
-        filtered = filtered.filter((tx) => {
-          const txDate = new Date(tx.date);
-          return (
-            txDate.getMonth() === now.getMonth() &&
-            txDate.getFullYear() === now.getFullYear()
-          );
-        });
-      } else if (dateFilter === "6 derniers mois") {
-        const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
-        filtered = filtered.filter((tx) => new Date(tx.date) >= sixMonthsAgo);
-      }
-    }
-    
-    return filtered;
-  }, [transactions, typeFilter, dateFilter]);
-
-  const sortedTransactions = useMemo(() => {
-    let sortable = [...filteredTransactions];
-    if (sortConfig.key !== null) {
-      sortable.sort((a, b) => {
-        let aVal = a[sortConfig.key];
-        let bVal = b[sortConfig.key];
-
-        if (sortConfig.key === "date") {
-          aVal = new Date(a.date);
-          bVal = new Date(b.date);
-        }
-
-        if (aVal < bVal) return sortConfig.direction === "ascending" ? -1 : 1;
-        if (aVal > bVal) return sortConfig.direction === "ascending" ? 1 : -1;
-        return 0;
-      });
-    }
-    return sortable;
-  }, [filteredTransactions, sortConfig]);
 
   const requestSort = (key) => {
     let direction = "ascending";
@@ -156,13 +183,11 @@ const TransactionsHistory = () => {
       </div>
     );
   }
-  const getAmountDisplay = (tx) => {
-    // For admin viewing mission first slice - show application fee
-    if (userRole === "Admin" && tx.isAdminMissionFee) {
-      return `+ ${(tx.applicationFee / 100).toFixed(2)} ${tx.currency}`; // Display applicationFee for Admin
-    }
 
-    // For other cases use normal logic
+  const getAmountDisplay = (tx) => {
+    if (userRole === "Admin" && tx.isAdminMissionFee) {
+      return `+ ${(tx.applicationFee / 100).toFixed(2)} ${tx.currency}`;
+    }
     if (tx.isIncoming) {
       return `+ ${tx.montant} ${tx.currency}`;
     }
@@ -171,31 +196,32 @@ const TransactionsHistory = () => {
     }
     return `${tx.montant} ${tx.currency}`;
   };
-  
+
   const getAmountStyle = (tx) => {
-    // For admin mission fees - always show green
     if (userRole === "Admin" && tx.isAdminMissionFee) {
-      return styles.receivedAmount; // Always green for admin's mission fee
+      return styles.receivedAmount;
     }
-    
-    // Normal logic for others
     if (tx.isIncoming) return styles.receivedAmount;
     if (tx.isOutgoing) return styles.sentAmount;
     return '';
   };
+
   return (
     <div className={styles.container}>
-      <ConsultantHeader />
-
       <div className={styles.header}>
         <h1 className={styles.title}>Historique des transactions</h1>
         <div className={styles.balanceInfo}>
           <span className={styles.balanceLabel}>
             Solde disponible : {(availableBalance ?? 0).toFixed(2)}€
           </span>
-          {userRole === "Entreprise" && (
+          {userRole === "Entreprise" && entrepriseType !== 'SSI' && (
             <span className={styles.frozenBalance}>
               Solde gelé : {(frozenBalance ?? 0).toFixed(2)}€
+            </span>
+          )}
+          {userRole === "Consultant" && (
+            <span className={styles.pendingBalance}>
+              Argent en attente : {pendingBalance.toFixed(2)}€
             </span>
           )}
           <button 
@@ -222,10 +248,10 @@ const TransactionsHistory = () => {
           <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
             <option>Tous les types</option>
             <option>Abonnement</option>
-            <option>Mission</option>
             <option>Première tranche de mission</option>
             <option>Ajout de fonds</option>
             <option>Fonds gelés</option>
+            <option>Commission SSI</option>
           </select>
         </div>
         <div className={styles.filterItem}>
@@ -239,7 +265,7 @@ const TransactionsHistory = () => {
 
       <div className={styles.filteredTotals}>
         <strong>Totaux filtrés :</strong>
-        <p>Sélectionnez un filtre pour voir le détail de vos gains, frais et taxes.</p>
+        <p>Sélectionnez un filtre pour voir le détail de vos gains, frais et status.</p>
       </div>
 
       <div className={styles.transactionHeader}>
@@ -249,6 +275,7 @@ const TransactionsHistory = () => {
         <span className={styles.sortableHeader} onClick={() => requestSort("type")}>
           Type {getSortIcon("type")}
         </span>
+        <span className={styles.sortableHeader}>Mission</span>
         <span className={styles.sortableHeader} onClick={() => requestSort("montant")}>
           Montant {getSortIcon("montant")}
         </span>
@@ -265,24 +292,23 @@ const TransactionsHistory = () => {
       {sortedTransactions && sortedTransactions.length > 0 ? (
         <div className={styles.transactionsList}>
           {sortedTransactions.map((tx) => (
-  <div className={styles.transactionRow} key={tx.id}>
-    <span>{tx.date.toLocaleDateString('fr-FR')}</span>
-    <span>{tx.type}</span>
-    <span className={getAmountStyle(tx)}>
-      {getAmountDisplay(tx)}
-      {/* Add application fee display for admins */}
-      {userRole === "Admin" && tx.type === "Première tranche de mission" && (
-        <div className={styles.feeText}>
-          (Frais: {(tx.applicationFee / 100).toFixed(2)} {tx.currency})
-        </div>
-      )}
-    </span>
-    <span className={tx.statut === 'Réussi' ? styles.successStatus : styles.errorStatus}>
-      {tx.statut}
-    </span>
-  </div>
-))}
-
+            <div className={styles.transactionRow} key={tx.id}>
+              <span>{new Date(tx.date).toLocaleDateString("fr-FR")}</span>
+              <span>{tx.type}</span>
+              <span>{tx.missionName}</span>
+              <span className={getAmountStyle(tx)}>
+                {getAmountDisplay(tx)}
+                {userRole === "Admin" && tx.type === "Première tranche de mission" && (
+                  <div className={styles.feeText}>
+                    (Frais: {(tx.applicationFee / 100).toFixed(2)} {tx.currency})
+                  </div>
+                )}
+              </span>
+              <span className={tx.statut === "Réussi" ? styles.successStatus : styles.errorStatus}>
+                {tx.statut}
+              </span>
+            </div>
+          ))}
         </div>
       ) : (
         <div className={styles.emptyState}>
@@ -305,16 +331,10 @@ const TransactionsHistory = () => {
               />
             </div>
             <div className={styles.modalActions}>
-              <button 
-                type="button" 
-                onClick={() => setShowAddFundsModal(false)}
-              >
+              <button type="button" onClick={() => setShowAddFundsModal(false)}>
                 Annuler
               </button>
-              <button 
-                type="button" 
-                onClick={handleAddFunds}
-              >
+              <button type="button" onClick={handleAddFunds}>
                 Confirmer
               </button>
             </div>

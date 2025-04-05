@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import  { useEffect, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
 import { FaList, FaTh } from 'react-icons/fa';
@@ -30,11 +30,10 @@ import {
   getMissionsByPorteDeTravail,
   getSavedMissions,
   saveMissionForConsultant,
-  applyWithConsultant, // nouvelle fonction pour l'API entreprise SSI
-  createProfileView 
-} from '../services/SearchMission';
+  applyWithConsultant // nouvelle fonction pour l'API entreprise SSI
+} from '../Services/SearchMission';
 import ConsultantService from '../Services/ConsultantService';
-import EntrepriseService from '../services/EntrepriseService';
+import EntrepriseService from '../Services/EntrepriseService';
 
 import styles from './SearchMission.module.css';
 
@@ -89,7 +88,6 @@ function SearchMission() {
       toast.error("Utilisateur non trouvé");
       return;
     }
-    // Si l'utilisateur est CONSULTANT, charger ses infos
     if (storedUser.role === "Consultant") {
       const consultantId = storedUser.user?.id || storedUser.id;
       if (!consultantId) {
@@ -103,11 +101,13 @@ function SearchMission() {
           toast.error("Erreur lors de la récupération du consultant");
         });
     }
-    // Si l'utilisateur est une Entreprise SSI, charger la liste de ses consultants disponibles
     else if (storedUser.role === "Entreprise") {
       const entrepriseId = storedUser.user?.id || storedUser.id;
       EntrepriseService.getConsultantsForEntreprise(entrepriseId)
-        .then(data => setEnterpriseConsultants(data))
+        .then(data => {
+          // REMOVE THE FILTER TO SHOW ALL CONSULTANTS
+          setEnterpriseConsultants(data);
+        })
         .catch(error => {
           console.error("[ERROR] Erreur lors de la récupération des consultants :", error);
           toast.error("Erreur lors de la récupération des consultants");
@@ -273,24 +273,7 @@ function SearchMission() {
         toast.error("Erreur lors de la sauvegarde de la mission");
       });
   };
-  const handleProfileClick = (mission) => {
-    // On suppose que la mission contient une propriété "entreprise" qui est un objet avec un "id"
-    console.log(mission)
-    const entrepriseId = mission.entreprise;
-    if (!entrepriseId) {
-      toast.error("Aucune entreprise associée à cette mission.");
-      return;
-    }
-    createProfileView(entrepriseId)
-      .then((profileView) => {
-        toast.success("Profile view créée !");
-        // Vous pouvez ici rediriger l'utilisateur ou afficher les détails du profileview
-      })
-      .catch((error) => {
-        console.error("[ERROR] Erreur lors de la création du profile view :", error);
-        toast.error("Erreur lors de la création du profile view");
-      });
-  };
+
   // Bascule entre missions normales et sauvegardées
   const handleShowSavedMissions = () => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -610,17 +593,7 @@ function SearchMission() {
                       >
                         Share
                       </Button>
-                      </MUITooltip>
-                      <MUITooltip title="View Profile" arrow>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={() => handleProfileClick(mission)}
-                      >
-                        Profile
-                      </Button>
                     </MUITooltip>
-                    
                   </div>
                 </motion.div>
               ))
@@ -648,7 +621,7 @@ function SearchMission() {
           </div>
         )}
 
-        {showApplyModal && selectedMission && (
+{showApplyModal && selectedMission && (
           <Dialog open={true} onClose={handleCloseApplyModal}>
             <DialogTitle>Postuler à la mission : {selectedMission.titre}</DialogTitle>
             <DialogContent>
@@ -670,23 +643,36 @@ function SearchMission() {
                 InputProps={{ readOnly: true }}
                 helperText="Ex: 3 mois"
               />
-              {/* Affichage du select des consultants si l'utilisateur est une entreprise SSI */}
               {JSON.parse(localStorage.getItem("user")).role === "Entreprise" && (
                 <Select
-                  fullWidth
-                  value={selectedConsultantId}
-                  onChange={(e) => setSelectedConsultantId(e.target.value)}
-                  displayEmpty
-                >
-                  <MenuItem value="" disabled>
-                    Sélectionnez un consultant
-                  </MenuItem>
-                  {enterpriseConsultants.map(consult => (
-                    <MenuItem key={consult.id} value={consult.id}>
+                fullWidth
+                value={selectedConsultantId}
+                onChange={(e) => setSelectedConsultantId(e.target.value)}
+                displayEmpty
+              >
+                <MenuItem value="" disabled>
+                  Sélectionnez un consultant
+                </MenuItem>
+                {enterpriseConsultants.map(consult => (
+                  <MenuItem 
+                    key={consult.id} 
+                    value={consult.id}
+                    disabled={consult.workload > 0}
+                    style={{ display: 'flex', justifyContent: 'space-between',color: consult.workload > 0 ? '#000000' : 'inherit',
+                      fontStyle: consult.workload > 0 ? 'italic' : 'normal',
+                      cursor: consult.workload > 0 ? 'not-allowed' : 'pointer' }}
+                  >
+                    <span>
                       {consult.nom} {consult.prenom}
-                    </MenuItem>
-                  ))}
-                </Select>
+                    </span>
+                    {consult.workload > 0 && (
+                      <span style={{ color: '#ff0000', marginLeft: '1rem' }}>
+                        (Occupé)
+                      </span>
+                    )}
+                  </MenuItem>
+                ))}
+              </Select>
               )}
               <TextField
                 margin="dense"
