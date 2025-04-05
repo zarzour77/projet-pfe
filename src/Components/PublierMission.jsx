@@ -104,20 +104,25 @@ const PublierMission = () => {
   // États pour stocker les options récupérées depuis la base
   const [competenceOptions, setCompetenceOptions] = useState([]);
   const [domaineOptions, setDomaineOptions] = useState([]);
+  const [fetchedCompetences, setFetchedCompetences] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const competences = await CompetenceService.getAllCompetences();
         const domaines = await DomaineService.getAllDomaines();
-
+  
+        // Store raw competences data
+        setFetchedCompetences(competences);
+  
+        // Process for select options
         const uniqueCompetences = Array.from(
           new Map(
-            competences.map(c => [c.nom.toLowerCase(), { value: c.id, label: c.nom }])
+            competences.map(c => [c.nom.toLowerCase(), { value: c.id, label: c.nom, niveau: c.competenceNiveau || "Expert" }])
           ).values()
         );
         setCompetenceOptions(uniqueCompetences);
-
+  
         const uniqueDomaines = Array.from(
           new Map(
             domaines.map(d => [d.nom.toLowerCase(), { value: d.id, label: d.nom }])
@@ -213,28 +218,47 @@ const PublierMission = () => {
     setCurrentStep(prev => Math.max(prev - 1, 0));
   };
 
+  // Modification de la fonction handleCreateCompetence pour vérifier le niveau "Expert"
   const handleCreateCompetence = async (inputValue) => {
+    const cleanValue = inputValue.trim();
+    const currentSkills = getValues("skills") || [];
+    
+    // Vérifier si la compétence existe déjà en traitant une absence de niveau comme "Expert"
     const exists = competenceOptions.some(
-      option => option.label.toLowerCase() === inputValue.toLowerCase()
+      option =>
+        option.label.toLowerCase() === cleanValue.toLowerCase() &&
+        ((option.competenceNiveau || "Expert") === "Expert")
     );
+  
     if (exists) {
-      const currentSkills = getValues("skills") || [];
       const alreadySelected = currentSkills.some(
-        skill => skill.label.toLowerCase() === inputValue.toLowerCase()
+        skill => skill.label.toLowerCase() === cleanValue.toLowerCase()
       );
+      
       if (!alreadySelected) {
         const existingOption = competenceOptions.find(
-          option => option.label.toLowerCase() === inputValue.toLowerCase()
+          option =>
+            option.label.toLowerCase() === cleanValue.toLowerCase() &&
+            ((option.competenceNiveau || "Expert") === "Expert")
         );
         setValue("skills", [...currentSkills, existingOption]);
       }
       return;
     }
+  
     try {
-      const newCompetence = await CompetenceService.createCompetence({ nom: inputValue });
-      const newOption = { value: newCompetence.id, label: newCompetence.nom };
+      const newCompetence = await CompetenceService.createCompetence({ 
+        nom: cleanValue,
+        competenceNiveau: "Expert"
+      });
+      
+      const newOption = { 
+        value: newCompetence.id, 
+        label: newCompetence.nom,
+        competenceNiveau: newCompetence.competenceNiveau || "Expert"
+      };
+      
       setCompetenceOptions(prev => [...prev, newOption]);
-      const currentSkills = getValues("skills") || [];
       setValue("skills", [...currentSkills, newOption]);
     } catch (error) {
       console.error("Erreur lors de la création de la compétence :", error);
@@ -279,25 +303,55 @@ const PublierMission = () => {
         titre: data.title,
         description: data.description,
         budget: data.budget,
-        statut: "en attente", 
-        publishedAt: new Date(), // La date de soumission
+        statut: "en attente",
+        publishedAt: new Date(),
         domaines: data.domaines.map(dom => ({
           id: dom.value,
           nom: dom.label || dom.value,
         })),
-        competencesRequises: data.skills.map(skill => ({
-          id: skill.value,
-          nom: skill.label || skill.value,
-        })),
+        competencesRequises: await Promise.all(
+          data.skills.map(async (skill) => {
+            const existing = fetchedCompetences.find(
+              c => 
+                c.nom.toLowerCase() === skill.label.toLowerCase() && 
+                c.competenceNiveau === "Expert"
+            );
+            
+            if (existing) {
+              return {
+                id: existing.id,
+                nom: existing.nom,
+                competenceNiveau: "Expert"
+              };
+            }
+  
+            try {
+              const newCompetence = await CompetenceService.createCompetence({
+                nom: skill.label,
+                competenceNiveau: "Expert"
+              });
+              return {
+                id: newCompetence.id,
+                nom: newCompetence.nom,
+                competenceNiveau: newCompetence.competenceNiveau
+              };
+            } catch (error) {
+              console.error("Error creating competence:", error);
+              return {
+                nom: skill.label,
+                competenceNiveau: "Expert"
+              };
+            }
+          })
+        ),
         portetravail: data.scope,
         dureeEstime: data.duration,
         niveauExperienceRequis: data.experience,
-        // Store the coordinates along with the fetched address if needed
         latitude: data.latitude,
         longitude: data.longitude,
         adresse: address,
       };
-
+  
       try {
         const missionPublished = await publiermissionService.publishMission(transformedData);
         console.log("Mission publiée :", missionPublished);
@@ -536,12 +590,20 @@ const PublierMission = () => {
               </button>
             )}
             <button
-              type="submit"
-              className={styles.nextButton}
-              disabled={isLoading || (currentStep === 2 && subStep < subQuestions.length)}
-            >
-              {isLoading ? <span className={styles.spinner}></span> : currentStep === steps.length - 1 ? "Publier" : "Next"}
-            </button>
+  type="submit"
+  className={styles.nextButton}
+  disabled={isLoading || (currentStep === 2 && subStep < subQuestions.length)}
+>
+  {isLoading ? (
+    <div className={styles.spinnerContainer}>
+      <span className={styles.spinner}></span>
+    </div>
+  ) : currentStep === steps.length - 1 ? (
+    "Publier"
+  ) : (
+    "Next"
+  )}
+</button>
           </div>
         </form>
       ) : (

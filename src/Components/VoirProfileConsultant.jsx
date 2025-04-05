@@ -6,12 +6,15 @@ import styles from './ProfilePage.module.css';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ConsultantService from '../Services/ConsultantService';
+import { Box, CircularProgress, Typography } from '@mui/material';
+
 const VoirProfileConsultant = () => {
   const { consultantId } = useParams();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showCvModal, setShowCvModal] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState("");
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -27,6 +30,7 @@ const VoirProfileConsultant = () => {
     
     fetchUserData();
   }, [consultantId]);
+
   const handleGenerateCV = async () => {
     try {
       const response = await ConsultantService.generateCv(consultantId);
@@ -56,7 +60,7 @@ const VoirProfileConsultant = () => {
       <ToastContainer position="top-right" />
       
       <div className={styles.profileHeader}>
-      <button className={styles.cvButton} onClick={handleGenerateCV}>
+        <button className={styles.cvButton} onClick={handleGenerateCV}>
           <i className={`bi bi-file-earmark-text ${styles.cvIcon}`}></i>
           <span className={styles.cvText}>Aperçu du CV</span>
         </button>
@@ -75,32 +79,72 @@ const VoirProfileConsultant = () => {
 
       <div className={styles.profileSection}>
         <h2 className={styles.sectionTitle}>Informations de base</h2>
-        <div className={styles.infoGrid}>
-          <div className={styles.infoItem}>
-            <label className={styles.infoLabel}>Nom complet</label>
-            <p className={styles.infoValue}>{user.prenom} {user.nom}</p>
+        <div className={styles.basicInfoContainer}>
+          <div className={styles.infoGrid}>
+            <div className={styles.infoItem}>
+              <label className={styles.infoLabel}>Nom complet</label>
+              <p className={styles.infoValue}>{user.prenom} {user.nom}</p>
+            </div>
+            <div className={styles.infoItem}>
+              <label className={styles.infoLabel}>E-mail</label>
+              <p className={styles.infoValue}>{user.email}</p>
+            </div>
+            <div className={styles.infoItem}>
+              <label className={styles.infoLabel}>Téléphone</label>
+              <p className={styles.infoValue}>{user.telephone || "Non fourni"}</p>
+            </div>
+            <div className={styles.infoItem}>
+              <label className={styles.infoLabel}>Adresse</label>
+              <p className={styles.infoValue}>{user.adresse || "Non fourni"}</p>
+            </div>
+            <div className={styles.infoItem}>
+              <label className={styles.infoLabel}>Évaluation</label>
+              <p className={styles.infoValue}>
+                {user.rating ? `${user.rating}/5` : "Pas d’évaluation"}
+              </p>
+            </div>
           </div>
-
-          <div className={styles.infoItem}>
-            <label className={styles.infoLabel}>E-mail</label>
-            <p className={styles.infoValue}>{user.email}</p>
-          </div>
-
-          <div className={styles.infoItem}>
-            <label className={styles.infoLabel}>Téléphone</label>
-            <p className={styles.infoValue}>{user.telephone || "Non fourni"}</p>
-          </div>
-
-          <div className={styles.infoItem}>
-            <label className={styles.infoLabel}>Adresse</label>
-            <p className={styles.infoValue}>{user.adresse || "Non fourni"}</p>
-          </div>
-          
-          <div className={styles.infoItem}>
-            <label className={styles.infoLabel}>Évaluation</label>
-            <p className={styles.infoValue}>
-              {user.rating ? `${user.rating}/5` : "Pas d’évaluation"}
-            </p>
+          {/* Job Success Circular Progress */}
+          <div className={styles.jobSuccessContainer}>
+            <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+              <CircularProgress
+                variant="determinate"
+                value={100}
+                size={40}
+                thickness={4}
+                sx={{ color: '#f0f0f0' }}
+              />
+              <CircularProgress
+                variant="determinate"
+                value={user.jobSuccess || 0}
+                size={40}
+                thickness={4}
+                sx={{
+                  color: '#00796b',
+                  position: 'absolute',
+                  left: 0,
+                }}
+              />
+              <Box
+                sx={{
+                  top: 0,
+                  left: 0,
+                  bottom: 0,
+                  right: 0,
+                  position: 'absolute',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Typography variant="caption" component="div" sx={{ fontWeight: 'bold' }}>
+                  {`${user.jobSuccess || 0}%`}
+                </Typography>
+              </Box>
+            </Box>
+            <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary', mt: 1, textAlign: 'center' }}>
+              Score de Succès
+            </Typography>
           </div>
         </div>
       </div>
@@ -245,6 +289,7 @@ const VoirProfileConsultant = () => {
           </div>
         </div>
       </div>
+
       {/* Add CV Preview Modal */}
       {showCvModal && (
         <div className={styles.modalOverlay} onClick={() => { setShowCvModal(false); setPdfPreviewUrl(""); }}>

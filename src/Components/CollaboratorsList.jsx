@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './CollaboratorsList.module.css';
@@ -120,8 +121,14 @@ const CollaboratorsList = () => {
         </Link>
       </div>
 
-      <div className={styles.collaboratorsGrid}>
-        {collaborators.map((collaborator) => {
+      {collaborators.length === 0 ? (
+        <div className={styles.emptyState}>
+          <p>Aucun collaborateur n'a été trouvé.</p>
+          <p>Commencez par ajouter un collaborateur en cliquant sur le bouton ci-dessus.</p>
+        </div>
+      ) : (
+        <div className={styles.collaboratorsGrid}>
+          {collaborators.map((collaborator) => {
           const isExpanded = expandedIds.includes(collaborator.id);
           return (
             <div key={collaborator.id} className={`${styles.card} ${isExpanded ? styles.expanded : ''}`}>
@@ -188,7 +195,7 @@ const CollaboratorsList = () => {
           );
         })}
       </div>
-
+)}
       {/* Saved Missions Modal */}
       {showSavedModal && (
         <div className={styles.modalOverlay}>

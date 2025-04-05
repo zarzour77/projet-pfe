@@ -8,15 +8,9 @@
 }
 
 /* Barre de recherche globale */
-.globalSearchBar {
-  margin-bottom: 1rem;
+.globalSearchBar .MuiOutlinedInput-input {
+  padding: 14px 20px;
 }
-
-.globalSearchBar input,
-.MuiTextField-root {
-  width: 100%;
-}
-
 /* Barre de contrôle */
 .controlsBar {
   display: flex;
@@ -39,20 +33,25 @@
 }
 
 .viewToggle button {
-  background: none;
-  border: none;
-  font-size: 1.25rem;
-  cursor: pointer;
-  margin-right: 0.5rem;
-  color: black;
+  padding: 0.8rem !important;
+  border: none !important;
+  border-radius: 8px !important;
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0) !important;
+  color: #64748b !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 4px rgba(0, 25, 110, 0.1) !important;
 }
 
-.viewToggle button:hover,
-.viewToggle button.active,
-.viewToggle button.active:hover {
-  color: black;
+.viewToggle button.active {
+  background: linear-gradient(135deg, #e2e8f0, #cbd5e1) !important;
+  color: black !important;
+  box-shadow: 0 4px 8px rgba(0, 153, 144, 0.2) !important;
 }
 
+.viewToggle button:hover:not(.active) {
+  background: linear-gradient(135deg, #e2e8f0, #cbd5e1) !important;
+  transform: translateY(-1px);
+}
 .active {
   color: black;
 }
@@ -62,37 +61,39 @@
   display: flex;
   gap: 1rem;
 }
-
-/* Panneau des filtres */
+/* FILTERS */
 .filters {
-  flex: 0 0 220px;
-  background-color: #fff;
-  border: 1px solid #eee;
-  padding: 1rem;
-  border-radius: 4px;
-}
-
-.filters h3 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
+  flex: 0 0 260px;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-right: 2rem;
 }
 
 .filterGroup {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  position: relative;
 }
 
-.filterGroup label {
+.filterLabel {
   display: block;
+  color: #475569;
+  font-size: 0.875rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.filters :global(.MuiOutlinedInput-root) {
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  transition: all 0.2s ease;
 }
 
-/* Container pour le slider */
-.sliderContainer {
-  margin: 0.5rem 0;
+.filters :global(.MuiMenu-paper) {
+  border-radius: 8px !important;
+  margin-top: 4px !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
 }
-
 /* Liste des talents */
 .talentList {
   flex: 1;
@@ -101,6 +102,33 @@
   gap: 1rem;
 }
 
+/* Grid view modifications */
+.talentList.gridView {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+/* Grid item specific styles */
+.talentList.gridView .talentItem {
+  width: 100%;
+  margin: 0;
+  min-height: 300px; /* Adjust based on your content */
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .talentList.gridView {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .talentList.gridView {
+    grid-template-columns: 1fr;
+  }
+}
 /* Carte d'un talent */
 .talentItem {
   background-color: #fff;
@@ -205,14 +233,6 @@
   margin-top: 0.75rem;
 }
 
-/* Pagination */
-.pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 1rem;
-}
-
 /* Message en cas de résultat vide */
 .noResults {
   text-align: center;
@@ -236,4 +256,294 @@
   width: 20px;  /* ajustez selon vos besoins */
   height: 20px; /* ajustez selon vos besoins */
   border-radius: 50%;
+}
+.actionButton {
+  padding: 0.8rem 2rem;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #007bff, #0062cc);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 123, 255, 0.1);
+}
+
+.actionButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(0, 123, 255, 0.2);
+}
+.viewProfile {
+  padding: 0.8rem 2rem; /* Adjust padding */
+  background: linear-gradient(135deg, #28a745, #218838);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
+  margin: 0 auto;
+}
+
+
+.viewProfile:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.2);
+}
+.contactButton {
+  padding: 0.8rem 1.5rem;
+  border: 2px solid #007bff !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: #007bff !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+  text-transform: none !important;
+}
+
+.contactButton:hover {
+  background: linear-gradient(135deg, #007bff, #0062cc) !important;
+  color: white !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 123, 255, 0.1);
+}
+
+/* If you want the hover animation */
+.MuiButton-outlined:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 123, 255, 0.1);
+}
+/* Add this to your CSS */
+.clearFiltersButton {
+  padding: 0.6rem 1.3rem !important;
+  border: none !important;
+  border-radius: 8px !important;
+  background: linear-gradient(135deg, #ff6b6b, #ff5252) !important;
+  color: white !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  text-transform: none !important;
+  box-shadow: 0 2px 4px rgba(255, 107, 107, 0.2) !important;
+}
+
+.clearFiltersButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3) !important;
+}
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin: 2rem 0;
+  grid-column: 1 / -1;
+}
+
+.pagination span {
+  color: #001A6E;
+  font-weight: 500;
+}
+
+.pagination :global(.MuiButton-root) {
+  padding: 0.6rem 1.5rem;
+  border: 2px solid #009990 !important;
+  border-radius: 8px;
+  color: #009990;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  text-transform: none;
+  background: transparent;
+}
+
+.pagination :global(.MuiButton-root:hover:not(:disabled)) {
+  background: linear-gradient(135deg, #009990, #00796b) !important;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 153, 144, 0.2);
+}
+
+.pagination :global(.MuiButton-root.Mui-disabled) {
+  border-color: #e2e8f0 !important;
+  color: #e2e8f0;
+  background: transparent !important;
+}
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3000;
+  backdrop-filter: blur(3px);
+}
+
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.modalContent h2{
+  font-size: 1.5rem;
+  color: #1a1a1a;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+.modalContent {
+  position: relative; /* Add this */
+
+  background: white;
+  width: 90%;
+  max-width: 500px;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: modalSlideIn 0.3s ease-out;
+}
+.modalCloseBtn {
+  position: absolute;
+  top: 0.7rem;
+  right: 1rem;
+  z-index: 1; /* Ensure it stays on top */
+  color: #333; /* Darker color for better visibility */
+  background: transparent;
+  border: none;
+  font-size: 2.5rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.modalHeader {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.modalCloseBtn:hover {
+  color: #333;
+}
+
+/* Form Groups for the add experience modal */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.formLabel {
+  font-size: 0.9rem;
+  color: #444;
+  font-weight: 500;
+}
+.formGroup input {
+  padding: 0.8rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.modalInput {
+  padding: 0.8rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.modalSubtitle {
+  color: var(--color-dark-blue);
+  margin-bottom: 0.5rem;
+  border-bottom: 2px solid var(--color-teal);
+  padding-bottom: 0.3rem;
+  display: inline-block;
+}
+.modalSubmitBtn {
+  padding: 0.8rem 2rem; /* Adjust padding */
+  width: 150px;
+    background: linear-gradient(135deg, #28a745, #218838);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
+  margin: 0 auto;
+}
+.modalSubmitBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.2);
+}
+.modalText {
+  color: var(--color-blue);
+  line-height: 1.6;
+  margin: 0.5rem 0;
+}
+
+/* Form Groups in Modal */
+.modalFormGroup {
+  margin-bottom: 1.5rem;
+}
+.modalCloseBtn {
+  position: absolute;
+  top: 0.7rem;
+  right: 1rem;
+  z-index: 1; /* Ensure it stays on top */
+  color: #333; /* Darker color for better visibility */
+  background: transparent;
+  border: none;
+  font-size: 2.5rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.modalActions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  justify-content: center; /* Center the button */
+}
+.modalFormGroup input,
+.modalFormGroup select,
+.modalFormGroup textarea {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+.modalSubmitBtn {
+  padding: 0.8rem 2rem; /* Adjust padding */
+  width: 225px;
+    background: linear-gradient(135deg, #28a745, #218838);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
+  margin: 0 auto;
+}
+
+.modalHelperText {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.modalSubmitBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.2);
 }

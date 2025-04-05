@@ -27,13 +27,22 @@
 /* Left section: Logo positioned more to the left */
 .leftSection {
   flex: 0 0 auto;
-  margin-left: -145px;
+  margin-left: -160px;
+  margin-top: -20px;
 }
 .logo a {
-  text-decoration: none;
-  color: #00796b;
-  font-size: 1.5rem;
-  font-weight: bold;
+  display: block;
+  height: 40px; /* Match your header's height needs */
+}
+
+.logoImage {
+  height: 60px; /* Adjust based on your logo proportions */
+  width: auto;
+  transition: opacity 0.2s ease;
+}
+
+.logoImage:hover {
+  opacity: 0.8;
 }
 
 /* Center section: Nav links with dropdowns */
@@ -41,7 +50,7 @@
   flex: 1;
   display: flex;
   justify-content: center;
-  margin-left: -150px;
+  margin-left: -100px;
 }
 .navLinks {
   list-style: none;

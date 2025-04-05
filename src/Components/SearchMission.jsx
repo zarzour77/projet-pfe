@@ -88,7 +88,6 @@ function SearchMission() {
       toast.error("Utilisateur non trouvé");
       return;
     }
-    // Si l'utilisateur est CONSULTANT, charger ses infos
     if (storedUser.role === "Consultant") {
       const consultantId = storedUser.user?.id || storedUser.id;
       if (!consultantId) {
@@ -102,11 +101,13 @@ function SearchMission() {
           toast.error("Erreur lors de la récupération du consultant");
         });
     }
-    // Si l'utilisateur est une Entreprise SSI, charger la liste de ses consultants disponibles
     else if (storedUser.role === "Entreprise") {
       const entrepriseId = storedUser.user?.id || storedUser.id;
       EntrepriseService.getConsultantsForEntreprise(entrepriseId)
-        .then(data => setEnterpriseConsultants(data))
+        .then(data => {
+          // REMOVE THE FILTER TO SHOW ALL CONSULTANTS
+          setEnterpriseConsultants(data);
+        })
         .catch(error => {
           console.error("[ERROR] Erreur lors de la récupération des consultants :", error);
           toast.error("Erreur lors de la récupération des consultants");
@@ -620,7 +621,7 @@ function SearchMission() {
           </div>
         )}
 
-        {showApplyModal && selectedMission && (
+{showApplyModal && selectedMission && (
           <Dialog open={true} onClose={handleCloseApplyModal}>
             <DialogTitle>Postuler à la mission : {selectedMission.titre}</DialogTitle>
             <DialogContent>
@@ -642,23 +643,36 @@ function SearchMission() {
                 InputProps={{ readOnly: true }}
                 helperText="Ex: 3 mois"
               />
-              {/* Affichage du select des consultants si l'utilisateur est une entreprise SSI */}
               {JSON.parse(localStorage.getItem("user")).role === "Entreprise" && (
                 <Select
-                  fullWidth
-                  value={selectedConsultantId}
-                  onChange={(e) => setSelectedConsultantId(e.target.value)}
-                  displayEmpty
-                >
-                  <MenuItem value="" disabled>
-                    Sélectionnez un consultant
-                  </MenuItem>
-                  {enterpriseConsultants.map(consult => (
-                    <MenuItem key={consult.id} value={consult.id}>
+                fullWidth
+                value={selectedConsultantId}
+                onChange={(e) => setSelectedConsultantId(e.target.value)}
+                displayEmpty
+              >
+                <MenuItem value="" disabled>
+                  Sélectionnez un consultant
+                </MenuItem>
+                {enterpriseConsultants.map(consult => (
+                  <MenuItem 
+                    key={consult.id} 
+                    value={consult.id}
+                    disabled={consult.workload > 0}
+                    style={{ display: 'flex', justifyContent: 'space-between',color: consult.workload > 0 ? '#000000' : 'inherit',
+                      fontStyle: consult.workload > 0 ? 'italic' : 'normal',
+                      cursor: consult.workload > 0 ? 'not-allowed' : 'pointer' }}
+                  >
+                    <span>
                       {consult.nom} {consult.prenom}
-                    </MenuItem>
-                  ))}
-                </Select>
+                    </span>
+                    {consult.workload > 0 && (
+                      <span style={{ color: '#ff0000', marginLeft: '1rem' }}>
+                        (Occupé)
+                      </span>
+                    )}
+                  </MenuItem>
+                ))}
+              </Select>
               )}
               <TextField
                 margin="dense"

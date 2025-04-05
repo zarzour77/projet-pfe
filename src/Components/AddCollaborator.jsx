@@ -99,7 +99,8 @@ const AddCollaborator = () => {
           taux_horaire: values.taux_horaire,
           typeConsultant: 'ENTREPRISE_SSI',
           entrepriseSsi: { id: entrepriseId },
-          dateRecrutement : new Date()
+          dateRecrutement : new Date(),
+          workload : 0
         };
         
         await ConsultantService.updateConsultant(createdUserId, consultantData);

@@ -1,8 +1,22 @@
 /* eslint-disable react/no-unescaped-entities */
-import { useState ,useEffect } from "react"; 
+import { useState, useEffect } from "react"; 
 import { useNavigate } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
 import styles from "./Experience.module.css";
 import ConsultantService from "../Services/ConsultantService";
+
+// Fonction utilitaire pour convertir "DD/MM/YYYY" en "YYYY-MM-DD"
+const convertDateForInput = (dateString) => {
+  if (!dateString) return "";
+  const parts = dateString.split("/");
+  if (parts.length !== 3) return dateString;
+  // Assurez-vous que les mois et jours sont sur deux chiffres
+  const day = parts[0].padStart(2, "0");
+  const month = parts[1].padStart(2, "0");
+  const year = parts[2];
+  return `${year}-${month}-${day}`;
+};
+
 const Experience = () => {
   const [consultant, setConsultant] = useState(() => {
     return JSON.parse(localStorage.getItem("user"));
@@ -13,25 +27,57 @@ const Experience = () => {
   const navigate = useNavigate();
   const [selectedPhases, setSelectedPhases] = useState([]);
 
-  // State for the Experience form (Step 4)
+  // Etats pour le formulaire Experience (Step 4)
   const [expDateDebut, setExpDateDebut] = useState("");
   const [expDateFin, setExpDateFin] = useState("");
   const [expEntreprise, setExpEntreprise] = useState("");
   const [expRole, setExpRole] = useState("");
   const [expDescription, setExpDescription] = useState("");
 
-  // State to hold multiple experiences
+  // Etat pour conserver plusieurs expériences ajoutées
   const [experienceList, setExperienceList] = useState([]);
 
-  // State for modal and PDF preview
+  // Etat pour l'aperçu du CV
   const [showCvModal, setShowCvModal] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState("");
+
+  // Pour récupérer l'utilisateur à chaque montage
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     setConsultant(storedUser);
   }, []);
   const consultantId = consultant?.id;
-  console.log(consultant);
+  console.log("Consultant:", consultant);
+
+  // Récupération des expériences extraites du CV depuis le localStorage
+  const cvExtracted = JSON.parse(localStorage.getItem("cvExtracted")) || {};
+  const cvExperiences = cvExtracted.experiences || [];
+  // Index pour suivre l'auto-remplissage des expériences
+  const [cvExperienceIndex, setCvExperienceIndex] = useState(0);
+
+  // Auto-remplissage de l'expérience à partir des données du CV si disponibles.
+  // Conversion des dates au format ISO pour l'input.
+  useEffect(() => {
+    if (cvExperiences.length > 0 && cvExperienceIndex < cvExperiences.length) {
+      const exp = cvExperiences[cvExperienceIndex];
+      if (!expDateDebut && exp.dateDebut) {
+        setExpDateDebut(convertDateForInput(exp.dateDebut));
+      }
+      if (!expDateFin && exp.dateFin) {
+        setExpDateFin(convertDateForInput(exp.dateFin));
+      }
+      if (!expEntreprise && exp.entreprise) {
+        setExpEntreprise(exp.entreprise);
+      }
+      if (!expRole && exp.role) {
+        setExpRole(exp.role);
+      }
+      if (!expDescription && exp.description) {
+        setExpDescription(exp.description);
+      }
+    }
+  }, [cvExperiences, cvExperienceIndex, expDateDebut, expDateFin, expEntreprise, expRole, expDescription]);
+
   const handleSelection = (phase) => {
     if (step === 2) {
       setSelectedPhases((prev) =>
@@ -55,7 +101,6 @@ const Experience = () => {
       setTimeout(() => setIsAnimating(false), 1000);
       return;
     }
-    // Move to step 4 instead of navigating away from step 3
     if (step === 3) {
       setStep(4);
       return;
@@ -67,14 +112,14 @@ const Experience = () => {
     }
   };
 
-  // Function to calculate duration in months (approx.)
+  // Fonction de calcul de la durée en mois (approx.)
   const calculateDuration = (start, end) => {
     const diffMs = new Date(end) - new Date(start);
     const diffDays = diffMs / (1000 * 60 * 60 * 24);
     return Math.round(diffDays / 30);
   };
 
-  // Add a new experience to the list
+  // Ajout d'une expérience : si le formulaire est rempli, ajoute l'expérience pré-remplie et passe au prochain index
   const handleAddExperience = () => {
     if (!expDateDebut || !expDateFin || !expEntreprise || !expRole || !expDescription) {
       setIsAnimating(true);
@@ -93,18 +138,29 @@ const Experience = () => {
 
     setExperienceList([...experienceList, newExperience]);
 
-    // Clear the form fields for a new entry
-    setExpDateDebut("");
-    setExpDateFin("");
-    setExpEntreprise("");
-    setExpRole("");
-    setExpDescription("");
+    // Incrémente l'index pour auto-remplissage
+    const nextIndex = cvExperienceIndex + 1;
+    setCvExperienceIndex(nextIndex);
+    if (nextIndex < cvExperiences.length) {
+      const nextExp = cvExperiences[nextIndex];
+      setExpDateDebut(convertDateForInput(nextExp.dateDebut || ""));
+      setExpDateFin(convertDateForInput(nextExp.dateFin || ""));
+      setExpEntreprise(nextExp.entreprise || "");
+      setExpRole(nextExp.role || "");
+      setExpDescription(nextExp.description || "");
+    } else {
+      // Sinon, vide les champs pour saisie manuelle
+      setExpDateDebut("");
+      setExpDateFin("");
+      setExpEntreprise("");
+      setExpRole("");
+      setExpDescription("");
+    }
   };
 
-  // Final submission: update experiences then display the CV modal
   const handleFinishExperience = async () => {
     try {
-      // Format the experiences data as required by the backend
+      // Formatage des expériences pour l'envoi au backend
       const formattedExperiences = experienceList.map(exp => ({
         dateDebut: exp.dateDebut,
         dateFin: exp.dateFin,
@@ -113,14 +169,10 @@ const Experience = () => {
         description: exp.description,
       }));
   
-      
-  
-      // Update consultant experiences in the backend
       const response = await ConsultantService.updateConsultant(consultantId, { experiences: formattedExperiences });
       if (response){
         console.log("Experiences updated successfully!");
         localStorage.setItem("user", JSON.stringify(response));
-        // Instead of navigating, display the modal for CV preview
         setShowCvModal(true);
       }
     } catch (error) {
@@ -129,12 +181,10 @@ const Experience = () => {
     }
   };
 
-  // Generate CV preview by calling the backend endpoint
+  // Fonctions de génération et téléchargement du CV (inchangées)
   const handleGenerateCV = async () => {
-    
     try {
       const response = await ConsultantService.generateCv(consultantId);
-      // Create a blob URL from the response (assuming response is a Blob)
       const blob = new Blob([response], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       setPdfPreviewUrl(url);
@@ -143,9 +193,7 @@ const Experience = () => {
     }
   };
 
-  // Save the CV in the database and redirect to the subscription page
   const handleSaveAndSubscribe = async () => {
-    
     try {
       await ConsultantService.saveCv(consultantId);
       navigate("/subscription");
@@ -154,7 +202,6 @@ const Experience = () => {
     }
   };
 
-  // Download the CV file using the preview URL
   const handleDownloadCV = () => {
     if (pdfPreviewUrl) {
       const link = document.createElement("a");
@@ -381,51 +428,49 @@ const Experience = () => {
       </div>
 
       {showCvModal && (
-  <div className={styles.modalOverlay}>
-    <div className={styles.modalContent}>
-      <h2>Aperçu de votre CV</h2>
-      {!pdfPreviewUrl ? (
-        <div className={styles.modalActions}>
-          <button onClick={handleGenerateCV} className={styles.generateButton}>
-            Générer le CV
-          </button>
-          <button onClick={handleSaveAndSubscribe} className={styles.ignoreButton}>
-            Ignorer pour le moment
-          </button>
-        </div>
-      ) : (
-        <>
-          <iframe src={pdfPreviewUrl} title="CV Preview" className={styles.pdfPreview} />
-          <div className={styles.modalActions}>
-            <div className={styles.actionRow}>
-              <button onClick={handleDownloadCV} className={styles.downloadButton}>
-                Télécharger le CV
-              </button>
-              <button onClick={handleSaveAndSubscribe} className={styles.saveButton}>
-                Valider & S'abonner
-              </button>
-            </div>
-            <div className={styles.closeRow}>
-              <button
-                onClick={() => {
-                  setShowCvModal(false);
-                  setPdfPreviewUrl(""); // Clear the preview for updated experiences
-                }}
-                className={styles.closeModal}
-              >
-                Modifier mes expériences
-              </button>
-            </div>
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <h2>Aperçu de votre CV</h2>
+            {!pdfPreviewUrl ? (
+              <div className={styles.modalActions}>
+                <button onClick={handleGenerateCV} className={styles.generateButton}>
+                  Générer le CV
+                </button>
+                <button onClick={handleSaveAndSubscribe} className={styles.ignoreButton}>
+                  Ignorer pour le moment
+                </button>
+              </div>
+            ) : (
+              <>
+                <iframe src={pdfPreviewUrl} title="CV Preview" className={styles.pdfPreview} />
+                <div className={styles.modalActions}>
+                  <div className={styles.actionRow}>
+                    <button onClick={handleDownloadCV} className={styles.downloadButton}>
+                      Télécharger le CV
+                    </button>
+                    <button onClick={handleSaveAndSubscribe} className={styles.saveButton}>
+                      Valider & S'abonner
+                    </button>
+                  </div>
+                  <div className={styles.closeRow}>
+                    <button
+                      onClick={() => {
+                        setShowCvModal(false);
+                        setPdfPreviewUrl("");
+                      }}
+                      className={styles.closeModal}
+                    >
+                      Modifier mes expériences
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
-        </>
+        </div>
       )}
-    </div>
-  </div>
-)}
 
-
-
-
+      <ToastContainer />
     </div>
   );
 };

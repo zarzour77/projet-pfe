@@ -2,7 +2,7 @@
 import  { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaList, FaTh, FaHeart, FaRegHeart } from 'react-icons/fa';
+import { FaList, FaTh} from 'react-icons/fa';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -12,17 +12,15 @@ import TextField from '@mui/material/TextField';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import MUITooltip from '@mui/material/Tooltip';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
 import Slider from '@mui/material/Slider';
 import Typography from '@mui/material/Typography';
-import LinearProgress from '@mui/material/LinearProgress';
-import Rating from '@mui/material/Rating';
-import Checkbox from '@mui/material/Checkbox';
-import FormControlLabel from '@mui/material/FormControlLabel';
+import CircularProgress from '@mui/material/CircularProgress';
+
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
+import Box from '@mui/material/Box';
 
 // Services et utilitaires
 import ProfileViewService from '../Services/ProfileViewService';
@@ -47,23 +45,14 @@ import TopViewed from '../assets/icons/TopViewed.svg';
 import ExcellentCommunicator from '../assets/icons/ExcellentCommunicator.svg';
 
 // Création du thème Material‑UI
-const theme = createTheme({
-  palette: {
-    primary: { main: "#009990" },
-    secondary: { main: "#074799" },
-    background: { default: "#E1FFBB" },
-    text: { primary: "#001A6E" }
-  },
-  typography: { fontFamily: "Arial, sans-serif" },
-});
+
 
 // Options de tri
 const SORT_OPTIONS = [
   { value: '', label: 'Aucun' },
-  { value: 'hourlyRate', label: 'Trier par Taux Horaire' },
-  { value: 'experienceYears', label: 'Trier par Expérience (Années)' },
-  { value: 'rating', label: 'Trier par Rating' },
-  { value: 'jobSuccess', label: 'Trier par Taux de réussite' },
+  { value: 'hourlyRate', label: 'Taux Horaire' },
+  { value: 'experienceYears', label: 'Expérience (Années)' },
+  { value: 'jobSuccess', label: 'Taux de réussite' },
 ];
 
 // Fonction pour retourner l'image associée au badge
@@ -129,18 +118,27 @@ function LandingEntreprise() {
   const [location, setLocation] = useState('');
   const [hourlyRateRange, setHourlyRateRange] = useState([0, 100]);
   const [sortOption, setSortOption] = useState('');
-  const [viewMode, setViewMode] = useState('list');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
-  const [favoriteConsultants, setFavoriteConsultants] = useState([]);
-  const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
+  const [viewMode, setViewMode] = useState(() => {
+    return localStorage.getItem('viewMode') || 'list';
+  });  
+  const [currentPage, setCurrentPage] = useState(() => {
+    const savedPage = localStorage.getItem('currentPage');
+    return savedPage ? parseInt(savedPage) : 1;
+  });  const itemsPerPage = 6;
 
   // États pour la modal d'invitation/recrutement
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [selectedConsultantForInvite, setSelectedConsultantForInvite] = useState(null);
   const [selectedMissionForInvite, setSelectedMissionForInvite] = useState(null);
   const [inviteMessage, setInviteMessage] = useState('');
+  useEffect(() => {
+    localStorage.setItem('viewMode', viewMode);
+  }, [viewMode]);
 
+  // Save current page changes
+  useEffect(() => {
+    localStorage.setItem('currentPage', currentPage.toString());
+  }, [currentPage]);
   useEffect(() => {
     setIsLoading(true);
     Promise.all([
@@ -189,7 +187,6 @@ function LandingEntreprise() {
 
   const filteredConsultants = useMemo(() => {
     return consultants.filter(c => {
-      if (showOnlyFavorites && !favoriteConsultants.includes(c.id)) return false;
       const kw = searchKeyword.toLowerCase();
       const matchKeyword =
         !kw ||
@@ -219,7 +216,7 @@ function LandingEntreprise() {
       const matchRate = cRate >= minRate && cRate <= maxRate;
       return matchKeyword && matchCategory && matchDomain && matchCompetence && matchLocation && matchRate;
     });
-  }, [consultants, searchKeyword, selectedCategory, selectedDomain, selectedCompetence, location, hourlyRateRange, showOnlyFavorites, favoriteConsultants]);
+  }, [consultants, searchKeyword, selectedCategory, selectedDomain, selectedCompetence, location, hourlyRateRange]);
 
   const sortedConsultants = useMemo(() => {
     const sorted = [...filteredConsultants];
@@ -227,10 +224,8 @@ function LandingEntreprise() {
       sorted.sort((a, b) => (Number(a.taux_horaire) || 0) - (Number(b.taux_horaire) || 0));
     } else if (sortOption === 'experienceYears') {
       sorted.sort((a, b) => (b.experienceYears || 0) - (a.experienceYears || 0));
-    } else if (sortOption === 'rating') {
-      sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     } else if (sortOption === 'jobSuccess') {
-      sorted.sort((a, b) => ((b.rating || 0) * 20) - ((a.rating || 0) * 20));
+      sorted.sort((a, b) => (b.jobSuccess || 0) - (a.jobSuccess || 0));
     }
     return sorted;
   }, [filteredConsultants, sortOption]);
@@ -252,12 +247,7 @@ function LandingEntreprise() {
     setHourlyRateRange(newValue);
   };
 
-  const toggleFavorite = consultantId => {
-    setFavoriteConsultants(prev => {
-      if (prev.includes(consultantId)) return prev.filter(id => id !== consultantId);
-      return [...prev, consultantId];
-    });
-  };
+
 
   const handleContact = async consultant => {
     try {
@@ -340,7 +330,6 @@ function LandingEntreprise() {
     setLocation('');
     setHourlyRateRange([0, 100]);
     setSortOption('');
-    setShowOnlyFavorites(false);
     setCurrentPage(1);
   };
 
@@ -353,7 +342,6 @@ function LandingEntreprise() {
   };
 
   return (
-    <ThemeProvider theme={theme}>
       <div className={styles.landingContainer}>
         <ToastContainer />
         {/* Barre de recherche globale */}
@@ -387,7 +375,7 @@ function LandingEntreprise() {
               onChange={e => setSortOption(e.target.value)}
               style={{ marginRight: '1rem' }}
               renderValue={value => {
-                if (value === "") return <span style={{ color: "#aaa" }}>Aucun</span>;
+                if (value === "") return <span style={{ color: "#aaa" }}>Filtrer par </span>;
                 const found = SORT_OPTIONS.find(opt => opt.value === value);
                 return found ? found.label : value;
               }}
@@ -398,19 +386,11 @@ function LandingEntreprise() {
                 </MenuItem>
               ))}
             </Select>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={showOnlyFavorites}
-                  onChange={e => setShowOnlyFavorites(e.target.checked)}
-                  color="primary"
-                />
-              }
-              label="Favoris"
-            />
+            
           </div>
           <div className={styles.rightActions}>
-            <Button variant="contained" onClick={clearFilters}>
+            <Button variant="contained"   className={styles.clearFiltersButton}
+ onClick={clearFilters}>
               Effacer Filtres
             </Button>
             <div className={styles.viewToggle}>
@@ -443,7 +423,6 @@ function LandingEntreprise() {
               <Select
                 displayEmpty
                 fullWidth
-                variant="outlined"
                 value={selectedCategory}
                 onChange={e => setSelectedCategory(e.target.value)}
                 renderValue={value => {
@@ -535,237 +514,280 @@ function LandingEntreprise() {
             </div>
           </motion.aside>
 
-          <section className={styles.talentList}>
-            {isLoading ? (
-              <p>Chargement...</p>
-            ) : currentPageConsultants.length === 0 ? (
-              <div className={styles.noResults}>
-                <p>Aucun consultant trouvé.</p>
-              </div>
-            ) : (
-              currentPageConsultants.map((consultant, index) => {
-                const ratingValue = consultant.rating || 0;
-                const jobSuccessValue = parseInt(ratingValue * 20);
-                let expLabel = 'Débutant';
-                if (consultant.experienceYears && consultant.experienceYears >= 1) {
-                  if (consultant.experienceYears < 3) expLabel = 'Intermédiaire';
-                  else expLabel = 'Expert';
-                }
-                return (
-                  <motion.div
-                    key={consultant.id}
-                    className={`${styles.talentItem} ${viewMode === 'grid' ? styles.gridItem : ''}`}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.1 }}
-                    whileHover={{ scale: 1.02 }}
-                    onClick={() => handleOpenProfile(consultant)}
-                  >
-                    <div
-                      className={styles.favoriteIcon}
-                      onClick={e => {
-                        e.stopPropagation();
-                        toggleFavorite(consultant.id);
-                      }}
-                    >
-                      {favoriteConsultants.includes(consultant.id) ? (
-                        <FaHeart style={{ color: 'red' }} />
-                      ) : (
-                        <FaRegHeart />
-                      )}
-                    </div>
-                    <div className={styles.talentHeader}>
-                      <div className={styles.profilePicWrapper}>
-                        <img
-                          src={consultant.photoprofile || 'https://via.placeholder.com/50'}
-                          alt={`${consultant.nom || ''} ${consultant.prenom || ''}`}
-                          className={styles.profilePic}
-                        />
-                        {consultant.badge && (
-                          <img
-                            src={getBadgeImage(consultant.badge)}
-                            alt={consultant.badge}
-                            className={styles.consultantBadge}
-                          />
-                        )}
-                      </div>
-                      <div>
-                        <h2>{consultant.nom} {consultant.prenom}</h2>
-                        <Rating
-                          name={`rating-${consultant.id}`}
-                          value={ratingValue}
-                          precision={0.5}
-                          readOnly
-                          size="small"
-                        />
-                      </div>
-                    </div>
-                    <div className={styles.talentInfo}>
-                      <span>{expLabel}</span>
-                      <span>{consultant.adresse || 'Localisation inconnue'}</span>
-                      <span>${Number(consultant.taux_horaire) || 0}/h</span>
-                    </div>
-                    <MUITooltip title={`Job Success: ${jobSuccessValue}%`} arrow>
-                      <LinearProgress
-                        variant="determinate"
-                        value={jobSuccessValue}
-                        style={{ width: '100%', height: '8px', borderRadius: '4px' }}
-                      />
-                    </MUITooltip>
-                    <div className={styles.talentSkills}>
-                      {consultant.domaines?.map(dom => (
-                        <span key={dom.id} className={styles.skillTag}>
-                          {dom.nom}
-                        </span>
-                      ))}
-                    </div>
-                    <div className={styles.talentSkills}>
-                      {consultant.competences?.map(comp => (
-                        <span key={comp.id} className={styles.skillTag}>
-                          {comp.nom}
-                        </span>
-                      ))}
-                    </div>
-                    <p className={styles.talentBio}>
-                      {consultant.statut || 'Disponible'}
-                    </p>
-                    <div className={styles.actionButtons} onClick={e => e.stopPropagation()}>
-                      <MUITooltip title="Voir le profil" arrow>
-                        <Button variant="contained" size="small" onClick={() => handleOpenProfile(consultant)}>
-                          Profil
-                        </Button>
-                      </MUITooltip>
-                      <MUITooltip title="Contacter" arrow>
-                        <Button variant="outlined" size="small" onClick={() => handleContact(consultant)}>
-                          Contacter
-                        </Button>
-                      </MUITooltip>
-                      <MUITooltip title={isEntrepriseSSI ? "Recruter" : "Invite to Job"} arrow>
-                        <Button variant="contained" size="small" color="secondary" onClick={() => handleInviteClick(consultant)}>
-                          {isEntrepriseSSI ? "Recruter" : "Invite to Job"}
-                        </Button>
-                      </MUITooltip>
-                    </div>
-                  </motion.div>
-                );
-              })
-            )}
-            {sortedConsultants.length > itemsPerPage && (
-              <div className={styles.pagination}>
-                <Button variant="outlined" onClick={handlePrevPage} disabled={currentPage === 1} style={{ marginRight: '1rem' }}>
-                  Précédent
-                </Button>
-                <span>
-                  Page {currentPage} / {totalPages}
-                </span>
-                <Button variant="outlined" onClick={() => handleNextPage(totalPages)} disabled={currentPage === totalPages} style={{ marginLeft: '1rem' }}>
-                  Suivant
-                </Button>
-              </div>
-            )}
-          </section>
+          <section className={`${styles.talentList} ${viewMode === 'grid' ? styles.gridView : ''}`} >
+  {isLoading ? (
+    <p>Chargement...</p>
+  ) : currentPageConsultants.length === 0 ? (
+    <div className={styles.noResults}>
+      <p>Aucun consultant trouvé.</p>
+    </div>
+  ) : (
+    currentPageConsultants.map((consultant, index) => {
+      const jobSuccessValue = consultant.jobSuccess || 0;
+      let expLabel = 'Débutant';
+      if (consultant.experienceYears >= 1) {
+        expLabel = consultant.experienceYears < 3 ? 'Intermédiaire' : 'Expert';
+      }
+      return (
+        <motion.div
+          key={consultant.id}
+          className={`${styles.talentItem} ${viewMode === 'grid' ? styles.gridItem : ''}`}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: index * 0.1 }}
+          whileHover={{ scale: 1.02 }}
+          onClick={() => handleOpenProfile(consultant)}
+        >
+         
+          <div className={styles.talentHeader}>
+            <div className={styles.profilePicWrapper}>
+              <img
+                src={consultant.photoprofile || 'https://via.placeholder.com/50'}
+                alt={`${consultant.nom || ''} ${consultant.prenom || ''}`}
+                className={styles.profilePic}
+              />
+              {consultant.badge && (
+                <img
+                  src={getBadgeImage(consultant.badge)}
+                  alt={consultant.badge}
+                  className={styles.consultantBadge}
+                />
+              )}
+            </div>
+            <div>
+              <h2>{consultant.nom} {consultant.prenom}</h2>
+            </div>
+          </div>
+          <div className={styles.talentInfo}>
+            <span>{expLabel}</span>
+            <span>{consultant.adresse || 'Localisation inconnue'}</span>
+            <span>${Number(consultant.taux_horaire) || 0}/h</span>
+          </div>
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, mb: 1 }}>
+            <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+              <CircularProgress
+                variant="determinate"
+                value={100}
+                size={40}
+                thickness={4}
+                sx={{ color: '#f0f0f0' }}
+              />
+              <CircularProgress
+                variant="determinate"
+                value={jobSuccessValue}
+                size={40}
+                thickness={4}
+                sx={{ 
+                  color: '#00796b',
+                  position: 'absolute',
+                  left: 0
+                }}
+              />
+              <Box
+                sx={{
+                  top: 0,
+                  left: 0,
+                  bottom: 0,
+                  right: 0,
+                  position: 'absolute',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Typography variant="caption" component="div" sx={{ fontWeight: 'bold' }}>
+                  {`${jobSuccessValue}%`}
+                </Typography>
+              </Box>
+            </Box>
+            <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary', minWidth: 70 }}>
+            Taux de réussite
+            </Typography>
+          </Box>
+
+          <div className={styles.talentSkills}>
+            {consultant.domaines?.map((dom) => (
+              <span key={dom.id} className={styles.skillTag}>
+                {dom.nom}
+              </span>
+            ))}
+          </div>
+          <div className={styles.talentSkills}>
+            {consultant.competences?.map((comp) => (
+              <span key={comp.id} className={styles.skillTag}>
+                {comp.nom}
+              </span>
+            ))}
+          </div>
+          <p className={styles.talentBio}>{consultant.workload >0 ? 'En travail' : 'Disponible' }</p>
+          <div className={styles.actionButtons} onClick={(e) => e.stopPropagation()}>
+            <MUITooltip title="Voir le profil" arrow>
+              <Button variant="contained" className={styles.viewProfile} onClick={() => handleOpenProfile(consultant)}>
+                Profil
+              </Button>
+            </MUITooltip>
+            <MUITooltip title="Contacter" arrow>
+              <Button
+                variant="outlined"
+                className={styles.contactButton}
+                onClick={() => handleContact(consultant)}
+              >
+                Contacter
+              </Button>
+            </MUITooltip>
+            <MUITooltip title={isEntrepriseSSI ? "Recruter" : "Inviter"} arrow>
+              <Button
+                variant="contained"
+                size="small"
+                className={styles.actionButton}
+                onClick={() => handleInviteClick(consultant)}
+              >
+                {isEntrepriseSSI ? "Recruter" : "Inviter"}
+              </Button>
+            </MUITooltip>
+          </div>
+        </motion.div>
+      );
+    })
+  )}
+  {sortedConsultants.length > itemsPerPage && (
+    <div className={styles.pagination}>
+      <Button
+        variant="outlined"
+        onClick={handlePrevPage}
+        disabled={currentPage === 1}
+        
+      >
+        Précédent
+      </Button>
+      <span>
+        Page {currentPage} / {totalPages}
+      </span>
+      <Button
+        variant="outlined"
+        onClick={() => handleNextPage(totalPages)}
+        disabled={currentPage === totalPages}
+        style={{ marginLeft: '1rem' }}
+      >
+        Suivant
+      </Button>
+    </div>
+  )}
+</section>
         </div>
 
         {/* Modal d'invitation/recrutement */}
         {showInviteModal && (
-          <Dialog open={true} onClose={handleCloseInviteModal}>
-            <DialogTitle>
-              {isEntrepriseSSI
-                ? `Recruter ${selectedConsultantForInvite && `${selectedConsultantForInvite.nom} ${selectedConsultantForInvite.prenom}`}`
-                : `Inviter ${selectedConsultantForInvite && `${selectedConsultantForInvite.nom} ${selectedConsultantForInvite.prenom}`} à une mission`}
-            </DialogTitle>
-            <DialogContent>
-              {isEntrepriseSSI ? (
-                <>
-                  <TextField
-                    margin="dense"
-                    label="Votre message"
+  <div className={styles.modalOverlay} onClick={handleCloseInviteModal}>
+    <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+      <button className={styles.modalCloseBtn} onClick={handleCloseInviteModal}>
+        &times;
+      </button>
+      <h2 className={styles.modalTitle}>
+        {isEntrepriseSSI
+          ? `Recruter ${selectedConsultantForInvite?.nom} ${selectedConsultantForInvite?.prenom}`
+          : `Inviter ${selectedConsultantForInvite?.nom} ${selectedConsultantForInvite?.prenom} à une mission`}
+      </h2>
+
+      <div className={styles.modalBody}>
+        {isEntrepriseSSI ? (
+          <>
+            <div className={styles.modalFormGroup}>
+              <label className={styles.formLabel}>Votre message</label>
+              <textarea
+                value={inviteMessage}
+                onChange={(e) => setInviteMessage(e.target.value)}
+                className={styles.formControl}
+                rows={3}
+                placeholder="Expliquez les conditions de recrutement..."
+              />
+              <p className={styles.modalHelperText}>
+                Le consultant pourra accepter ou refuser votre invitation
+              </p>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className={styles.modalFormGroup}>
+              <label className={styles.formLabel}>Sélectionner une mission</label>
+              <br />
+              <select
+                value={selectedMissionForInvite?.id || ''}
+                onChange={(e) => {
+                  const mission = missionsEntreprise
+                    .filter(m => m.statut?.toLowerCase() === 'en attente')
+                    .find(m => m.id === e.target.value);
+                  setSelectedMissionForInvite(mission);
+                }}
+                className={styles.formControl}
+              >
+                {missionsEntreprise
+                  .filter(mission => mission.statut?.toLowerCase() === 'en attente')
+                  .map(mission => (
+                    <option key={mission.id} value={mission.id}>
+                      {mission.titre}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            {selectedMissionForInvite && (
+              <>
+                <div className={styles.modalFormGroup}>
+                  <label className={styles.formLabel}>Montant</label>
+                  <input
                     type="text"
-                    fullWidth
-                    multiline
-                    rows={3}
-                    value={inviteMessage}
-                    onChange={e => setInviteMessage(e.target.value)}
-                    helperText="Expliquez brièvement les conditions de recrutement (ex. poste, rémunération, avantages)"
+                    value={selectedMissionForInvite.budget || ''}
+                    className={styles.formControl}
+                    readOnly
                   />
-                  <Typography variant="body2" color="textSecondary" style={{ marginTop: '0.5rem' }}>
-                    Une fois l'invitation de recrutement envoyée, le consultant pourra l'accepter ou la refuser.
-                  </Typography>
-                </>
-              ) : (
-                <>
-                  <Select
-                    fullWidth
-                    value={selectedMissionForInvite ? selectedMissionForInvite.id : ''}
-                    onChange={e => {
-                      const mission = missionsEntreprise
-                        .filter(m => m.statut?.toLowerCase() === 'en attente')
-                        .find(m => m.id === e.target.value);
-                      setSelectedMissionForInvite(mission);
-                    }}
-                  >
-                    {missionsEntreprise
-                      .filter(mission => mission.statut?.toLowerCase() === 'en attente')
-                      .map(mission => (
-                        <MenuItem key={mission.id} value={mission.id}>
-                          {mission.titre}
-                        </MenuItem>
-                      ))}
-                  </Select>
-                  {selectedMissionForInvite && (
-                    <>
-                      <TextField
-                        margin="dense"
-                        label="Montant"
-                        type="text"
-                        fullWidth
-                        value={selectedMissionForInvite.budget || ''}
-                        InputProps={{
-                          readOnly: true,
-                        }}
-                      />
-                      <TextField
-                        margin="dense"
-                        label="Durée estimée"
-                        type="text"
-                        fullWidth
-                        value={selectedMissionForInvite.dureeEstime || ''}
-                        InputProps={{
-                          readOnly: true,
-                        }}
-                      />
-                    </>
-                  )}
-                  <TextField
-                    margin="dense"
-                    label="Votre message"
+                </div>
+
+                <div className={styles.modalFormGroup}>
+                  <label className={styles.formLabel}>Durée estimée</label>
+                  <input
                     type="text"
-                    fullWidth
-                    multiline
-                    rows={3}
-                    value={inviteMessage}
-                    onChange={e => setInviteMessage(e.target.value)}
-                    helperText="Expliquez brièvement votre proposition"
+                    value={selectedMissionForInvite.dureeEstime || ''}
+                    className={styles.formControl}
+                    readOnly
                   />
-                  <Typography variant="body2" color="textSecondary" style={{ marginTop: '0.5rem' }}>
-                    Une fois l'invitation envoyée, un email et une notification seront envoyés au consultant.
-                  </Typography>
-                </>
-              )}
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleCloseInviteModal} color="primary">
-                Annuler
-              </Button>
-              <Button onClick={handleSubmitInvite} color="primary">
-                {isEntrepriseSSI ? "Envoyer le recrutement" : "Envoyer l'invitation"}
-              </Button>
-            </DialogActions>
-          </Dialog>
+                </div>
+              </>
+            )}
+
+            <div className={styles.modalFormGroup}>
+              <label className={styles.formLabel}>Votre message</label>
+              <textarea
+                value={inviteMessage}
+                onChange={(e) => setInviteMessage(e.target.value)}
+                className={styles.formControl}
+                rows={3}
+                placeholder="Expliquez votre proposition..."
+              />
+              <p className={styles.modalHelperText}>
+              <i className="bi bi-bell"></i> Le consultant recevra une notification par email
+              </p>
+            </div>
+          </>
         )}
+      </div>
+
+      <div className={styles.modalActions}>
+    
+        <button
+          className={`${styles.modalSubmitBtn} ${styles.modalPrimaryBtn}`}
+          onClick={handleSubmitInvite}
+        >
+          {isEntrepriseSSI ? "Envoyer le recrutement" : "Envoyer l'invitation"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
         <ToastContainer />
       </div>
-    </ThemeProvider>
+    
   );
 }
 

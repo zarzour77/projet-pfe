@@ -293,3 +293,37 @@
     padding: 10px;
   }
 }
+/* Bouton Traduire */
+.translateButton {
+  background: linear-gradient(135deg, #0084ff, #006edc);
+  color: #fff;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.2s ease, background 0.2s ease;
+  margin-right: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+.translateButton:hover {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #006edc, #005bb5);
+}
+
+/* Liste déroulante pour le choix de la langue */
+.languageSelect {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+  background: #fff;
+  color: #333;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+.languageSelect:focus {
+  border-color: #0084ff;
+  box-shadow: 0 0 5px rgba(0,132,255,0.5);
+}

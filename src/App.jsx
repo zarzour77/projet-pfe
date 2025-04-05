@@ -1,4 +1,3 @@
-// src/App.jsx
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Home from "./Components/Home";
 import Login from "./Components/Login";
@@ -24,13 +23,16 @@ import StatConsultant from "./Components/StatConsultant";
 import ConsultantPropositions from "./Components/ConsultantPropositions";
 import Header from "./Components/Header";
 import VirtualAssistant from "./Components/VirtualAssistant";
-import ProtectedRoute from "./Services/ProtectedRoute";
-import { AuthProvider } from "./Services/AuthContext";
+import StatEntreprise from "./Components/StatEntreprise";
+import StatAdmin from "./Components/StatAdmin";
+import Footer from "./Components/Footer";
+import ProtectedRoute from "./services/ProtectedRoute";
 import AddCollaborator from "./Components/AddCollaborator";
 import CollaboratorsList from "./Components/CollaboratorsList";
 import EntrepriseProfilePage from "./Components/EntrepriseProfilePage";
 import VoirProfileEntreprise from "./Components/VoirProfileEntreprise";
 import Settings from "./Components/Settings";
+import { AuthProvider } from "./Services/AuthContext";
 
 const App = () => {
   return (
@@ -42,6 +44,38 @@ const App = () => {
           <Route path="/UserInformation" element={<UserInformation />} />
           <Route path="/Notification" element={<Notification />} />
           
+          {/* Updated Stat Routes */}
+          <Route
+            path="/StatConsultant"
+            element={
+              <ProtectedRoute allowedRoles={["Consultant", "Admin"]}>
+                <Header />
+                <VirtualAssistant />
+                <StatConsultant />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/StatEntreprise"
+            element={
+              <ProtectedRoute allowedRoles={["Entreprise", "Admin"]}>
+                <Header />
+                <VirtualAssistant />
+                <StatEntreprise />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/StatAdmin"
+            element={
+              <ProtectedRoute allowedRoles={["Admin"]}>
+                <Header />
+                <VirtualAssistant />
+                <StatAdmin />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/consultant/:consultantId"
             element={
@@ -53,8 +87,6 @@ const App = () => {
             }
           />
 
-          <Route path="/StatConsultant" element={<StatConsultant />} />
-          
           <Route
             path="/entreprise/:entrepriseId"
             element={
@@ -72,6 +104,7 @@ const App = () => {
               <ProtectedRoute allowedRoles={["Entreprise", "Admin"]}>
                 <Header />
                 <EntrepriseMission />
+                <Footer />
               </ProtectedRoute>
             }
           />
@@ -160,6 +193,7 @@ const App = () => {
                 <Header />
                 <VirtualAssistant />
                 <ProfilePage />
+                <Footer />
               </ProtectedRoute>
             }
           />
@@ -167,13 +201,14 @@ const App = () => {
             path="/transactions"
             element={
               <ProtectedRoute allowedRoles={["Consultant", "Entreprise", "Admin"]}>
+                <Header />
                 <TransactionsHistory />
                 <VirtualAssistant />
               </ProtectedRoute>
             }
           />
 
-          {/* NEW Protected Route for ConsultantPropositions */}
+          {/* ConsultantPropositions Route */}
           <Route
             path="/ConsultantPropositions"
             element={
@@ -207,7 +242,7 @@ const App = () => {
             }
           />
 
-          {/* Messenger accessible by both roles */}
+          {/* Messenger Route */}
           <Route
             path="/Messenger"
             element={

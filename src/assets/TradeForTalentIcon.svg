@@ -1,0 +1,40 @@
+<!-- Fichier : trade_for_talent_logo.svg -->
+<svg
+    version="1.1"
+    xmlns="http://www.w3.org/2000/svg"
+    width="400"
+    height="120"
+    viewBox="0 0 400 120"
+>
+  <!-- Deux cercles qui s’entrecroisent pour représenter l’échange/collaboration -->
+  <circle cx="70" cy="60" r="40" fill="#1A2940" />
+  <circle cx="110" cy="60" r="40" fill="#00BFA6" />
+
+  <!-- Titre : "Trade For Talent" -->
+  <text
+    x="170"
+    y="58"
+    font-family="Poppins, sans-serif"
+    font-size="24"
+    fill="#1A2940"
+  >
+    Trade For 
+    <tspan
+      font-weight="600"
+      fill="#1A2940"
+    >
+      Talent
+    </tspan>
+  </text>
+
+  <!-- Tagline (optionnelle) : “Connecting Opportunities and Skills” -->
+  <text
+    x="170"
+    y="85"
+    font-family="Poppins, sans-serif"
+    font-size="14"
+    fill="#555555"
+  >
+    Connecting Opportunities and Skills
+  </text>
+</svg>

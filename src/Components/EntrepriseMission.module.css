@@ -518,3 +518,194 @@
   border-radius: 8px;
   border: 1px solid #ffe6e6;
 }
+.invitedBadge {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3000;
+  backdrop-filter: blur(3px);
+}
+
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.modalContent h2{
+  font-size: 1.5rem;
+  color: #1a1a1a;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+.modalContent {
+  position: relative; /* Add this */
+
+  background: white;
+  width: 90%;
+  max-width: 500px;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: modalSlideIn 0.3s ease-out;
+}
+.modalCloseBtn {
+  position: absolute;
+  top: 0.7rem;
+  right: 1rem;
+  z-index: 1; /* Ensure it stays on top */
+  color: #333; /* Darker color for better visibility */
+  background: transparent;
+  border: none;
+  font-size: 2.5rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.modalHeader {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.modalCloseBtn:hover {
+  color: #333;
+}
+
+/* Form Groups for the add experience modal */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.formLabel {
+  font-size: 0.9rem;
+  color: #444;
+  font-weight: 500;
+}
+.formGroup input {
+  padding: 0.8rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.modalInput {
+  padding: 0.8rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+.modalActions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  justify-content: center; /* Center the button */
+}
+.modalSubmitBtn {
+  padding: 0.9rem 1rem; /* Adjust padding */
+  width: 170px;
+  background: linear-gradient(135deg, #28a745, #218838);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
+  margin: 0 auto;
+}
+.modalSubmitBtn i {
+  margin-left: 8px;
+}
+
+.modalSubmitBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.2);
+}
+.modalText {
+  color: var(--color-blue);
+  line-height: 1.6;
+  margin: 0.5rem 0;
+}
+
+/* Form Groups in Modal */
+.modalFormGroup {
+  margin-bottom: 1.5rem;
+}
+
+.modalActions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  justify-content: center; /* Center the button */
+}
+.modalFormGroup input,
+.modalFormGroup textarea {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+.ratingContainer{
+  text-align: center;
+}
+.ratingLabel {
+  display: block;
+  margin-top: 0.5rem;
+  margin-bottom: 0.7rem;
+  font-size: 0.9rem;
+  color: #666;
+  text-align: center;
+  min-height: 1.2rem;
+  font-weight: bold;
+}
+.modalTextarea {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  min-height: 100px;
+  resize: vertical;
+  background: white;
+  font-family: inherit; /* Ensure font consistency */
+}
+.formLabel {
+  font-size: 0.9rem;
+  color: #444;
+  font-weight: 500;
+}
+.modalFormGroup textarea {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+

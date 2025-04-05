@@ -302,18 +302,7 @@ const EntrepriseProfilePage = () => {
                 className={styles.formControl}
               />
             </div>
-            <div className={styles.modalFormGroup}>
-              <label className={styles.formLabel}>E-mail</label>
-              <input 
-                type="email"
-                value={updatedEntrepriseData.email}
-                onChange={(e) => setUpdatedEntrepriseData({
-                  ...updatedEntrepriseData,
-                  email: e.target.value,
-                })}
-                className={styles.formControl}
-              />
-            </div>
+            
             <div className={styles.modalFormGroup}>
               <label className={styles.formLabel}>Téléphone</label>
               <input 

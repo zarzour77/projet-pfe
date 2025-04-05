@@ -87,7 +87,6 @@ const ConsultantPropositions = () => {
       const filteredActives = propositions.filter(
         (p) => p.statut?.toUpperCase() === 'ACCEPTED' &&
         p.origine?.toUpperCase() !== 'RECRUTEMENT' 
-
       );
       const filteredRefusees = propositions.filter(
         (p) => p.statut?.toUpperCase() === 'REFUSED'
@@ -186,21 +185,26 @@ const ConsultantPropositions = () => {
     const [entrepriseDetails, setEntrepriseDetails] = useState(null);
     const isRecruitment = proposition.origine?.toUpperCase() === 'RECRUTEMENT';
 
-    // Si c'est une proposition de recrutement et que l'entreprise est un identifiant (nombre),
-    // on récupère les détails complets depuis l'API Entreprise.
+    // Si c'est une proposition de recrutement, on récupère les détails de l'entreprise si nécessaire.
     useEffect(() => {
-      if (isRecruitment && typeof proposition.entreprise === 'number') {
-        const fetchEntreprise = async () => {
-          try {
-            const result = await EntrepriseService.getEntrepriseById(proposition.entreprise);
-            console.log(`Entreprise pour la proposition ${proposition.id}:`, result);
-            setEntrepriseDetails(result);
-          } catch (error) {
-            console.error("Erreur lors de la récupération de l'entreprise", error);
-            toast.error("Erreur lors de la récupération de l'entreprise");
-          }
-        };
-        fetchEntreprise();
+      if (isRecruitment) {
+        if (typeof proposition.entreprise === 'number') {
+          // Si l'entreprise est seulement représentée par un identifiant, on fetch les détails.
+          const fetchEntreprise = async () => {
+            try {
+              const result = await EntrepriseService.getEntrepriseById(proposition.entreprise);
+              console.log(`Entreprise pour la proposition ${proposition.id}:`, result);
+              setEntrepriseDetails(result);
+            } catch (error) {
+              console.error("Erreur lors de la récupération de l'entreprise", error);
+              toast.error("Erreur lors de la récupération de l'entreprise");
+            }
+          };
+          fetchEntreprise();
+        } else if (proposition.entreprise && typeof proposition.entreprise === 'object') {
+          // Si l'entreprise est déjà fournie sous forme d'objet, on l'utilise directement.
+          setEntrepriseDetails(proposition.entreprise);
+        }
       }
     }, [proposition.entreprise, isRecruitment, proposition.id]);
 

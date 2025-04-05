@@ -341,3 +341,24 @@
 .card:hover .savedMissionsButton {
   opacity: 1;
 }
+
+.emptyState {
+  text-align: center;
+  padding: 40px;
+  margin-top: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.emptyState p {
+  color: #6c757d;
+  font-size: 1.1rem;
+  margin: 10px 0;
+}
+
+.emptyState p:first-child {
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: #495057;
+}

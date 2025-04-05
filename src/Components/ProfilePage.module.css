@@ -1043,3 +1043,16 @@ border-left: 1px solid #0000002c;
 .changeOfferButton:hover {
   background-color: #0056b3;
 }
+.basicInfoContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.jobSuccessContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
