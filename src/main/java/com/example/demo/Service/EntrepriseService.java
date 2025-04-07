@@ -348,5 +348,11 @@ public class EntrepriseService {
                 .map(Entreprise::getFrozenBalance)
                 .orElseThrow(() -> new RuntimeException("Entreprise not found with id: " + userId));
     }
-
+    @Transactional
+    public List<Entreprise> searchEntreprises(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        return entrepriseRepository.searchEntreprises(query.trim());
+    }
 }

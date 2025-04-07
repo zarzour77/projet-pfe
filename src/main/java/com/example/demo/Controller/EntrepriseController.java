@@ -226,5 +226,11 @@ public class EntrepriseController {
             return ResponseEntity.notFound().build();
         }
     }
-
+    @GetMapping("/search")
+    public ResponseEntity<List<Entreprise>> search(
+            @RequestParam("q") String q
+    ) {
+        List<Entreprise> results = entrepriseService.searchEntreprises(q);
+        return ResponseEntity.ok(results);
+    }
 }

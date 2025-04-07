@@ -223,5 +223,12 @@ public class ConsultantController {
             return ResponseEntity.notFound().build();
         }
     }
+    @GetMapping("/search")
+    public ResponseEntity<List<Consultant>> search(
+            @RequestParam("q") String q
+    ) {
+        List<Consultant> results = consultantService.searchConsultants(q);
+        return ResponseEntity.ok(results);
+    }
 
 }

@@ -464,4 +464,11 @@ public class ConsultantService {
 
         return propositionRepository.findAcceptationDatesByConsultant(consultant);
     }
+    @Transactional
+    public List<Consultant> searchConsultants(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        return consultantRepository.searchConsultants(query.trim());
+    }
 }

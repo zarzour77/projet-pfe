@@ -21,7 +21,10 @@ public interface ConsultantRepository extends JpaRepository<Consultant, Long> {
     @Query("SELECT c FROM Consultant c WHERE c.workload < 3")
     List<Consultant> findAvailableConsultants();
 
-
+    @Query("SELECT c FROM Consultant c " +
+            "WHERE LOWER(c.nom) LIKE LOWER(CONCAT('%', :query, '%')) " +
+            "   OR LOWER(c.prenom) LIKE LOWER(CONCAT('%', :query, '%'))")
+    List<Consultant> searchConsultants(@Param("query") String query);
 
 }
 
