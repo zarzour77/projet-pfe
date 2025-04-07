@@ -160,5 +160,10 @@ public class MissionController {
             return ResponseEntity.badRequest().build();
         }
     }
+    @GetMapping("/search1")
+    public ResponseEntity<List<Mission>> searchMissions(@RequestParam("q") String query) {
+        List<Mission> results = missionService.searchMissions(query);
+        return ResponseEntity.ok(results);
+    }
 
 }

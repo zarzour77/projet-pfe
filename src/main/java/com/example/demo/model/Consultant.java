@@ -31,7 +31,6 @@ public class Consultant extends User {
 
 
     @OneToMany(mappedBy = "consultant", fetch = FetchType.EAGER)
-    @JsonIgnore // Empêche la sérialisation de ce champ
     private List<Proposition> propositions;
 
     @Column(nullable = true)

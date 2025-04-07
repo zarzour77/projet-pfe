@@ -235,6 +235,8 @@ public class MissionService {
         }
         return missionRepository.save(mission);
     }
-
+    public List<Mission> searchMissions(String query) {
+        return missionRepository.search(query);
+    }
 
 }

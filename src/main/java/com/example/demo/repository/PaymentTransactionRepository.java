@@ -39,7 +39,7 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
             String paymentType,
             String status
     );
-    @Query("SELECT COALESCE(SUM(pt.amount)-SUM(pt.applicationFee), 0) FROM PaymentTransaction pt " +
+    @Query("SELECT COALESCE(SUM(pt.amount), 0) FROM PaymentTransaction pt " +
             "WHERE pt.consultantReceiver.id = :consultantId " +
             "AND pt.status = 'PROCESSED' " +
             "AND (pt.paymentType = 'MISSION_FIRST_SLICE' OR pt.paymentType = 'MISSION_FINAL_PAYMENT') " +
