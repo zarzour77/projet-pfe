@@ -22,4 +22,7 @@ public interface PropositionRepository extends JpaRepository<Proposition, Long> 
             "p.statut = 'accepted' AND " +
             "p.origine = 'RECRUTEMENT'")
     List<Date> findAcceptationDatesByConsultant(@Param("consultant") Consultant consultant);
+    // Ajoutez cette méthode pour récupérer les propositions d'une entreprise
+    @Query("SELECT p FROM Proposition p LEFT JOIN FETCH p.entreprise WHERE p.entreprise.id = :entrepriseId")
+    List<Proposition> findByEntrepriseId(@Param("entrepriseId") Long entrepriseId);
 }

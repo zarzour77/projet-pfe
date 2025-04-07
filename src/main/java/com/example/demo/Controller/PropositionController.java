@@ -21,6 +21,21 @@ public class PropositionController {
     public PropositionController(PropositionService propositionService) {
         this.propositionService = propositionService;
     }
+    // Nouvel endpoint pour les statistiques d'une entreprise
+    @GetMapping("/stats/entreprise/{entrepriseId}")
+    public ResponseEntity<Map<String, Object>> getAggregatedEntrepriseStats(
+            @PathVariable Long entrepriseId,
+            @RequestParam(defaultValue = "7") int periodDays) {
+        Map<String, Object> aggregatedStats = propositionService.getAggregatedEntrepriseStats(entrepriseId, periodDays);
+        return ResponseEntity.ok(aggregatedStats);
+    }
+    @GetMapping("/stats/consultant/{consultantId}")
+    public ResponseEntity<Map<String, Object>> getAggregatedStats(
+            @PathVariable Long consultantId,
+            @RequestParam(defaultValue = "7") int periodDays) {
+        Map<String, Object> aggregatedStats = propositionService.getAggregatedConsultantStats(consultantId, periodDays);
+        return ResponseEntity.ok(aggregatedStats);
+    }
     // Endpoint PUT pour mettre à jour le statut d'une proposition
     @PutMapping("/{id}")
     public ResponseEntity<Proposition> updatePropositionStatus(@PathVariable Long id, @RequestBody Map<String, String> updateRequest) {
@@ -100,13 +115,7 @@ public class PropositionController {
             return ResponseEntity.notFound().build();
         }
     }
-    @GetMapping("/stats/consultant/{consultantId}")
-    public ResponseEntity<Map<String, Object>> getAggregatedStats(
-            @PathVariable Long consultantId,
-            @RequestParam(defaultValue = "7") int periodDays) {
-        Map<String, Object> aggregatedStats = propositionService.getAggregatedConsultantStats(consultantId, periodDays);
-        return ResponseEntity.ok(aggregatedStats);
-    }
+
 
 
 }

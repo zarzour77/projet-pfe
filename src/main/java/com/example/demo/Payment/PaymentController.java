@@ -37,6 +37,30 @@ public class PaymentController {
         this.paymentBusinessService = paymentBusinessService;
         this.stripeService = stripeService;
     }
+    @GetMapping("/enterprise/{enterpriseId}")
+    public ResponseEntity<?> getEarningsForEnterprise(
+            @PathVariable Long enterpriseId,
+            @RequestParam("period") String period) {
+        try {
+            ZoneId zone = ZoneId.systemDefault();
+            LocalDateTime now = LocalDateTime.now(zone);
+            LocalDateTime startDate;
+            if ("month".equalsIgnoreCase(period)) {
+                startDate = now.minusMonths(1);
+            } else if ("year".equalsIgnoreCase(period)) {
+                startDate = now.minusYears(1);
+            } else {
+                return ResponseEntity.badRequest().body("Invalid period. Use 'month' or 'year'.");
+            }
+
+            // Calcul de la somme des commissions SSI pour l'entreprise
+            Long earnings = paymentTransactionRepository.findEarningsByEnterpriseAndDateRange(enterpriseId, startDate, now);
+            return ResponseEntity.ok(earnings);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal error");
+        }
+    }
     @GetMapping("/global/applicationFee")
     public ResponseEntity<?> getGlobalApplicationFeeStats(@RequestParam("period") String period) {
         try {

@@ -261,7 +261,111 @@ public class PropositionService {
                 .orElseThrow(() -> new RuntimeException("Proposition not found with id: " + propositionId));
         return proposition.getMission();
     }
+    public Map<String, Object> getAggregatedEntrepriseStats(Long entrepriseId, int periodDays) {
+        // Récupération des propositions liées à l'entreprise
+        List<Proposition> proposals = propositionRepository.findByEntrepriseId(entrepriseId);
 
+        // Utilisation du fuseau horaire local de l'application
+        ZoneId zone = ZoneId.systemDefault();
+        LocalDate endDate = LocalDate.now(zone);
+        LocalDate startDate = endDate.minusDays(periodDays - 1);
+
+        // Filtrer les propositions sur la période demandée
+        List<Proposition> filtered = proposals.stream()
+                .filter(p -> {
+                    LocalDate propDate = p.getDateProposition().toInstant().atZone(zone).toLocalDate();
+                    return !propDate.isBefore(startDate) && !propDate.isAfter(endDate);
+                })
+                .collect(Collectors.toList());
+
+        // Création des labels (ex : "03 Mar", "04 Mar", etc.)
+        List<String> labels = Stream.iterate(startDate, date -> date.plusDays(1))
+                .limit(periodDays)
+                .map(date -> date.format(DateTimeFormatter.ofPattern("dd MMM")))
+                .collect(Collectors.toList());
+
+        // Les statuts mappés pour le graphique
+        String[] statuses = {"sent", "invited", "inProgress", "terminated", "refused"};
+
+        // Préparation des datasets par date et par statut
+        List<Map<String, Object>> datasets = new ArrayList<>();
+        for (String status : statuses) {
+            List<Long> data = new ArrayList<>();
+            for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+                LocalDate finalDate = date;
+                long count = filtered.stream()
+                        .filter(p -> {
+                            // Mapping du statut en fonction des champs "statut" et "origine"
+                            String graphStatus;
+                            if ("ACCEPTED".equalsIgnoreCase(p.getStatut())) {
+                                graphStatus = "inProgress";
+                            } else if ("terminée".equalsIgnoreCase(p.getStatut())) {
+                                graphStatus = "terminated";
+                            } else if ("REFUSED".equalsIgnoreCase(p.getStatut())) {
+                                graphStatus = "refused";
+                            } else if ("APPLIED".equalsIgnoreCase(p.getOrigine())) {
+                                graphStatus = "sent";
+                            } else if ("INVITED".equalsIgnoreCase(p.getOrigine())) {
+                                graphStatus = "invited";
+                            } else {
+                                graphStatus = "";
+                            }
+                            return status.equalsIgnoreCase(graphStatus);
+                        })
+                        .filter(p -> {
+                            LocalDate propDate = p.getDateProposition().toInstant().atZone(zone).toLocalDate();
+                            return propDate.equals(finalDate);
+                        })
+                        .count();
+                data.add(count);
+            }
+            Map<String, Object> dataset = new HashMap<>();
+            dataset.put("label", status);
+            dataset.put("data", data);
+            datasets.add(dataset);
+        }
+
+        // Calcul des totaux par statut (mappés)
+        Map<String, Long> totals = new HashMap<>();
+        for (String status : statuses) {
+            long total = filtered.stream()
+                    .filter(p -> {
+                        String graphStatus;
+                        if ("ACCEPTED".equalsIgnoreCase(p.getStatut())) {
+                            graphStatus = "inProgress";
+                        } else if ("terminée".equalsIgnoreCase(p.getStatut())) {
+                            graphStatus = "terminated";
+                        } else if ("REFUSED".equalsIgnoreCase(p.getStatut())) {
+                            graphStatus = "refused";
+                        } else if ("APPLIED".equalsIgnoreCase(p.getOrigine())) {
+                            graphStatus = "sent";
+                        } else if ("INVITED".equalsIgnoreCase(p.getOrigine())) {
+                            graphStatus = "invited";
+                        } else {
+                            graphStatus = "";
+                        }
+                        return status.equalsIgnoreCase(graphStatus);
+                    })
+                    .count();
+            totals.put(status, total);
+        }
+
+        // Calcul des totaux regroupés
+        long totalInvitedApplied = totals.getOrDefault("sent", 0L) + totals.getOrDefault("invited", 0L);
+        long totalStatus = totals.getOrDefault("inProgress", 0L)
+                + totals.getOrDefault("terminated", 0L)
+                + totals.getOrDefault("refused", 0L);
+
+        // Construction de la réponse
+        Map<String, Object> response = new HashMap<>();
+        response.put("labels", labels);
+        response.put("datasets", datasets);
+        response.put("totals", totals);
+        response.put("totalInvitedApplied", totalInvitedApplied);
+        response.put("totalStatus", totalStatus);
+
+        return response;
+    }
     public Map<String, Object> getAggregatedConsultantStats(Long consultantId, int periodDays) {
         List<Proposition> proposals = propositionRepository.findByConsultantId(consultantId);
 
