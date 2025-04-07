@@ -15,6 +15,7 @@ const getDonutData = async (consultantId, period) => {
         Authorization: `Bearer ${token}`,
       },
     });
+    console.log("Response from donut data:", response.data);
     return response.data;
   } catch (error) {
     console.error("Erreur lors de la récupération des données du donut :", error);

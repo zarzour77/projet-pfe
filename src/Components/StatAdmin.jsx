@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
-import  { useState, useEffect } from 'react'; 
+import  { useState, useEffect } from 'react';  
 import { motion } from 'framer-motion';
 import { Line, Bar, Pie } from 'react-chartjs-2';
 import {
@@ -21,8 +21,9 @@ import {
   fetchUserRoleStats, 
   fetchCountryStats,
   fetchConnectionStats,
-  fetchTransactionsVolume
-} from '../services/StatAdminService';
+  fetchTransactionsVolume,
+  fetchGlobalApplicationFeeStats
+} from '../Services/StatAdminService';
 
 ChartJS.register(
   CategoryScale,
@@ -36,7 +37,7 @@ ChartJS.register(
   Legend
 );
 
-// Fonction pour générer le range complet de dates (format ISO "YYYY-MM-DD")
+// Fonction pour générer un range de dates (pour inscriptions)
 const generateDateRange = (filter) => {
   const dates = [];
   const end = new Date(); // aujourd'hui
@@ -53,129 +54,86 @@ const generateDateRange = (filter) => {
 };
 
 function StatAdmin() {
-  // États existants
-  const [inscriptionsData, setInscriptionsData] = useState({
-    labels: [],
-    datasets: []
-  });
+  // États pour les différentes sections
+  const [inscriptionsData, setInscriptionsData] = useState({ labels: [], datasets: [] });
   const [filter, setFilter] = useState("lastWeek");
-  const [topTalentsData, setTopTalentsData] = useState({
-    labels: [],
-    datasets: []
-  });
-  const [roleDistributionData, setRoleDistributionData] = useState({
-    labels: [],
-    datasets: []
-  });
+  const [topTalentsData, setTopTalentsData] = useState({ labels: [], datasets: [] });
+  const [roleDistributionData, setRoleDistributionData] = useState({ labels: [], datasets: [] });
   const [heatmapData, setHeatmapData] = useState(null);
   const [connectionStatsData, setConnectionStatsData] = useState(null);
-  // Nouvel état pour le volume des transactions
-  const [transactionsVolumeData, setTransactionsVolumeData] = useState({
-    labels: [],
-    datasets: []
-  });
+  const [transactionsVolumeData, setTransactionsVolumeData] = useState({ labels: [], datasets: [] });
+  
+  // États pour les revenus globaux (applicationFee)
+  const [revenuePeriod, setRevenuePeriod] = useState("6months"); // "6months" ou "year"
+  const [feeStats, setFeeStats] = useState(null);
 
   // Animation pour les cartes
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
-  };
+  const cardVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
 
-  // Options du graphique pour les inscriptions
+  // Options pour le graphique des inscriptions
   const inscriptionsOptions = {
     responsive: true,
-    plugins: {
-      legend: { display: true },
-      tooltip: { mode: 'index', intersect: false }
-    },
+    plugins: { legend: { display: true }, tooltip: { mode: 'index', intersect: false } },
     scales: {
-      x: {
-        title: {
-          display: true,
-          text: filter === "lastWeek" ? "Jour de la semaine" : "Jour du mois"
-        }
-      },
-      y: {
-        title: { display: true, text: "Nombre d'inscriptions" },
-        beginAtZero: true,
-        ticks: {
-          precision: 0,
-          stepSize: 1,
-          callback: (value) => Number(value).toString()
-        }
-      }
+      x: { title: { display: true, text: filter === "lastWeek" ? "Jour de la semaine" : "Jour du mois" } },
+      y: { title: { display: true, text: "Nombre d'inscriptions" }, beginAtZero: true, ticks: { precision: 0, stepSize: 1, callback: (value) => Number(value).toString() } }
     }
   };
 
-  // Options pour le graphique des connexions (Périodes de forte activité)
+  // Options pour le graphique des connexions
   const connectionStatsOptions = {
     responsive: true,
-    plugins: {
-      legend: { display: false },
-      tooltip: { mode: 'index', intersect: false }
-    },
+    plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
     scales: {
-      x: {
-        title: { display: true, text: "Heures de la journée" },
-        ticks: { autoSkip: false } // Afficher toutes les heures
-      },
-      y: {
-        title: { display: true, text: "Nombre de connexions" },
-        beginAtZero: false,
-        min: 1,   // Démarre à 1 pour ne pas afficher 0
-        ticks: {
-          stepSize: 1
-        }
-      }
+      x: { title: { display: true, text: "Heures de la journée" }, ticks: { autoSkip: false } },
+      y: { title: { display: true, text: "Nombre de connexions" }, beginAtZero: false, min: 1, ticks: { stepSize: 1 } }
     }
   };
 
-  // Récupération et traitement des données d'inscriptions selon le filtre sélectionné
+  // Options pour le graphique des revenus (Line Chart)
+  const revenueOptions = {
+    responsive: true,
+    plugins: {
+      legend: { position: "bottom" },
+      tooltip: { callbacks: { label: (context) => (context.raw || 0).toFixed(2) + "€" } }
+    },
+    scales: { x: { title: { display: true, text: "Mois" } }, y: { title: { display: true, text: "Montant en €" }, beginAtZero: true } }
+  };
+
+  // Options pour le graphique Pie (Répartition des revenus)
+  const revenueDistributionOptions = { responsive: true, plugins: { legend: { position: "bottom" } } };
+
+  // Récupération et traitement des données d'inscriptions
   useEffect(() => {
     const getData = async () => {
       try {
         const stats = await fetchInscriptions(filter);
         console.log('Statistiques des inscriptions:', stats);
-
-        // Générer le range complet de dates pour la période
         const allDates = generateDateRange(filter);
-
-        // Pour chaque date, récupérer l'objet correspondant (ou créer un objet vide)
         const completeStats = allDates.map(dateStr => {
           const found = stats.find(item => item.date === dateStr);
-          return found || {
-            date: dateStr,
-            consultantCount: 0,
-            entrepriseClienteCount: 0,
-            entrepriseSsiCount: 0
-          };
+          return found || { date: dateStr, consultantCount: 0, entrepriseClienteCount: 0, entrepriseSsiCount: 0 };
         });
-
-        const labels = completeStats.map(item => item.date);
-        const consultantData = completeStats.map(item => Number(item.consultantCount));
-        const entrepriseClienteData = completeStats.map(item => Number(item.entrepriseClienteCount));
-        const entrepriseSsiData = completeStats.map(item => Number(item.entrepriseSsiCount));
-
         setInscriptionsData({
-          labels,
+          labels: completeStats.map(item => item.date),
           datasets: [
             {
               label: 'Inscriptions Consultant',
-              data: consultantData,
+              data: completeStats.map(item => Number(item.consultantCount)),
               borderColor: '#005293',
               backgroundColor: 'rgba(0,82,147,0.2)',
               fill: true
             },
             {
               label: 'Inscriptions Entreprise Cliente',
-              data: entrepriseClienteData,
+              data: completeStats.map(item => Number(item.entrepriseClienteCount)),
               borderColor: '#F39C12',
               backgroundColor: 'rgba(243,156,18,0.2)',
               fill: true
             },
             {
               label: 'Inscriptions Entreprise SSI',
-              data: entrepriseSsiData,
+              data: completeStats.map(item => Number(item.entrepriseSsiCount)),
               borderColor: '#2ecc71',
               backgroundColor: 'rgba(46,204,113,0.2)',
               fill: true
@@ -183,14 +141,13 @@ function StatAdmin() {
           ]
         });
       } catch (error) {
-        console.error('Erreur lors de la récupération des données d’inscriptions:', error);
+        console.error('Erreur lors de la récupération des inscriptions:', error);
       }
     };
-
     getData();
   }, [filter]);
 
-  // Récupération des données Top Talents depuis l'API via le service
+  // Récupération des données Top Talents
   useEffect(() => {
     const getTopTalentsData = async () => {
       try {
@@ -210,18 +167,17 @@ function StatAdmin() {
           ]
         });
       } catch (error) {
-        console.error("Erreur lors de la récupération des données Top Talents:", error);
+        console.error("Erreur lors de la récupération des Top Talents:", error);
       }
     };
     getTopTalentsData();
   }, []);
 
-  // Récupération des statistiques des rôles depuis l'API via le service
+  // Récupération des statistiques des rôles
   useEffect(() => {
     const getUserRoleStats = async () => {
       try {
         const data = await fetchUserRoleStats();
-        console.log('Statistiques des rôles:', data);
         const labels = Object.keys(data);
         const counts = Object.values(data);
         setRoleDistributionData({
@@ -243,13 +199,11 @@ function StatAdmin() {
     getUserRoleStats();
   }, []);
 
-  // Récupération des données de la heatmap via fetchCountryStats
+  // Récupération des données de la heatmap
   useEffect(() => {
     const getHeatmapData = async () => {
       try {
         const data = await fetchCountryStats();
-        console.log('Statistiques géographiques:', data);
-        // On suppose que data est un objet { "Pays1": nombre, "Pays2": nombre, ... }
         const labels = Object.keys(data);
         const counts = Object.values(data);
         setHeatmapData({
@@ -263,27 +217,24 @@ function StatAdmin() {
           ]
         });
       } catch (error) {
-        console.error("Erreur lors de la récupération des données de la heatmap:", error);
+        console.error("Erreur lors de la récupération de la heatmap:", error);
       }
     };
     getHeatmapData();
   }, []);
 
-  // Récupération des statistiques de connexions via fetchConnectionStats
+  // Récupération des statistiques de connexions
   useEffect(() => {
     const getConnectionStats = async () => {
       try {
         const data = await fetchConnectionStats();
-        console.log('Statistiques de connexions:', data);
-        // data est un objet où chaque clé représente une heure ("00", "01", … "23")
-        // et la valeur correspondante est le nombre de connexions.
         const labels = Object.keys(data);
         const counts = Object.values(data);
         const backgroundColors = labels.map(label => {
           const count = data[label];
-          if (count > 5) return '#FF4500'; // Rouge pour forte activité
-          if (count > 2) return '#FFA500'; // Orange
-          return '#2ecc71'; // Vert pour faible activité
+          if (count > 5) return '#FF4500';
+          if (count > 2) return '#FFA500';
+          return '#2ecc71';
         });
         setConnectionStatsData({
           labels,
@@ -296,26 +247,57 @@ function StatAdmin() {
           ]
         });
       } catch (error) {
-        console.error("Erreur lors de la récupération des statistiques de connexions:", error);
+        console.error("Erreur lors de la récupération des connexions:", error);
       }
     };
     getConnectionStats();
   }, []);
 
-  // Récupération du volume des transactions via fetchTransactionsVolume
-  // Ici, nous utilisons la période "month". Vous pouvez l'adapter selon vos besoins.
+  // Récupération du volume des transactions avec ajout de couleur dans les bars
   useEffect(() => {
     const getTransactionsVolume = async () => {
       try {
         const data = await fetchTransactionsVolume("month");
-        console.log("Volume des transactions:", data);
-        setTransactionsVolumeData(data);
+        // Ajout d'une couleur personnalisée pour chaque barre
+        const coloredDatasets = data.datasets.map(ds => ({
+          ...ds,
+          backgroundColor: ds.data.map(() => "#36A2EB") // Couleur bleu clair pour toutes les barres
+        }));
+        setTransactionsVolumeData({
+          labels: data.labels,
+          datasets: coloredDatasets
+        });
       } catch (error) {
         console.error("Erreur lors de la récupération du volume des transactions:", error);
       }
     };
     getTransactionsVolume();
   }, []);
+
+  // Récupération des revenus globaux via l'API pour les applicationFee
+  useEffect(() => {
+    async function getGlobalRevenue() {
+      try {
+        const data = await fetchGlobalApplicationFeeStats(revenuePeriod);
+        console.log("Revenus globaux reçus du backend:", data);
+        // Conversion des montants de centimes en euros
+        const dataset = {
+          label: "Application Fee (en €)",
+          data: data.data.map(value => value / 100),
+          borderColor: "#F39C12",
+          backgroundColor: "rgba(243,156,18,0.2)",
+          fill: false,
+        };
+        setFeeStats({
+          labels: data.labels,
+          datasets: [dataset],
+        });
+      } catch (error) {
+        console.error("Erreur lors de la récupération des revenus globaux :", error);
+      }
+    }
+    getGlobalRevenue();
+  }, [revenuePeriod]);
 
   // Données statiques pour les revenus (exemple)
   const revenueData = {
@@ -363,7 +345,7 @@ function StatAdmin() {
         Visualisez les statistiques clés de la plateforme.
       </motion.p>
 
-      {/* Carte Inscriptions avec filtre */}
+      {/* Section Inscriptions */}
       <div className={styles.section}>
         <motion.h2 
           className={styles.sectionTitle}
@@ -467,25 +449,42 @@ function StatAdmin() {
             animate="visible"
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <h3 className={styles.cardTitle}>Revenus générés</h3>
-            <Line data={revenueData} />
+            {/* Carte Revenus générés par l'admin */}
+            <div className={styles.cardHeader}>
+              <h3 className={styles.cardTitle}>Revenus générés par l'admin</h3>
+              <div className={styles.periodSelect}>
+                <select
+                  className={styles.select}
+                  value={revenuePeriod}
+                  onChange={(e) => setRevenuePeriod(e.target.value)}
+                >
+                  <option value="6months">Derniers 6 mois</option>
+                  <option value="year">Dernière année</option>
+                </select>
+              </div>
+            </div>
+            {feeStats ? (
+              <Line data={feeStats} options={revenueOptions} />
+            ) : (
+              <p>Chargement des revenus...</p>
+            )}
           </motion.div>
           <motion.div 
             className={styles.card}
             variants={cardVariants}
             initial="hidden"
-            animate={{ opacity: 1, y: 0 }}
+            animate="visible"
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <h3 className={styles.cardTitle}>Répartition des revenus</h3>
             <div className={styles.smallPie}>
-              <Pie data={revenueDistributionData} />
+              <Pie data={revenueDistributionData} options={revenueDistributionOptions} />
             </div>
           </motion.div>
         </div>
       </div>
 
-      {/* Section Engagement avec deux cartes côte à côte */}
+      {/* Section Engagement */}
       <div className={styles.section}>
         <motion.h2 
           className={styles.sectionTitle}
@@ -496,13 +495,12 @@ function StatAdmin() {
           Engagement et activité sur la plateforme
         </motion.h2>
         <div className={styles.dualColumn}>
-          {/* Carte Gauche : Périodes de forte activité (statistiques de connexion) */}
           <div className={styles.column}>
             <motion.div 
               className={styles.card}
               variants={cardVariants}
               initial="hidden"
-              animate={{ opacity: 1, y: 0 }}
+              animate="visible"
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <h3 className={styles.cardTitle}>Périodes de forte activité</h3>
@@ -515,13 +513,12 @@ function StatAdmin() {
               </div>
             </motion.div>
           </div>
-          {/* Carte Droite : Heatmap de l'activité (statistiques géographiques) */}
           <div className={styles.column}>
             <motion.div 
               className={styles.card}
               variants={cardVariants}
               initial="hidden"
-              animate={{ opacity: 1, y: 0 }}
+              animate="visible"
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <h3 className={styles.cardTitle}>Heatmap de l'activité</h3>

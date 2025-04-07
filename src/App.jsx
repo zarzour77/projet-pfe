@@ -32,6 +32,8 @@ import CollaboratorsList from "./Components/CollaboratorsList";
 import EntrepriseProfilePage from "./Components/EntrepriseProfilePage";
 import VoirProfileEntreprise from "./Components/VoirProfileEntreprise";
 import Settings from "./Components/Settings";
+import Dispute from "./Components/Dispute";
+import AdminDispute from "./Components/Admindispute";
 import { AuthProvider } from "./Services/AuthContext";
 
 const App = () => {
@@ -43,7 +45,8 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/UserInformation" element={<UserInformation />} />
           <Route path="/Notification" element={<Notification />} />
-          
+          <Route path="/Dispute" element={<Dispute />} />
+          <Route path="/Admindispute" element={<AdminDispute />} />
           {/* Updated Stat Routes */}
           <Route
             path="/StatConsultant"
@@ -247,6 +250,7 @@ const App = () => {
             path="/Messenger"
             element={
               <ProtectedRoute allowedRoles={["Consultant", "Entreprise", "Admin"]}>
+                <Header />
                 <Messenger />
               </ProtectedRoute>
             }

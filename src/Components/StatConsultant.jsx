@@ -16,7 +16,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
 import styles from './StatConsultant.module.css';
-import StatConsultantService from '../services/StatConsultantService';
+import StatConsultantService from '../Services/StatConsultantService';
 import ProfileViewService from '../Services/ProfileViewService';
 import ConsultantService from '../Services/ConsultantService';
 

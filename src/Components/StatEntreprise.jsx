@@ -12,7 +12,7 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
-import StatEntrepriseService from '../services/StatEntrepriseService';
+import StatEntrepriseService from '../Services/StatEntrepriseService';
 import styles from './StatEntreprise.module.css';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);

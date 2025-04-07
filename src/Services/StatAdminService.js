@@ -9,7 +9,24 @@ const CONNECTION_STATS_API_URL = 'http://localhost:8181/api/users/connection-sta
 const TRANSACTIONS_VOLUME_API_URL = 'http://localhost:8181/api/payments/transactions/volume/all';
 
 
-
+export const fetchGlobalApplicationFeeStats = async (period = "6months") => {
+  const token = localStorage.getItem("token");
+  try {
+    const response = await axios.get(
+      `http://localhost:8181/api/payments/global/applicationFee?period=${period}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data; // doit renvoyer { labels: [...], data: [...] }
+  } catch (error) {
+    console.error("Erreur lors de la récupération des stats globales d'applicationFee :", error);
+    throw error;
+  }
+};
 export const fetchTransactionsVolume = async (period = "month") => {
   const token = localStorage.getItem("token");
   try {

@@ -7,18 +7,13 @@ import 'react-toastify/dist/ReactToastify.css';
 
 // Material‑UI components
 import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
+
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import TextField from '@mui/material/TextField';
 import MUITooltip from '@mui/material/Tooltip';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 // Services et navigation
-import { useNavigate } from 'react-router-dom';
 import DomaineService from '../Services/DomaineService';
 import {
   applyToMission,
@@ -37,19 +32,11 @@ import EntrepriseService from '../Services/EntrepriseService';
 
 import styles from './SearchMission.module.css';
 
-const theme = createTheme({
-  palette: {
-    primary: { main: "#009990" },
-    secondary: { main: "#074799" },
-    background: { default: "#E1FFBB" },
-    text: { primary: "#001A6E" }
-  },
-  typography: { fontFamily: "Arial, sans-serif" },
-});
+
 
 function SearchMission() {
-  const navigate = useNavigate();
-
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+  const userRole = storedUser?.role;
   // États pour filtres, affichage et pagination
   const [selectedDomaine, setSelectedDomaine] = useState('');
   const [experience, setExperience] = useState('');
@@ -67,8 +54,7 @@ function SearchMission() {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
-
+  const itemsPerPage = 6;
   // États pour le modal d'application
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [selectedMission, setSelectedMission] = useState(null);
@@ -81,9 +67,12 @@ function SearchMission() {
   const [enterpriseConsultants, setEnterpriseConsultants] = useState([]);
   const [selectedConsultantId, setSelectedConsultantId] = useState("");
 
+  const [proposedMissionIds, setProposedMissionIds] = useState([]);
+
   // Récupération de l'utilisateur lors du montage
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user"));
+    
+
     if (!storedUser) {
       toast.error("Utilisateur non trouvé");
       return;
@@ -95,7 +84,14 @@ function SearchMission() {
         return;
       }
       ConsultantService.getConsultantById(consultantId)
-        .then(data => setConsultant(data))
+        .then(data => {setConsultant(data); console.log(data)
+          const ids = data.propositions?.map(p => p.mission?.id) || [];
+    setProposedMissionIds(ids);
+    console.log(proposedMissionIds)
+        }
+      
+      )
+
         .catch(error => {
           console.error("[ERROR] Erreur lors de la récupération du consultant :", error);
           toast.error("Erreur lors de la récupération du consultant");
@@ -226,6 +222,9 @@ function SearchMission() {
 
   // Filtrage par mot-clé
   const filteredMissionsList = missions.filter(mission => {
+    if (userRole === 'Consultant' && proposedMissionIds.includes(mission.id)) {
+      return false;
+    }
     if (!searchKeyword) return true;
     const lowerKeyword = searchKeyword.toLowerCase();
     return (
@@ -376,7 +375,6 @@ function SearchMission() {
   };
 
   return (
-    <ThemeProvider theme={theme}>
       <div className={styles.searchMissionContainer}>
         <ToastContainer />
 
@@ -404,34 +402,55 @@ function SearchMission() {
           animate={{ y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Button variant="contained" onClick={handleShowSavedMissions} aria-label="Toggle Saved Missions">
-            {showSaved ? "All Missions" : "Saved missions"}
-          </Button>
+          {userRole === 'Consultant' && (
+  <Button
+    variant="contained"
+    onClick={handleShowSavedMissions}
+    aria-label="Toggle Saved Missions"
+  >
+    {showSaved ? "All Missions" : "Saved missions"}
+  </Button>
+)}
+
+
+          <div className={styles.leftActions}>
+          
           <Select
-            value={sortOption}
-            onChange={(e) => setSortOption(e.target.value)}
-            variant="outlined"
-            size="small"
-            aria-label="Sort missions"
-          >
-            <MenuItem value="newest">Sort by: Newest</MenuItem>
-            <MenuItem value="oldest">Sort by: Oldest</MenuItem>
-          </Select>
-          <div className={styles.viewToggle}>
-            <button
-              onClick={() => setViewMode('list')}
-              className={viewMode === 'list' ? styles.active : ''}
-              aria-label="List view"
-            >
-              <FaList />
-            </button>
-            <button
-              onClick={() => setViewMode('grid')}
-              className={viewMode === 'grid' ? styles.active : ''}
-              aria-label="Grid view"
-            >
-              <FaTh />
-            </button>
+  value={sortOption}
+  onChange={e => setSortOption(e.target.value)}
+  variant="outlined"
+  displayEmpty
+  renderValue={value =>
+    `Trier par : ${value === 'newest' ? 'Plus récent' : 'Plus ancien'}`
+  }
+  style={{ marginRight: '1rem', minWidth: 180 }}
+  aria-label="Trier les missions"
+>
+  <MenuItem value="newest">Plus récent</MenuItem>
+  <MenuItem value="oldest">Plus ancien</MenuItem>
+</Select>
+
+
+          </div>
+          <div className={styles.rightActions}>
+            <Button variant="contained"   className={styles.clearFiltersButton}
+ onClick={clearFilters}>
+              Effacer Filtres
+            </Button>
+            <div className={styles.viewToggle}>
+              <button
+                onClick={() => setViewMode('list')}
+                className={viewMode === 'list' ? styles.active : ''}
+              >
+                <FaList />
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={viewMode === 'grid' ? styles.active : ''}
+              >
+                <FaTh />
+              </button>
+            </div>
           </div>
         </motion.div>
 
@@ -444,7 +463,6 @@ function SearchMission() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
             >
-              <h3>Filter by</h3>
               <div className={styles.filterGroup}>
                 <label>Domaine</label>
                 <Select
@@ -515,94 +533,71 @@ function SearchMission() {
                   <MenuItem value="3-6 mois">{"3-6 mois"}</MenuItem>
                 </Select>
               </div>
-              <Button variant="outlined" onClick={clearFilters} className={styles.clearFilters}>
-                Clear All Filters
-              </Button>
+              
             </motion.aside>
           )}
 
-          <section className={styles.jobList}>
-            {isLoading ? (
-              <div className={styles.skeletonContainer}>
-                <div className={styles.skeletonItem}></div>
-                <div className={styles.skeletonItem}></div>
-                <div className={styles.skeletonItem}></div>
+<section className={`${styles.jobList} ${viewMode === 'grid' ? styles.gridView : ''}`}>
+          {isLoading ? null : sortedMissions.length === 0 ? null : currentMissions.map((mission, idx) => (
+            <motion.div
+              key={mission.id}
+              className={`${styles.jobItem} ${viewMode === 'grid' ? styles.gridItem : ''}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: idx * 0.1 }}
+              whileHover={{ scale: 1.02 }}
+            >
+              <h2>{mission.titre}</h2>
+              <div className={styles.jobInfo}>
+                <span className={styles.paymentVerified}>Payment verified</span>
+                <span className={styles.spent}>{"$" + mission.budget + "+"}</span>
+                <span className={styles.location}>
+                  {mission.entreprise ? (mission.entreprise.nom || mission.entreprise) : "Unknown"}
+                </span>
+                <span className={styles.published}>
+                  {mission.publishedAt && !isNaN(new Date(mission.publishedAt).getTime())
+                    ? formatDistanceToNow(new Date(mission.publishedAt), { addSuffix: true })
+                    : "N/A"}
+                </span>
+                <span className={styles.propositionsCount}>
+                  {mission.propositionsCount} proposition{mission.propositionsCount !== 1 ? "s" : ""}
+                </span>
               </div>
-            ) : sortedMissions.length === 0 ? (
-              <div className={styles.noJobs}>
-                <img src="https://undraw.co/api/illustrations/searching.svg" alt="No missions found" />
-                <p>No missions found. Try adjusting your filters.</p>
+              <div className={styles.jobTags}>
+                {mission.domaines?.map((d, i) => <span key={i} className={styles.tag}>{d.nom}</span>)}
+                {mission.competencesRequises?.map((c, i) => <span key={i} className={styles.tag}>{c.nom}</span>)}
               </div>
-            ) : (
-              currentMissions.map((mission, index) => (
-                <motion.div
-                  key={mission.id}
-                  className={`${styles.jobItem} ${viewMode === 'grid' ? styles.gridItem : ''}`}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                  whileHover={{ scale: 1.02 }}
-                >
-                  <h2>{mission.titre}</h2>
-                  <div className={styles.jobInfo}>
-                    <span className={styles.paymentVerified}>Payment verified</span>
-                    <span className={styles.spent}>{"$" + mission.budget + "+"}</span>
-                    <span className={styles.location}>
-                      {mission.entreprise ? (mission.entreprise.nom || mission.entreprise) : "Unknown"}
-                    </span>
-                    <span className={styles.published}>
-                      Published{" "}
-                      {mission.publishedAt && !isNaN(new Date(mission.publishedAt).getTime())
-                        ? formatDistanceToNow(new Date(mission.publishedAt), { addSuffix: true })
-                        : "N/A"}
-                    </span>
-                    <span className={styles.propositionsCount}>
-                      {mission.propositionsCount} proposition{mission.propositionsCount !== 1 ? "s" : ""}
-                    </span>
-                  </div>
-                  <div className={styles.jobTags}>
-                    {mission.domaines && mission.domaines.map((d, i) => (
-                      <span key={i} className={styles.tag}>{d.nom}</span>
-                    ))}
-                    {mission.competencesRequises && mission.competencesRequises.map((c, i) => (
-                      <span key={i} className={styles.tag}>{c.nom}</span>
-                    ))}
-                  </div>
-                  <p className={styles.jobDescription}>{mission.description}</p>
-                  <div className={styles.actionButtons}>
-                    {consultant?.typeConsultant !== 'ENTREPRISE_SSI' && (
-                      <MUITooltip title="Apply for this mission" arrow>
-                        <Button variant="contained" size="small" onClick={() => handleApplyClick(mission)}>
-                          Apply
-                        </Button>
-                      </MUITooltip>
-                    )}
-                    <MUITooltip title="Save this mission for later" arrow>
+              <p className={styles.jobDescription}>{mission.description}</p>
+              <div className={styles.actionButtons}>
+                {userRole === 'Consultant' && (
+                  <>
+                    <MUITooltip title="Postuler" arrow>
+                      <Button variant="contained" size="small" onClick={() => handleApplyClick(mission)}>
+                        Postuler
+                      </Button>
+                    </MUITooltip>
+                    <MUITooltip title="Sauvegarder" arrow>
                       <Button variant="outlined" size="small" onClick={() => handleSaveJob(mission.id)}>
-                        Save
+                        Sauvegarder
                       </Button>
                     </MUITooltip>
-                    <MUITooltip title="Copy mission link" arrow>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={() => {
-                          console.log("[INFO] Copie du lien de la mission :", mission.id);
-                          toast.info("Link copied!");
-                        }}
-                      >
-                        Share
-                      </Button>
-                    </MUITooltip>
-                  </div>
-                </motion.div>
-              ))
-            )}
-          </section>
+                  </>
+                )}
+                {userRole === 'Entreprise' && (
+                  <MUITooltip title="Attribuer" arrow>
+                    <Button variant="contained" size="small" onClick={() => handleApplyClick(mission)}>
+                      Attribuer
+                    </Button>
+                  </MUITooltip>
+                )}
+              </div>
+            </motion.div>
+          ))}
+        </section>
         </div>
 
         {sortedMissions.length > itemsPerPage && (
-          <div className={styles.paginationContainer}>
+          <div className={styles.pagination}>
             <Button
               variant="outlined"
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
@@ -622,82 +617,55 @@ function SearchMission() {
         )}
 
 {showApplyModal && selectedMission && (
-          <Dialog open={true} onClose={handleCloseApplyModal}>
-            <DialogTitle>Postuler à la mission : {selectedMission.titre}</DialogTitle>
-            <DialogContent>
-              <TextField
-                autoFocus
-                margin="dense"
-                label="Montant proposé"
-                type="number"
-                fullWidth
-                value={propositionMontant}
-                InputProps={{ readOnly: true }}
-              />
-              <TextField
-                margin="dense"
-                label="Durée estimée"
-                type="text"
-                fullWidth
-                value={propositionDuree}
-                InputProps={{ readOnly: true }}
-                helperText="Ex: 3 mois"
-              />
-              {JSON.parse(localStorage.getItem("user")).role === "Entreprise" && (
-                <Select
-                fullWidth
-                value={selectedConsultantId}
-                onChange={(e) => setSelectedConsultantId(e.target.value)}
-                displayEmpty
-              >
-                <MenuItem value="" disabled>
-                  Sélectionnez un consultant
-                </MenuItem>
-                {enterpriseConsultants.map(consult => (
-                  <MenuItem 
-                    key={consult.id} 
-                    value={consult.id}
-                    disabled={consult.workload > 0}
-                    style={{ display: 'flex', justifyContent: 'space-between',color: consult.workload > 0 ? '#000000' : 'inherit',
-                      fontStyle: consult.workload > 0 ? 'italic' : 'normal',
-                      cursor: consult.workload > 0 ? 'not-allowed' : 'pointer' }}
-                  >
-                    <span>
-                      {consult.nom} {consult.prenom}
-                    </span>
-                    {consult.workload > 0 && (
-                      <span style={{ color: '#ff0000', marginLeft: '1rem' }}>
-                        (Occupé)
-                      </span>
-                    )}
-                  </MenuItem>
-                ))}
-              </Select>
-              )}
-              <TextField
-                margin="dense"
-                label="Votre message"
-                type="text"
-                fullWidth
-                multiline
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <button className={styles.modalCloseBtn} onClick={handleCloseApplyModal}>×</button>
+            <div className={styles.modalHeader}>
+              <h2>
+                {userRole === 'Entreprise'
+                  ? `Attribuer un consultant à la mission : ${selectedMission.titre}`
+                  : `Postuler à la mission : ${selectedMission.titre}`}
+              </h2>
+            </div>
+            <div className={styles.modalFormGroup}>
+              <label className={styles.formLabel}>Montant proposé : </label>
+              <input className={styles.modalInput} type="number" value={propositionMontant} readOnly />
+            </div>
+            <div className={styles.modalFormGroup}>
+              <label className={styles.formLabel}>Durée estimée : </label>
+              <input className={styles.modalInput} type="text" value={propositionDuree} readOnly />
+            </div>
+            {userRole === "Entreprise" && (
+              <div className={styles.modalFormGroup}>
+                <label className={styles.formLabel}>Sélectionnez un consultant</label>
+                <select className={styles.modalInput} value={selectedConsultantId} onChange={e => setSelectedConsultantId(e.target.value)}>
+                  <option value="" disabled>Sélectionnez un consultant</option>
+                  {enterpriseConsultants.map(c => (
+                    <option key={c.id} value={c.id} disabled={c.workload > 0}>
+                      {c.nom} {c.prenom}{c.workload > 0 ? ' (Occupé)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div className={styles.modalFormGroup}>
+              <label className={styles.formLabel}>Votre message</label>
+              <textarea
+                className={styles.modalInput}
                 rows={3}
                 value={propositionMessage}
-                onChange={(e) => setPropositionMessage(e.target.value)}
-                helperText="Expliquez brièvement votre proposition"
+                onChange={e => setPropositionMessage(e.target.value)}
               />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleCloseApplyModal} color="primary">
-                Annuler
-              </Button>
-              <Button onClick={handleSubmitProposition} color="primary">
-                Envoyer la proposition
-              </Button>
-            </DialogActions>
-          </Dialog>
-        )}
+            </div>
+            <div className={styles.modalActions}>
+              <button className={styles.modalSubmitBtn} onClick={handleSubmitProposition}>
+                {userRole === 'Entreprise' ? 'Attribuer' : 'Envoyer la proposition'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
-    </ThemeProvider>
   );
 }
 

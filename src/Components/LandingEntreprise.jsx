@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { FaList, FaTh} from 'react-icons/fa';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { FaBell } from 'react-icons/fa';
 
 // Material‑UI components
 import Button from '@mui/material/Button';
@@ -16,10 +17,6 @@ import Slider from '@mui/material/Slider';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
 import Box from '@mui/material/Box';
 
 // Services et utilitaires
@@ -417,7 +414,6 @@ function LandingEntreprise() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <h3>Filtrer par</h3>
             <div className={styles.filterGroup}>
               <label>Catégorie</label>
               <Select
@@ -713,23 +709,24 @@ function LandingEntreprise() {
               <label className={styles.formLabel}>Sélectionner une mission</label>
               <br />
               <select
-                value={selectedMissionForInvite?.id || ''}
-                onChange={(e) => {
-                  const mission = missionsEntreprise
-                    .filter(m => m.statut?.toLowerCase() === 'en attente')
-                    .find(m => m.id === e.target.value);
-                  setSelectedMissionForInvite(mission);
-                }}
-                className={styles.formControl}
-              >
-                {missionsEntreprise
-                  .filter(mission => mission.statut?.toLowerCase() === 'en attente')
-                  .map(mission => (
-                    <option key={mission.id} value={mission.id}>
-                      {mission.titre}
-                    </option>
-                  ))}
-              </select>
+  value={selectedMissionForInvite?.id || ''}
+  onChange={(e) => {
+    const selectedId = e.target.value;
+    const mission = missionsEntreprise
+      .filter(m => m.statut?.toLowerCase() === 'en attente')
+      .find(m => m.id === parseInt(selectedId, 10)); // Convert to number
+    setSelectedMissionForInvite(mission);
+  }}
+  className={styles.formControl}
+>
+  {missionsEntreprise
+    .filter(mission => mission.statut?.toLowerCase() === 'en attente')
+    .map(mission => (
+      <option key={mission.id} value={mission.id}>
+        {mission.titre}
+      </option>
+    ))}
+</select>
             </div>
 
             {selectedMissionForInvite && (
@@ -765,9 +762,26 @@ function LandingEntreprise() {
                 rows={3}
                 placeholder="Expliquez votre proposition..."
               />
-              <p className={styles.modalHelperText}>
-              <i className="bi bi-bell"></i> Le consultant recevra une notification par email
-              </p>
+              <Typography 
+  variant="caption" 
+  color="textSecondary" 
+  sx={{ 
+    mt: 1, 
+    mb: 2,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center', // Added this line for horizontal centering
+    gap: '9px',
+    textAlign: 'center' // Ensures text wraps properly when centered
+  }}
+>
+  <FaBell style={{ 
+    fontSize: '16px', 
+    color: 'grey',
+    flexShrink: 0
+  }} />
+  Le consultant recevra une notification par email
+</Typography>
             </div>
           </>
         )}

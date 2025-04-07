@@ -8,8 +8,9 @@ import EntrepriseService from "../Services/EntrepriseService";
 import ConsultantService from "../Services/ConsultantService";
 import styles from "./Header.module.css";
 import UserService from "../Services/UserService";
-import logo from '../assets/TradeForTalentIcon.svg'
-
+import logo from '../assets/logo3.png'
+import { debounce } from "lodash";
+import MissionService from "../Services/MissionService";
 const Header = () => {
   const navigate = useNavigate();
 
@@ -20,6 +21,10 @@ const Header = () => {
   const userId = user?.id;
   const role = basicUser?.role; // role from basic data is used for initial render
 
+  const [selectedSearchType, setSelectedSearchType] = useState('talent');
+const [searchQuery, setSearchQuery] = useState('');
+const [searchResults, setSearchResults] = useState([]);
+const [showResults, setShowResults] = useState(false);
   // Fetch extended user data in background and update state when available
   useEffect(() => {
     let isMounted = true;
@@ -48,7 +53,35 @@ const Header = () => {
       isMounted = false;
     };
   }, [basicUser?.id]);
-
+const getSearchOptions = () => {
+  if (role === 'Admin') return ['talent', 'entreprise', 'mission'];
+  if (role === 'Entreprise') return ['talent', 'entreprise', 'mission'];
+  if (role === 'Consultant') return ['entreprise', 'mission'];
+  return [];
+};
+const debouncedSearch = useRef(
+  debounce(async (query, type) => {
+    try {
+      const results = query ? await performSearch(query, type) : [];
+      setSearchResults(results);
+    } catch (error) {
+      console.error('Search error:', error);
+      setSearchResults([]);
+    }
+  }, 100)
+).current;
+const performSearch = async (query, type) => {
+  switch (type) {
+    case 'talent':
+      return ConsultantService.searchConsultants(query);
+    case 'entreprise':
+      return EntrepriseService.searchEntreprises(query);
+    case 'mission':
+      return MissionService.searchMissions(query);
+    default:
+      return [];
+  }
+};
   // Notification state and fetching
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -229,9 +262,6 @@ const Header = () => {
             <ul className={styles.navLinks}>
               {role === "Admin" ? (
                 <>
-                  <li>
-                    <Link to="/StatAdmin">Dashboard</Link>
-                  </li>
                   <li className={styles.dropdown}>
                     <span className={styles.dropdownTitle}>Management</span>
                     <ul className={styles.dropdownMenu}>
@@ -249,9 +279,7 @@ const Header = () => {
                 </>
               ) : role === "Entreprise" ? (
                 <>
-                  <li>
-                    <Link to="/StatEntreprise">Dashboard</Link>
-                  </li>
+
                   {user?.typeEntreprise === "CLIENTE" ? (
                     <>
                       <li className={styles.dropdown}>
@@ -295,9 +323,6 @@ const Header = () => {
               ) : role === "Consultant" ? (
                 <>
                   <li>
-                    <Link to="/StatConsultant">Dashboard</Link>
-                  </li>
-                  <li>
                     <Link to="/SearchMission">Trouver un emploi</Link>
                   </li>
                   <li>
@@ -329,11 +354,81 @@ const Header = () => {
 
           {/* Right: Search, Messages, Notifications, Profile */}
           <div className={styles.rightSection}>
-            <div className={styles.searchContainer}>
-              <input type="text" placeholder="Rechercher des missions..." />
-              <button className={styles.searchButton}>Rechercher</button>
-            </div>
+          <div className={styles.searchContainer}>
 
+  <i className={`fa fa-search ${styles.searchIcon}`}></i>
+  <input
+  type="text"
+  placeholder={`Rechercher ${selectedSearchType}s...`}
+  className={styles.searchInput}
+  value={searchQuery}
+  onChange={(e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    setShowResults(true);
+    debouncedSearch(query, selectedSearchType);
+  }}
+  onFocus={() => setShowResults(true)}
+  onBlur={() => setTimeout(() => setShowResults(false), 200)}
+/>
+<select 
+  className={styles.searchSelect}
+  value={selectedSearchType}
+  onChange={(e) => setSelectedSearchType(e.target.value)}
+>
+  {getSearchOptions().map((option) => (
+    <option key={option} value={option}>
+      {option.charAt(0).toUpperCase() + option.slice(1)}
+    </option>
+  ))}
+</select>
+  {showResults && (
+  <div className={styles.searchResults}>
+    {searchResults.length === 0 ? (
+      <div className={styles.noResults}>
+        {searchQuery ? "Aucun résultat trouvé" : "Commencez à taper pour rechercher"}
+      </div>
+    ) : (
+      searchResults.map((result) => (
+        <Link
+          key={result.id}
+          to={
+            selectedSearchType === 'talent' ? `/consultant/${result.id}` :
+            selectedSearchType === 'entreprise' ? `/entreprise/${result.id}` :
+            `/mission/${result.id}`
+          }
+          className={styles.searchResultItem}
+        >
+          {selectedSearchType !== 'mission' && (
+            <img
+              src={result.photoprofile || 'default-avatar.png'}
+              alt={result.nom}
+              className={styles.searchResultImage}
+            />
+          )}
+          <div>
+            <div className={styles.searchResultName}>
+              {selectedSearchType === 'mission' ? (
+                <>
+                  <div>{result.titre}</div>
+                  {result.entreprise?.nom && (
+                    <div className={styles.searchResultCompany}>
+                      {result.entreprise.nom}
+                    </div>
+                  )}
+                </>
+              ) : (
+                `${result.prenom} ${result.nom}`
+              )}
+            </div>
+          </div>
+        </Link>
+      ))
+    )}
+    </div>
+  )}
+</div>
+  
             <button className={styles.iconButton} onClick={() => navigate("/Messenger")}>
               <i className="fa fa-comment"></i>
             </button>
@@ -388,6 +483,39 @@ const Header = () => {
                 <i className="fa fa-user"></i> Votre profil
               </button>
             )}
+            {role === "Admin" && (
+        <button
+          className={styles.dropdownItem}
+          onClick={() => {
+            setShowProfileMenu(false);
+            navigate("/StatAdmin");
+          }}
+        >
+          <i className="fa fa-chart-line"></i> Statistiques
+        </button>
+      )}
+      {role === "Entreprise" && (
+        <button
+          className={styles.dropdownItem}
+          onClick={() => {
+            setShowProfileMenu(false);
+            navigate("/StatEntreprise");
+          }}
+        >
+          <i className="fa fa-chart-line"></i> Statistiques
+        </button>
+      )}
+      {role === "Consultant" && (
+        <button
+          className={styles.dropdownItem}
+          onClick={() => {
+            setShowProfileMenu(false);
+            navigate("/StatConsultant");
+          }}
+        >
+          <i className="fa fa-chart-line"></i> Statistiques
+        </button>
+      )}
             <button
               className={styles.dropdownItem}
               onClick={() => {

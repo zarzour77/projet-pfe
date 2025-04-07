@@ -329,7 +329,21 @@ try {
       console.error("Error getting saved missions:", error);
       throw error;
     }
+  },
+
+  // ←——— don’t forget this comma!
+  searchConsultants: async (query) => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await axios.get(`${API_URL}/search`, {
+        params: { q: query },
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error searching consultants:", error);
+      throw error;
+    }
   }
 };
-
 export default ConsultantService;
