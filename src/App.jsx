@@ -25,6 +25,7 @@ import ConsultantPropositions from "./components/ConsultantPropositions";
 import Header from "./components/Header";
 import VirtualAssistant from "./components/VirtualAssistant";
 import StatEntreprise from "./components/StatEntreprise";
+import StatEntreprisessi from "./components/StatEntreprisessi";
 import StatAdmin from "./components/StatAdmin";
 import Footer from "./components/Footer";
 import ProtectedRoute from "./services/ProtectedRoute";
@@ -51,7 +52,7 @@ const App = () => {
           <Route path="/StatAdmin" element={<StatAdmin />} />
           <Route path="/Dispute" element={<Dispute />} />
           <Route path="/Admindispute" element={<AdminDispute />} />
-
+          <Route path="/StatEntreprisessi" element={<StatEntreprisessi />} />
           {/* Public routes */}
           <Route
             path="/consultant/:consultantId"

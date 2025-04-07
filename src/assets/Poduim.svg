@@ -1,0 +1,21 @@
+<svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fond clair -->
+  <rect width="600" height="400" fill="#FFFFFF" />
+  
+  <!-- Podium - 2ème place -->
+  <rect x="100" y="220" width="120" height="180" fill="#34495E" rx="10" ry="10"/>
+  <text x="160" y="320" font-size="40" text-anchor="middle" fill="#FFFFFF" font-family="Arial, sans-serif">2</text>
+  
+  <!-- Podium - 1ère place -->
+  <rect x="260" y="180" width="120" height="220" fill="#2C3E50" rx="10" ry="10"/>
+  <text x="320" y="290" font-size="40" text-anchor="middle" fill="#FFFFFF" font-family="Arial, sans-serif">1</text>
+  
+  <!-- Podium - 3ème place -->
+  <rect x="420" y="240" width="120" height="160" fill="#4A6572" rx="10" ry="10"/>
+  <text x="480" y="320" font-size="40" text-anchor="middle" fill="#FFFFFF" font-family="Arial, sans-serif">3</text>
+  
+  <!-- Emplacements pour images positionnés en haut des colonnes -->
+  <circle cx="160" cy="200" r="40" fill="#ECECEC" stroke="#BDC3C7" stroke-width="2"/>
+  <circle cx="320" cy="140" r="40" fill="#ECECEC" stroke="#BDC3C7" stroke-width="2"/>
+  <circle cx="480" cy="200" r="40" fill="#ECECEC" stroke="#BDC3C7" stroke-width="2"/>
+</svg>

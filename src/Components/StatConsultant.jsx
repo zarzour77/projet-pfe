@@ -70,8 +70,8 @@ const badges = [
     description: "Recognized for consistent high performance.",
     requirementsTitle: "Requirements",
     requirements: [
-      { label: "Job Success Score of 90% or higher", status: true },
-      { label: "$1,000+ earnings in the last 12 months", status: false }
+      { label: "Job Success Score of 80% or higher" },
+      { label: "$1,000+ earnings in the last month" }
     ]
   },
   {
@@ -87,8 +87,8 @@ const badges = [
     description: "Elite professionals with exceptional results.",
     requirementsTitle: "Requirements",
     requirements: [
-      { label: "Top Rated badge for at least 3 months", status: false },
-      { label: "Excellent history with multiple clients", status: false }
+      { label: "Job Success Score of 100% or higher" },
+      { label: "$1,500+ earnings in the last month" }
     ]
   },
   {
@@ -104,8 +104,8 @@ const badges = [
     description: "Top 1% of talent verified by experts.",
     requirementsTitle: "Requirements",
     requirements: [
-      { label: "Invitation-only program", status: false },
-      { label: "Expert interview completed", status: false }
+      { label: "Invitation-only program" },
+      { label: "Expert interview completed" }
     ]
   },
   {
@@ -137,7 +137,7 @@ const badges = [
     description: "Outstanding communication skills.",
     requirementsTitle: "Requirements",
     requirements: [
-      { label: "High feedback score for communication", status: false }
+      { label: "High feedback score for communication" }
     ]
   }
 ];
@@ -151,7 +151,7 @@ function StatConsultant() {
 
   // États pour les earnings et la période de filtrage (month/year)
   const [earnings, setEarnings] = useState(null);
-  const [earningsPeriod, setEarningsPeriod] = useState('year');
+  const [earningsPeriod, setEarningsPeriod] = useState('month');
 
   // Nouvel état pour stocker les données du donut chart
   const [donutData, setDonutData] = useState(null);
@@ -254,14 +254,17 @@ function StatConsultant() {
         }
       })
       .then(response => {
-        // La réponse est un objet contenant frozenFunds, applicationFee et amountReceived
         const data = response.data;
-        // Préparation des données pour le Doughnut chart
+        // Conversion explicite des valeurs en nombres
+        const frozenFunds = Number(data.frozenFunds);
+        const applicationFee = Number(data.applicationFee);
+        const amountReceived = Number(data.amountReceived);
+
         setDonutData({
           labels: ["Frozen Funds", "Application Fee", "Amount Received"],
           datasets: [
             {
-              data: [data.frozenFunds, data.applicationFee, data.amountReceived],
+              data: [frozenFunds, applicationFee, amountReceived],
               backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56"]
             }
           ]
@@ -377,6 +380,23 @@ function StatConsultant() {
     return getTotalProfileViews() >= 1;
   };
 
+  // Vérifie si le badge Top Rated est rempli
+  const isTopRatedFulfilled = () => {
+    const jobSuccessOk = consultantData && consultantData.jobSuccess && consultantData.jobSuccess >= 80;
+    console.log(consultantData);
+    console.log("jobok", jobSuccessOk);
+    const earningsOk = earnings !== null && earnings >= 100000;
+    console.log("earningsok", earningsOk);
+    return jobSuccessOk && earningsOk;
+  };
+
+  // Vérifie si le badge Top Rated Plus est rempli
+  const isTopRatedPlusFulfilled = () => {
+    const jobSuccessOk = consultantData && consultantData.jobSuccess && consultantData.jobSuccess == 100;
+    const earningsOk = earnings !== null && earnings >= 150000;
+    return jobSuccessOk && earningsOk;
+  };
+
   // Gestion de l'attribution du badge
   const handleEarnBadge = async () => {
     try {
@@ -392,6 +412,14 @@ function StatConsultant() {
         toast.error("Vous devez avoir plus de 10 conversations pour gagner ce badge.");
         return;
       }
+      if (badges[selectedBadgeIndex].name === "Top Rated" && !isTopRatedFulfilled()) {
+        toast.error("Pour gagner ce badge, vous devez avoir un Job Success Score d'au moins 80% et plus de $1,000 de gains le mois dernier.");
+        return;
+      }
+      if (badges[selectedBadgeIndex].name === "Top Rated Plus" && !isTopRatedPlusFulfilled()) {
+        toast.error("Pour gagner ce badge, vous devez avoir un Job Success Score d'au moins 100% et plus de $1,500 de gains le mois dernier.");
+        return;
+      }
       const selectedBadgeName = badges[selectedBadgeIndex].name;
       await updateBadge(consultantId, selectedBadgeName);
       toast.success(`Félicitations, vous avez gagné le badge ${selectedBadgeName} !`);
@@ -401,9 +429,10 @@ function StatConsultant() {
     }
   };
 
-  // Rendu d'un requirement
+  // Rendu d'un requirement avec ✓ si la condition est satisfaite et ✗ sinon
   const renderRequirement = (req) => {
     let fulfilled = req.status;
+    
     if (badges[selectedBadgeIndex].name === "Rising Talent") {
       fulfilled = isProfileComplete(consultantData);
     }
@@ -412,6 +441,22 @@ function StatConsultant() {
     }
     if (badges[selectedBadgeIndex].name === "Excellent Communicator" && req.label === "High feedback score for communication") {
       fulfilled = isExcellentCommunicatorFulfilled();
+    }
+    if (badges[selectedBadgeIndex].name === "Top Rated") {
+      if (req.label.includes("Job Success Score")) {
+        fulfilled = consultantData && consultantData.jobSuccess >= 80;
+      }
+      if (req.label.includes("earnings")) {
+        fulfilled = earnings !== null && earnings >= 100000;
+      }
+    }
+    if (badges[selectedBadgeIndex].name === "Top Rated Plus") {
+      if (req.label.includes("Job Success Score")) {
+        fulfilled = consultantData && consultantData.jobSuccess >= 100;
+      }
+      if (req.label.includes("earnings")) {
+        fulfilled = earnings !== null && earnings >= 150000;
+      }
     }
     return (
       <div className={styles.requirementItem}>
@@ -433,6 +478,12 @@ function StatConsultant() {
     }
     if (badges[selectedBadgeIndex].name === "Excellent Communicator") {
       return !isExcellentCommunicatorFulfilled();
+    }
+    if (badges[selectedBadgeIndex].name === "Top Rated") {
+      return !isTopRatedFulfilled();
+    }
+    if (badges[selectedBadgeIndex].name === "Top Rated Plus") {
+      return !isTopRatedPlusFulfilled();
     }
     return false;
   };
