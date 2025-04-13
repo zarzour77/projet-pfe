@@ -1,8 +1,8 @@
 /* eslint-disable react/no-unescaped-entities */
-import  { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaList, FaTh} from 'react-icons/fa';
+import { FaList, FaTh, FaBell } from 'react-icons/fa';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -15,11 +15,6 @@ import MUITooltip from '@mui/material/Tooltip';
 import Slider from '@mui/material/Slider';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
-
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
 import Box from '@mui/material/Box';
 
 // Services et utilitaires
@@ -29,10 +24,11 @@ import {
   getAllDomaines,
   getAllCompetences,
   getPublishedMissionsForEntreprise,
-  inviteConsultantToJob
-} from '../Services/LandingEntreprise';
+  inviteConsultantToJob,
+  getById
+} from '../services/LandingEntreprise';
+import { fetchPremiumConsultants } from '../services/LandingEntreprise';
 import { createConversation } from '../services/MessengerService';
-import { getById } from '../Services/LandingEntreprise';
 
 import styles from './LandingEntreprise.module.css';
 
@@ -43,9 +39,6 @@ import TopRatedPlus from '../assets/icons/TopRatedPlus.svg';
 import ExpertVetted from '../assets/icons/ExpertVetted.svg';
 import TopViewed from '../assets/icons/TopViewed.svg';
 import ExcellentCommunicator from '../assets/icons/ExcellentCommunicator.svg';
-
-// Création du thème Material‑UI
-
 
 // Options de tri
 const SORT_OPTIONS = [
@@ -78,11 +71,11 @@ function getBadgeImage(badgeName) {
 function LandingEntreprise() {
   const navigate = useNavigate();
 
-  // Récupération de l'utilisateur depuis le localStorage pour obtenir son ID
+  // Récupération de l'utilisateur depuis localStorage
   const storedUser = JSON.parse(localStorage.getItem("user"));
   const userId = storedUser?.user?.id || storedUser?.id;
 
-  // State pour stocker les informations de l'entreprise récupérées via l'API
+  // State pour stocker les informations de l'entreprise
   const [entreprise, setEntreprise] = useState(null);
 
   // Appel API pour récupérer l'entreprise par son ID
@@ -99,7 +92,7 @@ function LandingEntreprise() {
       });
   }, [userId]);
 
-  // Vérification du type d'entreprise à partir des données récupérées
+  // Vérification du type d'entreprise
   const isEntrepriseSSI = entreprise?.typeEntreprise === "SSI";
   const isEntrepriseClient = !isEntrepriseSSI;
 
@@ -118,55 +111,79 @@ function LandingEntreprise() {
   const [location, setLocation] = useState('');
   const [hourlyRateRange, setHourlyRateRange] = useState([0, 100]);
   const [sortOption, setSortOption] = useState('');
-  const [viewMode, setViewMode] = useState(() => {
-    return localStorage.getItem('viewMode') || 'list';
-  });  
+  const [viewMode, setViewMode] = useState(() => localStorage.getItem('viewMode') || 'list');
   const [currentPage, setCurrentPage] = useState(() => {
     const savedPage = localStorage.getItem('currentPage');
     return savedPage ? parseInt(savedPage) : 1;
-  });  const itemsPerPage = 6;
+  });
+  const itemsPerPage = 6;
 
   // États pour la modal d'invitation/recrutement
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [selectedConsultantForInvite, setSelectedConsultantForInvite] = useState(null);
   const [selectedMissionForInvite, setSelectedMissionForInvite] = useState(null);
   const [inviteMessage, setInviteMessage] = useState('');
+
   useEffect(() => {
     localStorage.setItem('viewMode', viewMode);
   }, [viewMode]);
-
-  // Save current page changes
   useEffect(() => {
     localStorage.setItem('currentPage', currentPage.toString());
   }, [currentPage]);
+
+  // Chargement des consultants en fonction du type d'entreprise
   useEffect(() => {
     setIsLoading(true);
-    Promise.all([
-      getAllConsultants(),
-      getAllDomaines(),
-      getAllCompetences(),
-    ])
-      .then(([consultantsData, domainesData, competencesData]) => {
-        setConsultants(consultantsData || []);
-        setDomaines(domainesData || []);
-        setCompetences(competencesData || []);
-        setIsLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setIsLoading(false);
-      });
-  }, []);
+    if (isEntrepriseSSI) {
+      // Pour les entreprises SSI, on utilise fetchPremiumConsultants()
+      fetchPremiumConsultants()
+        .then(data => {
+          setConsultants(data || []);
+          setIsLoading(false);
+        })
+        .catch(err => {
+          console.error(err);
+          setIsLoading(false);
+        });
+    } else {
+      // Pour une entreprise cliente, on récupère tous les consultants puis on priorise les premium
+      Promise.all([getAllConsultants(), fetchPremiumConsultants()])
+        .then(([allConsultants, premiumConsultants]) => {
+          // Créer un Set des ids premium pour filtrer
+          const premiumIds = new Set(premiumConsultants.map(c => c.id));
+          // Séparer les consultants premium et non premium
+          const premiumList = allConsultants.filter(c => premiumIds.has(c.id));
+          const nonPremiumList = allConsultants.filter(c => !premiumIds.has(c.id));
+          // Combiner en affichant en premier les premium
+          const finalList = [...premiumList, ...nonPremiumList];
+          setConsultants(finalList);
+          setIsLoading(false);
+        })
+        .catch(err => {
+          console.error(err);
+          setIsLoading(false);
+        });
+    }
+  }, [isEntrepriseSSI]);
 
+  // Chargement des domaines et compétences
+  useEffect(() => {
+    getAllDomaines()
+      .then(data => setDomaines(data || []))
+      .catch(err => console.error(err));
+  }, []);
+  useEffect(() => {
+    getAllCompetences()
+      .then(data => setCompetences(data || []))
+      .catch(err => console.error(err));
+  }, []);
   useEffect(() => {
     if (!domaines.length) {
       setCategories([]);
       return;
     }
     const catSet = new Set();
-    domaines.forEach(d => {
-      if (d.category) catSet.add(d.category);
-    });
+    domaines.forEach(d => { if (d.category) catSet.add(d.category); });
     setCategories(Array.from(catSet));
   }, [domaines]);
 
@@ -177,9 +194,7 @@ function LandingEntreprise() {
       return;
     }
     getPublishedMissionsForEntreprise(entrepriseId)
-      .then(data => {
-        setMissionsEntreprise(data);
-      })
+      .then(data => setMissionsEntreprise(data))
       .catch(error => {
         console.error("Erreur lors du chargement des missions publiées:", error);
       });
@@ -243,11 +258,7 @@ function LandingEntreprise() {
     navigate(`/consultant/${consultant.id}`);
   };
 
-  const handleHourlyRateChange = (e, newValue) => {
-    setHourlyRateRange(newValue);
-  };
-
-
+  const handleHourlyRateChange = (e, newValue) => setHourlyRateRange(newValue);
 
   const handleContact = async consultant => {
     try {
@@ -292,7 +303,6 @@ function LandingEntreprise() {
       origine: isEntrepriseSSI ? "RECRUTEMENT" : "INVITED"
     };
 
-    // Pour une invitation classique (non-SSI)
     if (!isEntrepriseSSI) {
       if (!selectedMissionForInvite) {
         toast.error("Veuillez sélectionner une mission");
@@ -306,7 +316,6 @@ function LandingEntreprise() {
     }
     propositionData.consultant = { id: selectedConsultantForInvite.id };
     console.log("propositionData:", propositionData);
-    console.log(propositionData.mission)
     inviteConsultantToJob(entrepriseId, selectedConsultantForInvite.id, propositionData)
       .then(() => {
         toast.success(
@@ -333,461 +342,411 @@ function LandingEntreprise() {
     setCurrentPage(1);
   };
 
-  const handlePrevPage = () => {
-    setCurrentPage(prev => Math.max(prev - 1, 1));
-  };
-
-  const handleNextPage = totalPages => {
-    setCurrentPage(prev => Math.min(prev + 1, totalPages));
-  };
+  const handlePrevPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
+  const handleNextPage = totalPages => setCurrentPage(prev => Math.min(prev + 1, totalPages));
 
   return (
-      <div className={styles.landingContainer}>
-        <ToastContainer />
-        {/* Barre de recherche globale */}
-        <motion.div
-          className={styles.globalSearchBar}
+    <div className={styles.landingContainer}>
+      <ToastContainer />
+      {/* Barre de recherche globale */}
+      <motion.div
+        className={styles.globalSearchBar}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder="Rechercher un consultant (nom, adresse, domaine, compétence...)"
+          value={searchKeyword}
+          onChange={e => setSearchKeyword(e.target.value)}
+        />
+      </motion.div>
+
+      {/* Barre de contrôle */}
+      <motion.div
+        className={styles.controlsBar}
+        initial={{ y: -20 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className={styles.leftActions}>
+          <Select
+            displayEmpty
+            variant="outlined"
+            value={sortOption}
+            onChange={e => setSortOption(e.target.value)}
+            style={{ marginRight: '1rem' }}
+            renderValue={value => {
+              if (value === "") return <span style={{ color: "#aaa" }}>Filtrer par </span>;
+              const found = SORT_OPTIONS.find(opt => opt.value === value);
+              return found ? found.label : value;
+            }}
+          >
+            {SORT_OPTIONS.map(opt => (
+              <MenuItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </div>
+        <div className={styles.rightActions}>
+          <Button variant="contained" className={styles.clearFiltersButton} onClick={clearFilters}>
+            Effacer Filtres
+          </Button>
+          <div className={styles.viewToggle}>
+            <button onClick={() => setViewMode('list')} className={viewMode === 'list' ? styles.active : ''}>
+              <FaList />
+            </button>
+            <button onClick={() => setViewMode('grid')} className={viewMode === 'grid' ? styles.active : ''}>
+              <FaTh />
+            </button>
+          </div>
+        </div>
+      </motion.div>
+
+      <div className={styles.mainContent}>
+        <motion.aside
+          className={styles.filters}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="Rechercher un consultant (nom, adresse, domaine, compétence...)"
-            value={searchKeyword}
-            onChange={e => setSearchKeyword(e.target.value)}
-          />
-        </motion.div>
-
-        {/* Barre de contrôle */}
-        <motion.div
-          className={styles.controlsBar}
-          initial={{ y: -20 }}
-          animate={{ y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className={styles.leftActions}>
+          <div className={styles.filterGroup}>
+            <label>Catégorie</label>
             <Select
               displayEmpty
-              variant="outlined"
-              value={sortOption}
-              onChange={e => setSortOption(e.target.value)}
-              style={{ marginRight: '1rem' }}
+              fullWidth
+              value={selectedCategory}
+              onChange={e => setSelectedCategory(e.target.value)}
               renderValue={value => {
-                if (value === "") return <span style={{ color: "#aaa" }}>Filtrer par </span>;
-                const found = SORT_OPTIONS.find(opt => opt.value === value);
-                return found ? found.label : value;
+                if (value === "") return <span style={{ color: "#aaa" }}>Aucune</span>;
+                return value;
               }}
             >
-              {SORT_OPTIONS.map(opt => (
-                <MenuItem key={opt.value} value={opt.value}>
-                  {opt.label}
+              <MenuItem value=""><em>Aucune</em></MenuItem>
+              {categories.map(cat => (
+                <MenuItem key={cat} value={cat}>
+                  {cat}
                 </MenuItem>
               ))}
             </Select>
-            
           </div>
-          <div className={styles.rightActions}>
-            <Button variant="contained"   className={styles.clearFiltersButton}
- onClick={clearFilters}>
-              Effacer Filtres
-            </Button>
-            <div className={styles.viewToggle}>
-              <button
-                onClick={() => setViewMode('list')}
-                className={viewMode === 'list' ? styles.active : ''}
-              >
-                <FaList />
-              </button>
-              <button
-                onClick={() => setViewMode('grid')}
-                className={viewMode === 'grid' ? styles.active : ''}
-              >
-                <FaTh />
-              </button>
-            </div>
+          <div className={styles.filterGroup}>
+            <label>Domaine</label>
+            <Select
+              displayEmpty
+              fullWidth
+              variant="outlined"
+              value={selectedDomain}
+              onChange={e => setSelectedDomain(e.target.value)}
+              renderValue={value => {
+                if (value === "") return <span style={{ color: "#aaa" }}>Aucun</span>;
+                return value;
+              }}
+            >
+              <MenuItem value=""><em>Aucun</em></MenuItem>
+              {domaines.map(dom => (
+                <MenuItem key={dom.id} value={dom.nom}>
+                  {dom.nom}
+                </MenuItem>
+              ))}
+            </Select>
           </div>
-        </motion.div>
-
-        <div className={styles.mainContent}>
-          <motion.aside
-            className={styles.filters}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            <h3>Filtrer par</h3>
-            <div className={styles.filterGroup}>
-              <label>Catégorie</label>
-              <Select
-                displayEmpty
-                fullWidth
-                value={selectedCategory}
-                onChange={e => setSelectedCategory(e.target.value)}
-                renderValue={value => {
-                  if (value === "") return <span style={{ color: "#aaa" }}>Aucune</span>;
-                  return value;
-                }}
-              >
-                <MenuItem value="">
-                  <em>Aucune</em>
+          <div className={styles.filterGroup}>
+            <label>Compétence</label>
+            <Select
+              displayEmpty
+              fullWidth
+              variant="outlined"
+              value={selectedCompetence}
+              onChange={e => setSelectedCompetence(e.target.value)}
+              renderValue={value => {
+                if (value === "") return <span style={{ color: "#aaa" }}>Aucune</span>;
+                return value;
+              }}
+            >
+              <MenuItem value=""><em>Aucune</em></MenuItem>
+              {competences.map(c => (
+                <MenuItem key={c.id} value={c.nom}>
+                  {c.nom}
                 </MenuItem>
-                {categories.map(cat => (
-                  <MenuItem key={cat} value={cat}>
-                    {cat}
-                  </MenuItem>
-                ))}
-              </Select>
-            </div>
-            <div className={styles.filterGroup}>
-              <label>Domaine</label>
-              <Select
-                displayEmpty
-                fullWidth
-                variant="outlined"
-                value={selectedDomain}
-                onChange={e => setSelectedDomain(e.target.value)}
-                renderValue={value => {
-                  if (value === "") return <span style={{ color: "#aaa" }}>Aucun</span>;
-                  return value;
-                }}
-              >
-                <MenuItem value="">
-                  <em>Aucun</em>
-                </MenuItem>
-                {domaines.map(dom => (
-                  <MenuItem key={dom.id} value={dom.nom}>
-                    {dom.nom}
-                  </MenuItem>
-                ))}
-              </Select>
-            </div>
-            <div className={styles.filterGroup}>
-              <label>Compétence</label>
-              <Select
-                displayEmpty
-                fullWidth
-                variant="outlined"
-                value={selectedCompetence}
-                onChange={e => setSelectedCompetence(e.target.value)}
-                renderValue={value => {
-                  if (value === "") return <span style={{ color: "#aaa" }}>Aucune</span>;
-                  return value;
-                }}
-              >
-                <MenuItem value="">
-                  <em>Aucune</em>
-                </MenuItem>
-                {competences.map(c => (
-                  <MenuItem key={c.id} value={c.nom}>
-                    {c.nom}
-                  </MenuItem>
-                ))}
-              </Select>
-            </div>
-            <div className={styles.filterGroup}>
-              <label>Localisation</label>
-              <TextField
-                fullWidth
-                variant="outlined"
-                placeholder="Ex: Paris"
-                value={location}
-                onChange={e => setLocation(e.target.value)}
+              ))}
+            </Select>
+          </div>
+          <div className={styles.filterGroup}>
+            <label>Localisation</label>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Ex: Paris"
+              value={location}
+              onChange={e => setLocation(e.target.value)}
+            />
+          </div>
+          <div className={styles.filterGroup}>
+            <label>Taux horaire ($/h)</label>
+            <div className={styles.sliderContainer}>
+              <Typography variant="body2">{`$${hourlyRateRange[0]} - $${hourlyRateRange[1]}`}</Typography>
+              <Slider
+                value={hourlyRateRange}
+                onChange={handleHourlyRateChange}
+                valueLabelDisplay="auto"
+                min={0}
+                max={100}
+                step={5}
               />
             </div>
-            <div className={styles.filterGroup}>
-              <label>Taux horaire ($/h)</label>
-              <div className={styles.sliderContainer}>
-                <Typography variant="body2">
-                  {`$${hourlyRateRange[0]} - $${hourlyRateRange[1]}`}
-                </Typography>
-                <Slider
-                  value={hourlyRateRange}
-                  onChange={handleHourlyRateChange}
-                  valueLabelDisplay="auto"
-                  min={0}
-                  max={100}
-                  step={5}
-                />
-              </div>
-            </div>
-          </motion.aside>
+          </div>
+        </motion.aside>
 
-          <section className={`${styles.talentList} ${viewMode === 'grid' ? styles.gridView : ''}`} >
-  {isLoading ? (
-    <p>Chargement...</p>
-  ) : currentPageConsultants.length === 0 ? (
-    <div className={styles.noResults}>
-      <p>Aucun consultant trouvé.</p>
-    </div>
-  ) : (
-    currentPageConsultants.map((consultant, index) => {
-      const jobSuccessValue = consultant.jobSuccess || 0;
-      let expLabel = 'Débutant';
-      if (consultant.experienceYears >= 1) {
-        expLabel = consultant.experienceYears < 3 ? 'Intermédiaire' : 'Expert';
-      }
-      return (
-        <motion.div
-          key={consultant.id}
-          className={`${styles.talentItem} ${viewMode === 'grid' ? styles.gridItem : ''}`}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: index * 0.1 }}
-          whileHover={{ scale: 1.02 }}
-          onClick={() => handleOpenProfile(consultant)}
-        >
-         
-          <div className={styles.talentHeader}>
-            <div className={styles.profilePicWrapper}>
-              <img
-                src={consultant.photoprofile || 'https://via.placeholder.com/50'}
-                alt={`${consultant.nom || ''} ${consultant.prenom || ''}`}
-                className={styles.profilePic}
-              />
-              {consultant.badge && (
-                <img
-                  src={getBadgeImage(consultant.badge)}
-                  alt={consultant.badge}
-                  className={styles.consultantBadge}
-                />
+        <section className={`${styles.talentList} ${viewMode === 'grid' ? styles.gridView : ''}`}>
+          {isLoading ? (
+            <p>Chargement...</p>
+          ) : currentPageConsultants.length === 0 ? (
+            <div className={styles.noResults}>
+              <p>Aucun consultant trouvé.</p>
+            </div>
+          ) : (
+            currentPageConsultants.map((consultant, index) => {
+              const jobSuccessValue = consultant.jobSuccess || 0;
+              let expLabel = 'Débutant';
+              if (consultant.experienceYears >= 1) {
+                expLabel = consultant.experienceYears < 3 ? 'Intermédiaire' : 'Expert';
+              }
+              return (
+                <motion.div
+                  key={consultant.id}
+                  className={`${styles.talentItem} ${viewMode === 'grid' ? styles.gridItem : ''}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  whileHover={{ scale: 1.02 }}
+                  onClick={() => handleOpenProfile(consultant)}
+                >
+                  <div className={styles.talentHeader}>
+                    <div className={styles.profilePicWrapper}>
+                      <img
+                        src={consultant.photoprofile || 'https://via.placeholder.com/50'}
+                        alt={`${consultant.nom || ''} ${consultant.prenom || ''}`}
+                        className={styles.profilePic}
+                      />
+                      {consultant.badge && (
+                        <img
+                          src={getBadgeImage(consultant.badge)}
+                          alt={consultant.badge}
+                          className={styles.consultantBadge}
+                        />
+                      )}
+                    </div>
+                    <div>
+                      <h2>{consultant.nom} {consultant.prenom}</h2>
+                    </div>
+                  </div>
+                  <div className={styles.talentInfo}>
+                    <span>{expLabel}</span>
+                    <span>{consultant.adresse || 'Localisation inconnue'}</span>
+                    <span>${Number(consultant.taux_horaire) || 0}/h</span>
+                  </div>
+                  
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, mb: 1 }}>
+                    <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                      <CircularProgress
+                        variant="determinate"
+                        value={100}
+                        size={40}
+                        thickness={4}
+                        sx={{ color: '#f0f0f0' }}
+                      />
+                      <CircularProgress
+                        variant="determinate"
+                        value={jobSuccessValue}
+                        size={40}
+                        thickness={4}
+                        sx={{ color: '#00796b', position: 'absolute', left: 0 }}
+                      />
+                      <Box
+                        sx={{
+                          top: 0,
+                          left: 0,
+                          bottom: 0,
+                          right: 0,
+                          position: 'absolute',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <Typography variant="caption" component="div" sx={{ fontWeight: 'bold' }}>
+                          {`${jobSuccessValue}%`}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary', minWidth: 70 }}>
+                      Taux de réussite
+                    </Typography>
+                  </Box>
+
+                  <div className={styles.talentSkills}>
+                    {consultant.domaines?.map((dom) => (
+                      <span key={dom.id} className={styles.skillTag}>
+                        {dom.nom}
+                      </span>
+                    ))}
+                  </div>
+                  <div className={styles.talentSkills}>
+                    {consultant.competences?.map((comp) => (
+                      <span key={comp.id} className={styles.skillTag}>
+                        {comp.nom}
+                      </span>
+                    ))}
+                  </div>
+                  <p className={styles.talentBio}>{consultant.workload > 0 ? 'En travail' : 'Disponible'}</p>
+                  <div className={styles.actionButtons} onClick={(e) => e.stopPropagation()}>
+                    <MUITooltip title="Voir le profil" arrow>
+                      <Button variant="contained" className={styles.viewProfile} onClick={() => handleOpenProfile(consultant)}>
+                        Profil
+                      </Button>
+                    </MUITooltip>
+                    <MUITooltip title="Contacter" arrow>
+                      <Button variant="outlined" className={styles.contactButton} onClick={() => handleContact(consultant)}>
+                        Contacter
+                      </Button>
+                    </MUITooltip>
+                    <MUITooltip title={isEntrepriseSSI ? "Recruter" : "Inviter"} arrow>
+                      <Button variant="contained" size="small" className={styles.actionButton} onClick={() => handleInviteClick(consultant)}>
+                        {isEntrepriseSSI ? "Recruter" : "Inviter"}
+                      </Button>
+                    </MUITooltip>
+                  </div>
+                </motion.div>
+              );
+            })
+          )}
+          {sortedConsultants.length > itemsPerPage && (
+            <div className={styles.pagination}>
+              <Button variant="outlined" onClick={handlePrevPage} disabled={currentPage === 1}>
+                Précédent
+              </Button>
+              <span>
+                Page {currentPage} / {totalPages}
+              </span>
+              <Button variant="outlined" onClick={() => handleNextPage(totalPages)} disabled={currentPage === totalPages} style={{ marginLeft: '1rem' }}>
+                Suivant
+              </Button>
+            </div>
+          )}
+        </section>
+      </div>
+
+      {/* Modal d'invitation/recrutement */}
+      {showInviteModal && (
+        <div className={styles.modalOverlay} onClick={handleCloseInviteModal}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <button className={styles.modalCloseBtn} onClick={handleCloseInviteModal}>
+              &times;
+            </button>
+            <h2 className={styles.modalTitle}>
+              {isEntrepriseSSI
+                ? `Recruter ${selectedConsultantForInvite?.nom} ${selectedConsultantForInvite?.prenom}`
+                : `Inviter ${selectedConsultantForInvite?.nom} ${selectedConsultantForInvite?.prenom} à une mission`}
+            </h2>
+            <div className={styles.modalBody}>
+              {isEntrepriseSSI ? (
+                <>
+                  <div className={styles.modalFormGroup}>
+                    <label className={styles.formLabel}>Votre message</label>
+                    <textarea
+                      value={inviteMessage}
+                      onChange={(e) => setInviteMessage(e.target.value)}
+                      className={styles.formControl}
+                      rows={3}
+                      placeholder="Expliquez les conditions de recrutement..."
+                    />
+                    <p className={styles.modalHelperText}>
+                      Le consultant pourra accepter ou refuser votre invitation
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className={styles.modalFormGroup}>
+                    <label className={styles.formLabel}>Sélectionner une mission</label>
+                    <br />
+                    <select
+                      value={selectedMissionForInvite?.id || ''}
+                      onChange={(e) => {
+                        const selectedId = e.target.value;
+                        const mission = missionsEntreprise
+                          .filter(m => m.statut?.toLowerCase() === 'en attente')
+                          .find(m => m.id === parseInt(selectedId, 10));
+                        setSelectedMissionForInvite(mission);
+                      }}
+                      className={styles.formControl}
+                    >
+                      {missionsEntreprise
+                        .filter(mission => mission.statut?.toLowerCase() === 'en attente')
+                        .map(mission => (
+                          <option key={mission.id} value={mission.id}>
+                            {mission.titre}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  {selectedMissionForInvite && (
+                    <>
+                      <div className={styles.modalFormGroup}>
+                        <label className={styles.formLabel}>Montant</label>
+                        <input
+                          type="text"
+                          value={selectedMissionForInvite.budget || ''}
+                          className={styles.formControl}
+                          readOnly
+                        />
+                      </div>
+                      <div className={styles.modalFormGroup}>
+                        <label className={styles.formLabel}>Durée estimée</label>
+                        <input
+                          type="text"
+                          value={selectedMissionForInvite.dureeEstime || ''}
+                          className={styles.formControl}
+                          readOnly
+                        />
+                      </div>
+                    </>
+                  )}
+                  <div className={styles.modalFormGroup}>
+                    <label className={styles.formLabel}>Votre message</label>
+                    <textarea
+                      value={inviteMessage}
+                      onChange={(e) => setInviteMessage(e.target.value)}
+                      className={styles.formControl}
+                      rows={3}
+                      placeholder="Expliquez votre proposition..."
+                    />
+                    <Typography 
+                      variant="caption" 
+                      color="textSecondary" 
+                      sx={{ mt: 1, mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '9px', textAlign: 'center' }}
+                    >
+                      <FaBell style={{ fontSize: '16px', color: 'grey', flexShrink: 0 }} />
+                      Le consultant recevra une notification par email
+                    </Typography>
+                  </div>
+                </>
               )}
             </div>
-            <div>
-              <h2>{consultant.nom} {consultant.prenom}</h2>
+            <div className={styles.modalActions}>
+              <button className={`${styles.modalSubmitBtn} ${styles.modalPrimaryBtn}`} onClick={handleSubmitInvite}>
+                {isEntrepriseSSI ? "Envoyer le recrutement" : "Envoyer l'invitation"}
+              </button>
             </div>
           </div>
-          <div className={styles.talentInfo}>
-            <span>{expLabel}</span>
-            <span>{consultant.adresse || 'Localisation inconnue'}</span>
-            <span>${Number(consultant.taux_horaire) || 0}/h</span>
-          </div>
-          
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, mb: 1 }}>
-            <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-              <CircularProgress
-                variant="determinate"
-                value={100}
-                size={40}
-                thickness={4}
-                sx={{ color: '#f0f0f0' }}
-              />
-              <CircularProgress
-                variant="determinate"
-                value={jobSuccessValue}
-                size={40}
-                thickness={4}
-                sx={{ 
-                  color: '#00796b',
-                  position: 'absolute',
-                  left: 0
-                }}
-              />
-              <Box
-                sx={{
-                  top: 0,
-                  left: 0,
-                  bottom: 0,
-                  right: 0,
-                  position: 'absolute',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <Typography variant="caption" component="div" sx={{ fontWeight: 'bold' }}>
-                  {`${jobSuccessValue}%`}
-                </Typography>
-              </Box>
-            </Box>
-            <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary', minWidth: 70 }}>
-            Taux de réussite
-            </Typography>
-          </Box>
-
-          <div className={styles.talentSkills}>
-            {consultant.domaines?.map((dom) => (
-              <span key={dom.id} className={styles.skillTag}>
-                {dom.nom}
-              </span>
-            ))}
-          </div>
-          <div className={styles.talentSkills}>
-            {consultant.competences?.map((comp) => (
-              <span key={comp.id} className={styles.skillTag}>
-                {comp.nom}
-              </span>
-            ))}
-          </div>
-          <p className={styles.talentBio}>{consultant.workload >0 ? 'En travail' : 'Disponible' }</p>
-          <div className={styles.actionButtons} onClick={(e) => e.stopPropagation()}>
-            <MUITooltip title="Voir le profil" arrow>
-              <Button variant="contained" className={styles.viewProfile} onClick={() => handleOpenProfile(consultant)}>
-                Profil
-              </Button>
-            </MUITooltip>
-            <MUITooltip title="Contacter" arrow>
-              <Button
-                variant="outlined"
-                className={styles.contactButton}
-                onClick={() => handleContact(consultant)}
-              >
-                Contacter
-              </Button>
-            </MUITooltip>
-            <MUITooltip title={isEntrepriseSSI ? "Recruter" : "Inviter"} arrow>
-              <Button
-                variant="contained"
-                size="small"
-                className={styles.actionButton}
-                onClick={() => handleInviteClick(consultant)}
-              >
-                {isEntrepriseSSI ? "Recruter" : "Inviter"}
-              </Button>
-            </MUITooltip>
-          </div>
-        </motion.div>
-      );
-    })
-  )}
-  {sortedConsultants.length > itemsPerPage && (
-    <div className={styles.pagination}>
-      <Button
-        variant="outlined"
-        onClick={handlePrevPage}
-        disabled={currentPage === 1}
-        
-      >
-        Précédent
-      </Button>
-      <span>
-        Page {currentPage} / {totalPages}
-      </span>
-      <Button
-        variant="outlined"
-        onClick={() => handleNextPage(totalPages)}
-        disabled={currentPage === totalPages}
-        style={{ marginLeft: '1rem' }}
-      >
-        Suivant
-      </Button>
-    </div>
-  )}
-</section>
         </div>
-
-        {/* Modal d'invitation/recrutement */}
-        {showInviteModal && (
-  <div className={styles.modalOverlay} onClick={handleCloseInviteModal}>
-    <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-      <button className={styles.modalCloseBtn} onClick={handleCloseInviteModal}>
-        &times;
-      </button>
-      <h2 className={styles.modalTitle}>
-        {isEntrepriseSSI
-          ? `Recruter ${selectedConsultantForInvite?.nom} ${selectedConsultantForInvite?.prenom}`
-          : `Inviter ${selectedConsultantForInvite?.nom} ${selectedConsultantForInvite?.prenom} à une mission`}
-      </h2>
-
-      <div className={styles.modalBody}>
-        {isEntrepriseSSI ? (
-          <>
-            <div className={styles.modalFormGroup}>
-              <label className={styles.formLabel}>Votre message</label>
-              <textarea
-                value={inviteMessage}
-                onChange={(e) => setInviteMessage(e.target.value)}
-                className={styles.formControl}
-                rows={3}
-                placeholder="Expliquez les conditions de recrutement..."
-              />
-              <p className={styles.modalHelperText}>
-                Le consultant pourra accepter ou refuser votre invitation
-              </p>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className={styles.modalFormGroup}>
-              <label className={styles.formLabel}>Sélectionner une mission</label>
-              <br />
-              <select
-                value={selectedMissionForInvite?.id || ''}
-                onChange={(e) => {
-                  const mission = missionsEntreprise
-                    .filter(m => m.statut?.toLowerCase() === 'en attente')
-                    .find(m => m.id === e.target.value);
-                  setSelectedMissionForInvite(mission);
-                }}
-                className={styles.formControl}
-              >
-                {missionsEntreprise
-                  .filter(mission => mission.statut?.toLowerCase() === 'en attente')
-                  .map(mission => (
-                    <option key={mission.id} value={mission.id}>
-                      {mission.titre}
-                    </option>
-                  ))}
-              </select>
-            </div>
-
-            {selectedMissionForInvite && (
-              <>
-                <div className={styles.modalFormGroup}>
-                  <label className={styles.formLabel}>Montant</label>
-                  <input
-                    type="text"
-                    value={selectedMissionForInvite.budget || ''}
-                    className={styles.formControl}
-                    readOnly
-                  />
-                </div>
-
-                <div className={styles.modalFormGroup}>
-                  <label className={styles.formLabel}>Durée estimée</label>
-                  <input
-                    type="text"
-                    value={selectedMissionForInvite.dureeEstime || ''}
-                    className={styles.formControl}
-                    readOnly
-                  />
-                </div>
-              </>
-            )}
-
-            <div className={styles.modalFormGroup}>
-              <label className={styles.formLabel}>Votre message</label>
-              <textarea
-                value={inviteMessage}
-                onChange={(e) => setInviteMessage(e.target.value)}
-                className={styles.formControl}
-                rows={3}
-                placeholder="Expliquez votre proposition..."
-              />
-              <p className={styles.modalHelperText}>
-              <i className="bi bi-bell"></i> Le consultant recevra une notification par email
-              </p>
-            </div>
-          </>
-        )}
-      </div>
-
-      <div className={styles.modalActions}>
-    
-        <button
-          className={`${styles.modalSubmitBtn} ${styles.modalPrimaryBtn}`}
-          onClick={handleSubmitInvite}
-        >
-          {isEntrepriseSSI ? "Envoyer le recrutement" : "Envoyer l'invitation"}
-        </button>
-      </div>
+      )}
+      <ToastContainer />
     </div>
-  </div>
-)}
-        <ToastContainer />
-      </div>
-    
   );
 }
 

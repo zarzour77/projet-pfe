@@ -117,31 +117,34 @@
 
 .scoreContainer {
   display: flex;
+  flex-direction: column;
   align-items: center;
   margin-top: 20px;
 }
 
 .scoreCircle {
-  width: 60px;
-  height: 60px;
-  border: 3px solid #e1e8ed;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 10px;
-  background: #f0f4f8;
+  background: #e1e8ed;
+}
+
+.scoreTextOutside {
+  margin-top: 15px;
+  text-align: center;
 }
 
 .scoreValue {
-  font-size: 24px;
-  color: #0c68ff;
+  font-size: 28px;
+  color: #31BF0D;
   font-weight: 700;
 }
 
-.noScoreText {
-  font-size: 14px;
-  color: #555;
+.scoreRating {
+  margin-top: 10px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
 }
 
 /* Proposals */

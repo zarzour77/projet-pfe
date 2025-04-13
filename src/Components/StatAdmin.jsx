@@ -1,3 +1,4 @@
+// File: StatAdmin.js
 import React, { useState, useEffect } from 'react';  
 import { motion } from 'framer-motion';
 import { Line, Bar, Pie } from 'react-chartjs-2';
@@ -21,7 +22,8 @@ import {
   fetchCountryStats,
   fetchConnectionStats,
   fetchTransactionsVolume,
-  fetchGlobalApplicationFeeStats
+  fetchGlobalApplicationFeeStats,  // Pour "Revenus générés par l'admin"
+  fetchRevenueDistribution         // Pour "Répartition des revenus"
 } from '../services/StatAdminService';
 
 ChartJS.register(
@@ -36,15 +38,15 @@ ChartJS.register(
   Legend
 );
 
-// Fonction pour générer un range de dates (pour inscriptions)
+// Fonction pour générer un range de dates (pour les inscriptions)
 const generateDateRange = (filter) => {
   const dates = [];
-  const end = new Date(); // aujourd'hui
+  const end = new Date();
   let start = new Date();
   if (filter === "lastWeek") {
-    start.setDate(end.getDate() - 6); // 7 jours au total
+    start.setDate(end.getDate() - 6);
   } else if (filter === "lastMonth") {
-    start.setDate(end.getDate() - 29); // 30 jours au total
+    start.setDate(end.getDate() - 29);
   }
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
     dates.push(new Date(d).toISOString().slice(0, 10));
@@ -62,9 +64,10 @@ function StatAdmin() {
   const [connectionStatsData, setConnectionStatsData] = useState(null);
   const [transactionsVolumeData, setTransactionsVolumeData] = useState({ labels: [], datasets: [] });
   
-  // États pour les revenus globaux (applicationFee)
-  const [revenuePeriod, setRevenuePeriod] = useState("6months"); // "6months" ou "year"
-  const [feeStats, setFeeStats] = useState(null);
+  // États pour les revenus
+  const [revenuePeriod, setRevenuePeriod] = useState("6months");
+  const [feeStats, setFeeStats] = useState(null); // Revenus générés par l'admin
+  const [revenueDistributionData, setRevenueDistributionData] = useState({ labels: [], datasets: [] }); // Répartition des revenus
 
   // Animation pour les cartes
   const cardVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
@@ -75,7 +78,7 @@ function StatAdmin() {
     plugins: { legend: { display: true }, tooltip: { mode: 'index', intersect: false } },
     scales: {
       x: { title: { display: true, text: filter === "lastWeek" ? "Jour de la semaine" : "Jour du mois" } },
-      y: { title: { display: true, text: "Nombre d'inscriptions" }, beginAtZero: true, ticks: { precision: 0, stepSize: 1, callback: (value) => Number(value).toString() } }
+      y: { title: { display: true, text: "Nombre d'inscriptions" }, beginAtZero: true, ticks: { precision: 0, stepSize: 1 } }
     }
   };
 
@@ -102,12 +105,11 @@ function StatAdmin() {
   // Options pour le graphique Pie (Répartition des revenus)
   const revenueDistributionOptions = { responsive: true, plugins: { legend: { position: "bottom" } } };
 
-  // Récupération et traitement des données d'inscriptions
+  // UseEffect pour les inscriptions
   useEffect(() => {
-    const getData = async () => {
+    async function getData() {
       try {
         const stats = await fetchInscriptions(filter);
-        console.log('Statistiques des inscriptions:', stats);
         const allDates = generateDateRange(filter);
         const completeStats = allDates.map(dateStr => {
           const found = stats.find(item => item.date === dateStr);
@@ -142,13 +144,13 @@ function StatAdmin() {
       } catch (error) {
         console.error('Erreur lors de la récupération des inscriptions:', error);
       }
-    };
+    }
     getData();
   }, [filter]);
 
-  // Récupération des données Top Talents
+  // UseEffect pour les Top Talents
   useEffect(() => {
-    const getTopTalentsData = async () => {
+    async function getTopTalentsData() {
       try {
         const data = await fetchTopTalents();
         const labels = Object.keys(data);
@@ -168,13 +170,13 @@ function StatAdmin() {
       } catch (error) {
         console.error("Erreur lors de la récupération des Top Talents:", error);
       }
-    };
+    }
     getTopTalentsData();
   }, []);
 
-  // Récupération des statistiques des rôles
+  // UseEffect pour les statistiques des rôles
   useEffect(() => {
-    const getUserRoleStats = async () => {
+    async function getUserRoleStats() {
       try {
         const data = await fetchUserRoleStats();
         const labels = Object.keys(data);
@@ -194,13 +196,13 @@ function StatAdmin() {
       } catch (error) {
         console.error("Erreur lors de la récupération des statistiques des rôles:", error);
       }
-    };
+    }
     getUserRoleStats();
   }, []);
 
-  // Récupération des données de la heatmap
+  // UseEffect pour la heatmap
   useEffect(() => {
-    const getHeatmapData = async () => {
+    async function getHeatmapData() {
       try {
         const data = await fetchCountryStats();
         const labels = Object.keys(data);
@@ -218,13 +220,13 @@ function StatAdmin() {
       } catch (error) {
         console.error("Erreur lors de la récupération de la heatmap:", error);
       }
-    };
+    }
     getHeatmapData();
   }, []);
 
-  // Récupération des statistiques de connexions
+  // UseEffect pour les statistiques de connexions
   useEffect(() => {
-    const getConnectionStats = async () => {
+    async function getConnectionStats() {
       try {
         const data = await fetchConnectionStats();
         const labels = Object.keys(data);
@@ -248,19 +250,18 @@ function StatAdmin() {
       } catch (error) {
         console.error("Erreur lors de la récupération des connexions:", error);
       }
-    };
+    }
     getConnectionStats();
   }, []);
 
-  // Récupération du volume des transactions avec ajout de couleur dans les bars
+  // UseEffect pour le volume des transactions
   useEffect(() => {
-    const getTransactionsVolume = async () => {
+    async function getTransactionsVolume() {
       try {
         const data = await fetchTransactionsVolume("month");
-        // Ajout d'une couleur personnalisée pour chaque barre
         const coloredDatasets = data.datasets.map(ds => ({
           ...ds,
-          backgroundColor: ds.data.map(() => "#36A2EB") // Couleur bleu clair pour toutes les barres
+          backgroundColor: ds.data.map(() => "#36A2EB")
         }));
         setTransactionsVolumeData({
           labels: data.labels,
@@ -269,27 +270,40 @@ function StatAdmin() {
       } catch (error) {
         console.error("Erreur lors de la récupération du volume des transactions:", error);
       }
-    };
+    }
     getTransactionsVolume();
   }, []);
 
-  // Récupération des revenus globaux via l'API pour les applicationFee
+  // UseEffect pour les revenus générés par l'admin (utilisation de fetchGlobalApplicationFeeStats)
   useEffect(() => {
     async function getGlobalRevenue() {
       try {
         const data = await fetchGlobalApplicationFeeStats(revenuePeriod);
-        console.log("Revenus globaux reçus du backend:", data);
-        // Conversion des montants de centimes en euros
-        const dataset = {
-          label: "Application Fee (en €)",
-          data: data.data.map(value => value / 100),
-          borderColor: "#F39C12",
-          backgroundColor: "rgba(243,156,18,0.2)",
-          fill: false,
-        };
+        // Conversion des montants de centimes en euros pour chaque série
+        const feeDataEuro = data.applicationFee.map(value => value / 100);
+        const subscriptionDataEuro = data.subscription.map(value => value / 100);
+        
+        // Création des deux séries pour le Line Chart
+        const datasets = [
+          {
+            label: "Application Fee (en €)",
+            data: feeDataEuro,
+            borderColor: "#F39C12", // orange
+            backgroundColor: "rgba(243,156,18,0.2)",
+            fill: false,
+          },
+          {
+            label: "Abonnements (en €)",
+            data: subscriptionDataEuro,
+            borderColor: "#005293", // bleu
+            backgroundColor: "rgba(0,82,147,0.2)",
+            fill: false,
+          }
+        ];
+        
         setFeeStats({
           labels: data.labels,
-          datasets: [dataset],
+          datasets,
         });
       } catch (error) {
         console.error("Erreur lors de la récupération des revenus globaux :", error);
@@ -298,32 +312,32 @@ function StatAdmin() {
     getGlobalRevenue();
   }, [revenuePeriod]);
 
-  // Données statiques pour les revenus (exemple)
-  const revenueData = {
-    labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'],
-    datasets: [
-      {
-        label: 'Revenus générés',
-        data: [5000, 7000, 6500, 8000, 7500, 9000],
-        backgroundColor: '#005293',
-        borderColor: '#005293',
-        borderWidth: 1
+  // UseEffect pour la répartition des revenus (utilise son API dédiée)
+  useEffect(() => {
+    async function getRevenueDistributionData() {
+      try {
+        const data = await fetchRevenueDistribution();
+        // Conversion des montants de centimes en euros
+        const subscriptionEuro = data.subscriptionRevenue / 100;
+        const commissionEuro = data.commissionRevenue / 100;
+        setRevenueDistributionData({
+          labels: ['Abonnements', 'Commissions'],
+          datasets: [
+            {
+              label: 'Répartition des revenus',
+              data: [subscriptionEuro, commissionEuro],
+              backgroundColor: ['#005293', '#F39C12'],
+              borderColor: ['#005293', '#F39C12'],
+              borderWidth: 1
+            }
+          ]
+        });
+      } catch (error) {
+        console.error("Erreur lors de la récupération de la répartition des revenus:", error);
       }
-    ]
-  };
-
-  const revenueDistributionData = {
-    labels: ['Abonnements', 'Commissions', 'Services premium'],
-    datasets: [
-      {
-        label: 'Répartition des revenus',
-        data: [50, 30, 20],
-        backgroundColor: ['#005293', '#F39C12', '#2ecc71'],
-        borderColor: ['#005293', '#F39C12', '#2ecc71'],
-        borderWidth: 1
-      }
-    ]
-  };
+    }
+    getRevenueDistributionData();
+  }, []);
 
   return (
     <div className={styles.statsContainer}>
@@ -448,7 +462,7 @@ function StatAdmin() {
             animate="visible"
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            {/* Carte Revenus générés par l'admin */}
+            {/* Carte "Revenus générés par l'admin" utilisant fetchGlobalApplicationFeeStats */}
             <div className={styles.cardHeader}>
               <h3 className={styles.cardTitle}>Revenus générés par l'admin</h3>
               <div className={styles.periodSelect}>
@@ -475,6 +489,7 @@ function StatAdmin() {
             animate="visible"
             transition={{ duration: 0.5, delay: 0.2 }}
           >
+            {/* Carte Répartition des revenus utilisant son API dédiée */}
             <h3 className={styles.cardTitle}>Répartition des revenus</h3>
             <div className={styles.smallPie}>
               <Pie data={revenueDistributionData} options={revenueDistributionOptions} />
@@ -517,7 +532,7 @@ function StatAdmin() {
               className={styles.card}
               variants={cardVariants}
               initial="hidden"
-              animate="visible"
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <h3 className={styles.cardTitle}>Heatmap de l'activité</h3>

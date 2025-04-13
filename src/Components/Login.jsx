@@ -64,7 +64,7 @@ const Login = () => {
       }
       localStorage.setItem("user", JSON.stringify(fullUser));
       setCurrentUser(fullUser);
-      console.log(fullUser.role)
+      console.log(fullUser.role);
       if (fullUser.role === "ROLE_USER") {
         navigate("/UserInformation");
       } else if (fullUser.role === "Consultant" || fullUser.role === "Admin") {
@@ -73,7 +73,24 @@ const Login = () => {
         navigate("/LandingEntreprise");
       }
     } catch (error) {
-      setSignInError("Échec de la connexion. Veuillez vérifier vos identifiants.");
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        const serverMessage = error.response.data.message;
+        if (serverMessage.includes("n'est pas vérifié")) {
+          setSignInError("Votre email n'est pas vérifié. Veuillez saisir le code de vérification.");
+          setShowVerify(true);
+        } else if (serverMessage.includes("suspendu")) {
+          // Affiche le message retourné par l'API avec la date de fin de suspension
+          setSignInError(serverMessage);
+        } else {
+          setSignInError("Échec de la connexion. Veuillez vérifier vos identifiants.");
+        }
+      } else {
+        setSignInError("Échec de la connexion. Veuillez vérifier vos identifiants.");
+      }
       console.error(error);
     }
   };
@@ -117,41 +134,7 @@ const Login = () => {
     setSignInSuccess("");
 
     if (!showVerify) {
-      try {
-        const loginResponse = await AuthService.login(signinEmail, signinPassword);
-        localStorage.clear();
-        localStorage.setItem("user", JSON.stringify(loginResponse));
-        localStorage.setItem("token", loginResponse.token);
-
-        const fullUser = await UserService.getById(loginResponse.id);
-        if (!fullUser.token) {
-          fullUser.token = loginResponse.token;
-        }
-        localStorage.setItem("user", JSON.stringify(fullUser));
-        setCurrentUser(fullUser);
-
-        if (fullUser.role === "ROLE_USER") {
-          navigate("/UserInformation");
-        } else if (fullUser.role === "Consultant" || fullUser.role === "Admin") {
-          navigate("/SearchMission");
-        } else {
-          navigate("/LandingEntreprise");
-        }
-        
-      } catch (error) {
-        if (
-          error.response &&
-          error.response.data &&
-          error.response.data.message &&
-          error.response.data.message.includes("n'est pas vérifié")
-        ) {
-          setSignInError("Votre email n'est pas vérifié. Veuillez saisir le code de vérification.");
-          setShowVerify(true);
-        } else {
-          setSignInError("Échec de la connexion. Veuillez vérifier vos identifiants.");
-        }
-        console.error(error);
-      }
+      await performLogin();
     } else {
       await handleVerifySubmit(e);
     }

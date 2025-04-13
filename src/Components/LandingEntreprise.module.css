@@ -76,13 +76,6 @@
   position: relative;
 }
 
-.filterLabel {
-  display: block;
-  color: #475569;
-  font-size: 0.875rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-}
 .filters :global(.MuiOutlinedInput-root) {
   border-radius: 8px !important;
   border: 1px solid #e2e8f0 !important;
@@ -166,16 +159,6 @@
   border-bottom-left-radius: 4px;
 }
 
-/* Icône favori */
-.favoriteIcon {
-  position: absolute;
-  top: 0.3rem;
-  left: 0.3rem;
-  font-size: 1.2rem;
-  color: #555;
-  cursor: pointer;
-  z-index: 2; /* Au-dessus du ruban */
-}
 
 /* En-tête du talent */
 .talentHeader {
@@ -231,6 +214,7 @@
   display: flex;
   gap: 0.5rem;
   margin-top: 0.75rem;
+  
 }
 
 /* Message en cas de résultat vide */
@@ -347,9 +331,9 @@
 
 .pagination :global(.MuiButton-root) {
   padding: 0.6rem 1.5rem;
-  border: 2px solid #009990 !important;
+  border: 2px solid #000000 !important;
   border-radius: 8px;
-  color: #009990;
+  color: #000000;
   font-weight: 600;
   transition: all 0.2s ease;
   text-transform: none;
@@ -357,7 +341,7 @@
 }
 
 .pagination :global(.MuiButton-root:hover:not(:disabled)) {
-  background: linear-gradient(135deg, #009990, #00796b) !important;
+  background: #000000 !important;
   color: white;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 153, 144, 0.2);

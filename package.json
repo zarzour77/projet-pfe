@@ -44,7 +44,7 @@
     "react-select": "^5.10.0",
     "react-tinder-card": "^1.6.4",
     "react-toastify": "^11.0.3",
-    "recharts": "^2.15.1",
+    "recharts": "^2.15.2",
     "sockjs-client": "^1.6.1",
     "tailwindcss": "^4.0.3",
     "yup": "^1.6.1"

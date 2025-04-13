@@ -9,7 +9,6 @@ import PaymentSuccess from "./components/PaymentSuccess";
 import PaymentFailed from "./components/PaymentFailed";
 import UserInformation from "./components/UserInformation";
 import Messenger from "./components/Messenger";
-import MissioinTinder from "./components/MissionTinder";
 import SearchMission from "./components/SearchMission";
 import PublierMission from "./components/PublierMission";
 import ProfilePage from "./components/ProfilePage";
@@ -36,6 +35,7 @@ import VoirProfileEntreprise from "./components/VoirProfileEntreprise";
 import Settings from "./components/Settings";
 import Dispute from "./components/Dispute";
 import AdminDispute from "./components/Admindispute";
+import VoirAllUsers from "./components/VoirAllUsers";
 import { AuthProvider } from "./Services/AuthContext";
 
 const App = () => {
@@ -53,6 +53,7 @@ const App = () => {
           <Route path="/Dispute" element={<Dispute />} />
           <Route path="/Admindispute" element={<AdminDispute />} />
           <Route path="/StatEntreprisessi" element={<StatEntreprisessi />} />
+          <Route path="/VoirAllUsers" element={<VoirAllUsers />} />
           {/* Public routes */}
           <Route
             path="/consultant/:consultantId"
@@ -96,14 +97,6 @@ const App = () => {
                 <Header />
                 <VirtualAssistant />
                 <SearchMission />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/MissionTinder"
-            element={
-              <ProtectedRoute allowedRoles={["Consultant", "Admin"]}>
-                <MissioinTinder />
               </ProtectedRoute>
             }
           />

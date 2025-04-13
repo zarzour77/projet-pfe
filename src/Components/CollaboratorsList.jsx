@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './CollaboratorsList.module.css';
@@ -8,7 +9,9 @@ import { applyWithConsultant } from '../Services/SearchMission';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { formatDistanceToNow } from 'date-fns';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
+import {  Button } from '@mui/material';
+import { FaBell } from 'react-icons/fa';
+import Typography from '@mui/material/Typography';
 
 const CollaboratorsList = () => {
   const storedEntreprise = JSON.parse(localStorage.getItem("user"));
@@ -34,6 +37,7 @@ const CollaboratorsList = () => {
   useEffect(() => {
     const fetchCollaborators = async () => {
       try {
+        console.log(entrepriseId)
         const consultants = await entrepriseService.getConsultantsForEntreprise(entrepriseId);
         const consultantsWithPropositions = await Promise.all(
           consultants.map(async (consultant) => {
@@ -71,7 +75,30 @@ const CollaboratorsList = () => {
   const handleViewSavedMissions = async (consultant) => {
     try {
       const missions = await getSavedMissions(consultant.id);
-      setSavedMissions(missions);
+      console.log(missions)
+      // Fetch entreprise details for missions with missing nomEntreprise
+      const enrichedMissions = await Promise.all(
+        missions.map(async (mission) => {
+          if (!mission.entreprise?.nomEntreprise && mission.entreprise) {
+            try {
+              const entreprise = await entrepriseService.getEntrepriseById(mission.entreprise);
+              return {
+                ...mission,
+                entreprise: {
+                  ...mission.entreprise,
+                  nomEntreprise: entreprise.nomEntreprise || 'Entreprise inconnue'
+                }
+              };
+            } catch (error) {
+              console.error("Error fetching entreprise:", error);
+              return mission;
+            }
+          }
+          return mission;
+        })
+      );
+  
+      setSavedMissions(enrichedMissions);
       setModalConsultantName(`${consultant.nom} ${consultant.prenom}`);
       setSelectedConsultant(consultant);
       setShowSavedModal(true);
@@ -86,6 +113,7 @@ const CollaboratorsList = () => {
     setPropositionMontant(mission.budget || '');
     setPropositionDuree(mission.dureeEstime || '');
     setShowApplyModal(true);
+    console.log("ccc")
   };
 
   const handleSubmitApplication = async () => {
@@ -120,8 +148,14 @@ const CollaboratorsList = () => {
         </Link>
       </div>
 
-      <div className={styles.collaboratorsGrid}>
-        {collaborators.map((collaborator) => {
+      {collaborators.length === 0 ? (
+        <div className={styles.emptyState}>
+          <p>Aucun collaborateur n'a été trouvé.</p>
+          <p>Commencez par ajouter un collaborateur en cliquant sur le bouton ci-dessus.</p>
+        </div>
+      ) : (
+        <div className={styles.collaboratorsGrid}>
+          {collaborators.map((collaborator) => {
           const isExpanded = expandedIds.includes(collaborator.id);
           return (
             <div key={collaborator.id} className={`${styles.card} ${isExpanded ? styles.expanded : ''}`}>
@@ -188,11 +222,14 @@ const CollaboratorsList = () => {
           );
         })}
       </div>
-
+)}
       {/* Saved Missions Modal */}
       {showSavedModal && (
         <div className={styles.modalOverlay}>
           <div className={styles.missionsModalContent}>
+            <button className={styles.modalCloseBtn} onClick={() => setShowSavedModal(false)}>
+                          &times;
+                        </button>
             <h3>Missions sauvegardées pour {modalConsultantName}</h3>
             <div className={styles.missionsGrid}>
               {savedMissions.length > 0 ? (
@@ -203,8 +240,9 @@ const CollaboratorsList = () => {
                       <span className={styles.budget}>${mission.budget}</span>
                     </div>
                     <div className={styles.missionMeta}>
-                      <span className={styles.entreprise}>{mission.entreprise?.nom || 'Entreprise non spécifiée'}</span>
-                      <span className={styles.date}>Publié {formatDistanceToNow(new Date(mission.publishedAt))}</span>
+                    <span className={styles.entreprise}>
+  {mission.entreprise?.nomEntreprise || 'Entreprise non spécifiée'}
+</span>                      <span className={styles.date}>Publié il y a {formatDistanceToNow(new Date(mission.publishedAt))}</span>
                     </div>
                     <div className={styles.tags}>
                       {mission.domaines?.map((domaine, index) => (
@@ -215,10 +253,10 @@ const CollaboratorsList = () => {
                     <div className={styles.missionFooter}>
                       <Button 
                         variant="contained" 
-                        onClick={() => handleApplyToMission(mission)}
+                        onClick={() =>{handleApplyToMission(mission);setShowSavedModal(false)} }
                         className={styles.applyButton}
                       >
-                        Postuler
+                        Attribuer
                       </Button>
                     </div>
                   </div>
@@ -227,58 +265,89 @@ const CollaboratorsList = () => {
                 <p>Aucune mission sauvegardée trouvée.</p>
               )}
             </div>
-            <button className={styles.closeButton} onClick={() => setShowSavedModal(false)}>Fermer</button>
+            <button className={styles.closeButton} onClick={() => setShowSavedModal(false)}>Terminer</button>
           </div>
         </div>
       )}
 
-      {/* Application Modal */}
-      <Dialog open={showApplyModal} onClose={() => setShowApplyModal(false)}>
-        <DialogTitle>Postuler pour {selectedMission?.titre} avec {selectedConsultant?.nom}</DialogTitle>
-        <DialogContent>
-          <TextField
-            margin="dense"
-            label="Montant proposé"
-            type="number"
-            fullWidth
-            value={propositionMontant}
-            onChange={(e) => setPropositionMontant(e.target.value)}
-            InputLabelProps={{ shrink: true }}InputProps={{
-              readOnly: true,
-            }}
-          />
-          <TextField
-            margin="dense"
-            label="Durée estimée"
-            type="text"
-            fullWidth
-            value={propositionDuree}
-            onChange={(e) => setPropositionDuree(e.target.value)}
-            placeholder="Ex: 3 mois"
-            InputLabelProps={{ shrink: true }}
-            InputProps={{
-              readOnly: true,
-            }}
-          />
-          <TextField
-            margin="dense"
-            label="Message complémentaire"
-            multiline
-            rows={4}
-            fullWidth
-            value={propositionMessage}
-            onChange={(e) => setPropositionMessage(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-            
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowApplyModal(false)}>Annuler</Button>
-          <Button onClick={handleSubmitApplication} variant="contained" color="primary">
-            Envoyer la proposition
-          </Button>
-        </DialogActions>
-      </Dialog>
+
+{/* Application Modal */}
+{showApplyModal && selectedMission && (
+  <div className={styles.modalOverlay}>
+    <div className={styles.missionsModalContent} style={{ maxWidth: "500px" }}>
+      <button 
+        className={styles.modalCloseBtn} 
+        onClick={() => {setShowApplyModal(false) ;setShowSavedModal(true)}}
+      >
+        ×
+      </button>
+      
+      <div className={styles.modalHeader}>
+        <h2>
+          {`Attribuer un consultant à la mission : ${selectedMission.titre}`}
+        </h2>
+      </div>
+
+      <div className={styles.modalFormGroup}>
+        <label className={styles.formLabel}>Montant proposé :</label>
+        <input 
+          className={styles.modalInput} 
+          type="number" 
+          value={propositionMontant} 
+          readOnly 
+        />
+      </div>
+
+      <div className={styles.modalFormGroup}>
+        <label className={styles.formLabel}>Durée estimée :</label>
+        <input 
+          className={styles.modalInput} 
+          type="text" 
+          value={propositionDuree} 
+          readOnly 
+        />
+      </div>
+
+      <div className={styles.modalFormGroup}>
+        <label className={styles.formLabel}>Votre message :</label>
+        <textarea
+          className={styles.modalInput}
+          rows={3}
+          value={propositionMessage}
+          onChange={e => setPropositionMessage(e.target.value)}
+        />
+      </div>
+      <Typography 
+  variant="caption" 
+  color="textSecondary" 
+  sx={{ 
+    mt: 1, 
+    mb: 2,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center', // Added this line for horizontal centering
+    gap: '9px',
+    textAlign: 'center' // Ensures text wraps properly when centered
+  }}
+>
+  <FaBell style={{ 
+    fontSize: '16px', 
+    color: 'grey',
+    flexShrink: 0
+  }} />
+  Une notification sera envoyé à l'entreprise concernant cette proposition
+</Typography>
+      <div className={styles.modalActions}>
+        <button 
+          className={styles.modalSubmitBtn} 
+          onClick={handleSubmitApplication}
+        >
+          Envoyer la proposition
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };

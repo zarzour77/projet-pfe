@@ -4,15 +4,16 @@ const API_URL = 'http://localhost:8081/api/entreprises'; // Adjust the URL if ne
 
 const getConsultantsForEntreprise = async (id) => {
   const token = localStorage.getItem("token");
-
   try {
     const response = await axios.get(`${API_URL}/${id}/consultants`, {
       headers: {
         Authorization: `Bearer ${token}`
       }
-    });
+    })
+    ;    console.log(response.data)
     return response.data;
-  } catch (error) {
+  }
+   catch (error) {
     console.error("Erreur lors de la récupération des consultants pour l'entreprise:", error);
     throw error;
   }
@@ -24,7 +25,7 @@ const uploadProfilePicture= async (id, file) => {
     const formData = new FormData();
     formData.append("file", file);
     const response = await axios.post(
-      `http://localhost:8081/api/users/${id}/uploadProfilePic`,
+      `http://localhost:8181/api/users/${id}/uploadProfilePic`,
       formData,
       {
         headers: {
@@ -122,6 +123,21 @@ const getFrozenBalance = async (userId) => {
     throw error;
   }
 };
+const searchEntreprises = async (query) => {
+  const token = localStorage.getItem("token");
+  try {
+    const response = await axios.get(
+      `${API_URL}/search?q=${encodeURIComponent(query)}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error searching entreprises:", error);
+    throw error;
+  }
+};
+
+
 export default {
   getEntrepriseById,
   updateEntreprise,
@@ -129,5 +145,7 @@ export default {
   getMissions,
   removeConsultant,
   uploadProfilePicture,
-  getFrozenBalance
+  getFrozenBalance,
+  searchEntreprises // Add this
+
 };
