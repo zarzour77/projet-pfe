@@ -77,7 +77,7 @@ public class EmailService {
             helper.setText(htmlContent, true);
 
             // Ajout du logo en inline (assurez-vous que le fichier existe dans src/main/resources/static/img.png)
-            ClassPathResource logo = new ClassPathResource("static/img.png");
+            ClassPathResource logo = new ClassPathResource("static/logo2.png");
             helper.addInline("logoImage", logo);
 
             // Ajout de la pièce jointe si elle existe
@@ -145,7 +145,7 @@ public class EmailService {
             helper.setText(htmlContent, true);
 
             // Ajout du logo inline
-            ClassPathResource logo = new ClassPathResource("static/img.png");
+            ClassPathResource logo = new ClassPathResource("static/logo2.png");
             helper.addInline("logoImage", logo);
 
             mailSender.send(message);

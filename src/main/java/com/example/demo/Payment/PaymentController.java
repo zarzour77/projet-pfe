@@ -5,6 +5,7 @@ import com.example.demo.Payment.PaymentRequest;
 import com.example.demo.Payment.PaymentResponse;
 import com.example.demo.dto.BalanceDTO;
 import com.example.demo.dto.ResolveDisputeRequest;
+import com.example.demo.dto.RevenueDistributionDTO;
 import com.example.demo.exception.MissionNotFoundException;
 import com.example.demo.repository.PaymentTransactionRepository;
 import com.stripe.exception.StripeException;
@@ -38,6 +39,10 @@ public class PaymentController {
                              StripeService stripeService) {
         this.paymentBusinessService = paymentBusinessService;
         this.stripeService = stripeService;
+    }
+    @GetMapping("/revenue-distribution")
+    public RevenueDistributionDTO getRevenueDistribution() {
+        return paymentBusinessService.getRevenueDistribution();
     }
     @GetMapping("/enterprise/{enterpriseId}")
     public ResponseEntity<?> getEarningsForEnterprise(
@@ -85,30 +90,44 @@ public class PaymentController {
                 return ResponseEntity.badRequest().body("Invalid period. Use '6months' or 'year'.");
             }
 
-            List<Object[]> results = paymentTransactionRepository.findGlobalMonthlyApplicationFee(startDate, endDate);
-            List<String> labels = new ArrayList<>();
-            List<Long> fees = new ArrayList<>();
+            // Récupération des résultats pour l'applicationFee
+            List<Object[]> feeResults = paymentTransactionRepository.findGlobalMonthlyApplicationFee(startDate, endDate);
+            // Récupération des résultats pour les abonnements (paymentType = "Subscription")
+            List<Object[]> subscriptionResults = paymentTransactionRepository.findGlobalMonthlySubscriptionRevenue(startDate, endDate);
+
+            // Création d'une map pour chaque série
+            Map<String, Long> feeMap = new HashMap<>();
+            for (Object[] row : feeResults) {
+                String month = (String) row[0]; // format "YYYY-MM"
+                Long sum = (Long) row[1];
+                feeMap.put(month, sum);
+            }
+            Map<String, Long> subscriptionMap = new HashMap<>();
+            for (Object[] row : subscriptionResults) {
+                String month = (String) row[0];
+                Long sum = (Long) row[1];
+                subscriptionMap.put(month, sum);
+            }
 
             // Génération d'une liste de mois dans la période
             YearMonth startYM = YearMonth.from(startDate);
             YearMonth endYM = YearMonth.from(endDate);
-            Map<String, Long> map = new HashMap<>();
-            for (Object[] row : results) {
-                String month = (String) row[0]; // format "YYYY-MM"
-                Long sum = (Long) row[1];
-                map.put(month, sum);
-            }
+            List<String> labels = new ArrayList<>();
+            List<Long> feeData = new ArrayList<>();
+            List<Long> subscriptionData = new ArrayList<>();
             YearMonth current = startYM;
             while (!current.isAfter(endYM)) {
                 String key = current.toString(); // format "YYYY-MM"
                 labels.add(current.format(DateTimeFormatter.ofPattern("MMM yyyy")));
-                fees.add(map.getOrDefault(key, 0L));
+                feeData.add(feeMap.getOrDefault(key, 0L));
+                subscriptionData.add(subscriptionMap.getOrDefault(key, 0L));
                 current = current.plusMonths(1);
             }
 
             Map<String, Object> response = new HashMap<>();
             response.put("labels", labels);
-            response.put("data", fees);
+            response.put("applicationFee", feeData);
+            response.put("subscription", subscriptionData);
             logger.info("Global applicationFee stats: {}", response);
             return ResponseEntity.ok(response);
         } catch (Exception e) {

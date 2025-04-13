@@ -28,6 +28,12 @@ public class ConsultantController {
         this.consultantService = consultantService;
         this.propositionService = propositionService;
     }
+    @GetMapping("/premium")
+    public ResponseEntity<List<Consultant>> getActivePremiumConsultants() {
+        List<Consultant> consultants = consultantRepository.findActivePremiumConsultants();
+        return ResponseEntity.ok(consultants);
+    }
+
     @GetMapping("/countrystats")
     public ResponseEntity<Map<String, Long>> getGeographicActivity() {
         Map<String, Long> data = consultantService.getGeographicActivityStats();

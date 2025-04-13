@@ -17,4 +17,10 @@ public interface AvisRepository extends JpaRepository<Avis, Long> {
     boolean existsByMissionIdAndAuteurId(Long missionId, Long auteurId);
     List<Avis> findByCibleIdAndMissionIsNotNull(Long consultantId);
 
+    // Supprimer tous les avis où l'utilisateur est la cible
+    void deleteByCibleId(Long cibleId);
+
+    // Supprimer tous les avis où l'utilisateur est l'auteur
+    void deleteByAuteurId(Long auteurId);
+
 }

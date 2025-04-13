@@ -1,5 +1,6 @@
 package com.example.demo.Controller;
 
+import com.example.demo.Response.MessageResponse;
 import com.example.demo.Service.UserService;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
@@ -27,7 +28,33 @@ public class UserController {
         this.userService = userService;
         this.userRepository = userRepository;
     }
+    @PostMapping("/suspend/{userId}")
+    public ResponseEntity<MessageResponse> suspendUser(@PathVariable Long userId,
+                                                       @RequestParam("suspendedUntil") LocalDateTime suspendedUntil) {
+        Optional<User> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Utilisateur introuvable"));
+        }
+        User user = optionalUser.get();
+        user.setSuspendedUntil(suspendedUntil);
+        userRepository.save(user);
+        return ResponseEntity.ok(new MessageResponse("Utilisateur suspendu jusqu'au " + suspendedUntil.toString()));
+    }
 
+    /**
+     * Endpoint permettant de lever la suspension d'un utilisateur.
+     */
+    @PostMapping("/unsuspend/{userId}")
+    public ResponseEntity<MessageResponse> unsuspendUser(@PathVariable Long userId) {
+        Optional<User> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Utilisateur introuvable"));
+        }
+        User user = optionalUser.get();
+        user.setSuspendedUntil(null);
+        userRepository.save(user);
+        return ResponseEntity.ok(new MessageResponse("Suspension levée pour l'utilisateur"));
+    }
     @GetMapping("/connection-stats")
     public ResponseEntity<Map<String, Long>> getConnectionStats() {
         List<User> users = userRepository.findAll();

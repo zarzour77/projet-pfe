@@ -50,31 +50,40 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-        // Authenticate the user
+        // Authentification de l'utilisateur
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
+        // Vérification de la validation de l’email
         if (!userDetails.isEmailVerified()) {
-            // Envoi du code de vérification par email
             authService.sendVerificationCode(userDetails.getEmail());
             return ResponseEntity.badRequest().body(new MessageResponse("Votre email n'est pas vérifié. Un code de vérification vous a été envoyé."));
         }
 
-
-        // Mise à jour du dernier login et du statut
+        // Récupération de l'utilisateur dans la BDD
         Optional<User> optionalUser = userRepository.findByEmail(userDetails.getEmail());
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
+
+            // Vérifier si l'utilisateur est suspendu
+            LocalDateTime suspendedUntil = user.getSuspendedUntil();
+            if (suspendedUntil != null && LocalDateTime.now().isBefore(suspendedUntil)) {
+                return ResponseEntity.badRequest().body(
+                        new MessageResponse("Votre compte est suspendu jusqu'au " + suspendedUntil.toString())
+                );
+            }
+
+            // Mise à jour de la dernière connexion et du statut
             user.setLastConnection(LocalDateTime.now());
             user.setStatut("online");
             userRepository.save(user);
         }
 
-
-        // Si vérifié, générer le token JWT
+        // Génération du token JWT si tout est ok
         String jwt = jwtUtils.generateJwtToken(
                 authentication,
-                userDetails.getTokenVersion() // Get from UserDetailsImpl
+                userDetails.getTokenVersion()
         );
         List<String> roles = List.of(userDetails.getRole());
         return ResponseEntity.ok(new JwtResponse(
@@ -86,6 +95,7 @@ public class AuthController {
                 roles
         ));
     }
+
 
     @PostMapping("/signup")
     public ResponseEntity<User> registerUser(@RequestBody SignupRequest signUpRequest) {
