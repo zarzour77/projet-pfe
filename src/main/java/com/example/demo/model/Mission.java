@@ -22,7 +22,7 @@ public class Mission {
     private Double budget;
     private String statut;
 
-    // Relation avec Domaine (déjà configurée avec cascade)
+    // Relation avec Domaine (déjà configurée avec cascad
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "mission_domaines",

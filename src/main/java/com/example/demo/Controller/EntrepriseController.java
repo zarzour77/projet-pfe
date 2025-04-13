@@ -4,15 +4,18 @@ package com.example.demo.Controller;
 import com.example.demo.Service.EntrepriseService;
 import com.example.demo.Service.MissionService;
 import com.example.demo.Service.NotificationService;
+import com.example.demo.dto.ConsultantStatsDTO;
 import com.example.demo.model.*;
 import com.example.demo.repository.ConsultantRepository;
 import com.example.demo.repository.EntrepriseRepository;
+import com.example.demo.repository.PaymentTransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -24,14 +27,98 @@ public class EntrepriseController {
     private final NotificationService notificationService;
     private final ConsultantRepository consultantRepository;
     private final EntrepriseRepository entrepriseRepository;
-
+    private final PaymentTransactionRepository paymentTransactionRepository;
     @Autowired
-    public EntrepriseController(EntrepriseService entrepriseService, NotificationService notificationService, ConsultantRepository consultantRepository, EntrepriseRepository entrepriseRepository) {
+    public EntrepriseController(EntrepriseService entrepriseService, NotificationService notificationService, ConsultantRepository consultantRepository, EntrepriseRepository entrepriseRepository,PaymentTransactionRepository paymentTransactionRepository) {
         this.entrepriseService = entrepriseService;
         this.notificationService = notificationService;
         this.consultantRepository = consultantRepository;
         this.entrepriseRepository = entrepriseRepository;
+        this.paymentTransactionRepository = paymentTransactionRepository;
     }
+    @GetMapping("/{entrepriseId}/jobsuccessaverage")
+    public ResponseEntity<Double> getJobSuccessAverage(@PathVariable("entrepriseId") Long entrepriseId) {
+        // Récupération de la liste des consultants pour l'entreprise SSI (méthode existante dans le service)
+        List<Consultant> consultants = entrepriseService.getConsultantsForEntreprise(entrepriseId);
+
+        // Filtrer les consultants dont le jobSuccess est défini et différent de zéro.
+        List<Consultant> consultantsWithValidJobSuccess = consultants.stream()
+                .filter(consultant -> consultant.getJobSuccess() != null && consultant.getJobSuccess() != 0)
+                .collect(Collectors.toList());
+
+        // Si aucun consultant ne possède un jobSuccess valide, retourner 0.0
+        if (consultantsWithValidJobSuccess.isEmpty()) {
+            return ResponseEntity.ok(0.0);
+        }
+
+        // Calcul de la somme des jobSuccess pour les consultants filtrés
+        double sumJobSuccess = consultantsWithValidJobSuccess.stream()
+                .mapToDouble(Consultant::getJobSuccess)
+                .sum();
+
+        // Calcul de la moyenne
+        double averageJobSuccess = sumJobSuccess / consultantsWithValidJobSuccess.size();
+
+        return ResponseEntity.ok(averageJobSuccess);
+    }
+    @GetMapping("/{id}/consultants/stats")
+    public ResponseEntity<List<ConsultantStatsDTO>> getConsultantsStats(
+            @PathVariable Long id,
+            @RequestParam("period") String period) {
+        try {
+            // Récupérer la liste des consultants pour cette entreprise
+            List<Consultant> consultants = entrepriseService.getConsultantsForEntreprise(id);
+
+            // Calculer la période selon le paramètre (month/year)
+            ZoneId zone = ZoneId.systemDefault();
+            LocalDateTime now = LocalDateTime.now(zone);
+            LocalDateTime startDate;
+            if ("month".equalsIgnoreCase(period)) {
+                startDate = now.minusMonths(1);
+            } else if ("year".equalsIgnoreCase(period)) {
+                startDate = now.minusYears(1);
+            } else {
+                return ResponseEntity.badRequest().build();
+            }
+
+            List<ConsultantStatsDTO> statsList = new ArrayList<>();
+
+            for (Consultant consultant : consultants) {
+                // Calcul du nombre de missions avec statut "ACCEPTED" ou "terminée"
+                long missionCount = consultant.getPropositions().stream()
+                        .filter(p -> {
+                            String statut = p.getStatut();
+                            return statut != null &&
+                                    (statut.equalsIgnoreCase("ACCEPTED") || statut.equalsIgnoreCase("terminée"));
+                        })
+                        .count();
+
+                // Récupération du revenue via le repository
+                Long revenue = paymentTransactionRepository.findEarningsByConsultantAndDateRange(
+                        consultant.getId(), startDate, now);
+
+                // Récupération du job success et de la photo de profil
+                Double jobSuccess = consultant.getJobSuccess() != null ? consultant.getJobSuccess() : 0.0;
+                String photo = consultant.getPhotoprofile();
+
+                // Créer et ajouter le DTO en incluant l'id
+                ConsultantStatsDTO dto = new ConsultantStatsDTO(
+                        consultant.getId(),  // Ajout de l'id ici
+                        consultant.getPrenom() + " " + consultant.getNom(),
+                        missionCount,
+                        revenue,
+                        jobSuccess,
+                        photo
+                );
+                statsList.add(dto);
+            }
+            return ResponseEntity.ok(statsList);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).build();
+        }
+    }
+
     @GetMapping("/inscriptions")
     public List<Map<String, Object>> getInscriptionsStats(
             @RequestParam(required = false, defaultValue = "all") String filter) {

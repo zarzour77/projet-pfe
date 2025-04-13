@@ -21,7 +21,7 @@ public class Consultant extends User {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date dateInscription;
-    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, }, fetch = FetchType.EAGER)
+    @ManyToMany(cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
     @JoinTable(
             name = "consultant_competences",
             joinColumns = @JoinColumn(name = "consultant_id"),
@@ -30,7 +30,7 @@ public class Consultant extends User {
     private List<Competence> competences;
 
 
-    @OneToMany(mappedBy = "consultant", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "consultant", fetch = FetchType.EAGER )
     private List<Proposition> propositions;
 
     @Column(nullable = true)

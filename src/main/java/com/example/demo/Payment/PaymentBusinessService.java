@@ -1,6 +1,7 @@
 package com.example.demo.Payment;
 
 import com.example.demo.dto.BalanceDTO;
+import com.example.demo.dto.RevenueDistributionDTO;
 import com.example.demo.exception.MissionNotFoundException;
 import com.example.demo.model.Consultant;
 import com.example.demo.model.Entreprise;
@@ -55,6 +56,12 @@ public class PaymentBusinessService {
         this.entrepriseRepository = entrepriseRepository;
     }
 
+    public RevenueDistributionDTO getRevenueDistribution() {
+        Long subscriptionRevenue = transactionRepository.findTotalSubscriptionRevenue();
+        Long commissionRevenue = transactionRepository.findTotalCommissionRevenue();
+
+        return new RevenueDistributionDTO(subscriptionRevenue, commissionRevenue);
+    }
     @Transactional
     public PaymentResponse initiateSubscriptionPayment(PaymentRequest request, long consultantId)
             throws StripeException {

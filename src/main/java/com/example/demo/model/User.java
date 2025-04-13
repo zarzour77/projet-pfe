@@ -73,6 +73,7 @@ public class User {
     private Integer tokenVersion = 0;
     @Column(name = "stripe_customer_id")
     private String stripeCustomerId;
+    private LocalDateTime suspendedUntil;
 
     public User() {}
 
@@ -136,7 +137,13 @@ public class User {
         this.telephone = telephone;
         this.verificationCode = verificationCode;
     }
+    public LocalDateTime getSuspendedUntil() {
+        return suspendedUntil;
+    }
 
+    public void setSuspendedUntil(LocalDateTime suspendedUntil) {
+        this.suspendedUntil = suspendedUntil;
+    }
     public LocalDateTime getLastConnection() {
         return lastConnection;
     }

@@ -13,7 +13,13 @@ import java.util.List;
 public interface PaymentTransactionRepository extends JpaRepository<PaymentTransaction, Long> {
 
     // Valid query methods based on actual entity fields
+    // Calculer le montant total pour les transactions d'abonnement
+    @Query("SELECT COALESCE(SUM(p.amount),0) FROM PaymentTransaction p WHERE p.paymentType = 'Subscription'")
+    Long findTotalSubscriptionRevenue();
 
+    // Calculer la somme totale des commissions (applicationFee) pour les transactions de type mission
+    @Query("SELECT COALESCE(SUM(p.applicationFee),0) FROM PaymentTransaction p ")
+    Long findTotalCommissionRevenue();
     // Sender queries
     List<PaymentTransaction> findByEntrepriseSenderId(Long enterpriseId);
     List<PaymentTransaction> findByConsultantSenderId(Long consultantId);
@@ -88,13 +94,27 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
             "ORDER BY FUNCTION('DATE_FORMAT', pt.createdAt, '%Y-%m')")
     List<Object[]> findGlobalMonthlyApplicationFee(@Param("startDate") LocalDateTime startDate,
                                                    @Param("endDate") LocalDateTime endDate);
+    @Query("SELECT FUNCTION('DATE_FORMAT', pt.createdAt, '%Y-%m') as month, SUM(pt.amount) " +
+            "FROM PaymentTransaction pt " +
+            "WHERE pt.createdAt BETWEEN :startDate AND :endDate " +
+            "AND pt.paymentType = 'Subscription' " +
+            "GROUP BY FUNCTION('DATE_FORMAT', pt.createdAt, '%Y-%m') " +
+            "ORDER BY FUNCTION('DATE_FORMAT', pt.createdAt, '%Y-%m')")
+    List<Object[]> findGlobalMonthlySubscriptionRevenue(@Param("startDate") LocalDateTime startDate,
+                                                        @Param("endDate") LocalDateTime endDate);
     @Query("SELECT COALESCE(SUM(pt.ssiCommission), 0) FROM PaymentTransaction pt " +
             "WHERE pt.ssiEnterprise.id = :enterpriseId " +
             "AND pt.status = 'PROCESSED' " +
+            "AND pt.paymentType = 'SSI_COMMISSION' "+
             "AND pt.createdAt BETWEEN :startDate AND :endDate")
     Long findEarningsByEnterpriseAndDateRange(@Param("enterpriseId") Long enterpriseId,
                                               @Param("startDate") LocalDateTime startDate,
                                               @Param("endDate") LocalDateTime endDate);
+    // Supprime toutes les transactions où l'utilisateur est consultant receiver
+    void deleteByConsultantReceiverId(Long consultantId);
+
+    // Supprime toutes les transactions où l'utilisateur est consultant sender
+    void deleteByConsultantSenderId(Long consultantId);
 
 }
 
