@@ -7,6 +7,9 @@ import com.example.demo.repository.MissionRepository;
 import com.example.demo.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 // AvisService.java
 @Service
 public class AvisService {
@@ -73,5 +76,17 @@ public class AvisService {
         response.setDateAvis(avis.getDateAvis());
         response.setMissionTitre(avis.getMission().getTitre());
         return response;
+    }
+    public List<AvisResponse> getAvisByConsultantId(Long consultantId) {
+        List<Avis> avisList = avisRepository.findByCibleIdAndMissionIsNotNull(consultantId);
+        return avisList.stream()
+                .map(avis -> new AvisResponse(
+                        avis.getId(),
+                        avis.getAuteur().getPrenom() + " " + avis.getAuteur().getNom(),
+                        avis.getNote(),
+                        avis.getCommentaire(),
+                        avis.getDateAvis(),
+                        avis.getMission().getTitre()))
+                .collect(Collectors.toList());
     }
 }

@@ -47,13 +47,7 @@ public class TransactionDTO {
         if (transaction.getMission() != null) {
             dto.setMissionId(transaction.getMission().getId());
         }
-        // Enhanced receiver handling for SSI commissions
-        if ("SSI_COMMISSION".equals(transaction.getPaymentType())) {
-            if (transaction.getEntrepriseReceiver() != null) {
-                dto.setReceiverId(transaction.getEntrepriseReceiver().getId());
-                dto.setReceiverType("ENTERPRISE");
-            }
-        }
+
         // Handle sender
         if (transaction.getEntrepriseSender() != null) {
             dto.setSenderId(transaction.getEntrepriseSender().getId());
@@ -67,25 +61,27 @@ public class TransactionDTO {
         }
 
         // Handle receiver
-        if (transaction.getConsultantReceiver() != null) {
+        if (transaction.getEntrepriseReceiver() != null) {
+            dto.setReceiverId(transaction.getEntrepriseReceiver().getId());
+            dto.setReceiverType("ENTERPRISE");
+        } else if (transaction.getConsultantReceiver() != null) {
             dto.setReceiverId(transaction.getConsultantReceiver().getId());
             dto.setReceiverType("CONSULTANT");
         } else if (transaction.getAdminReceiver() != null) {
             dto.setReceiverId(transaction.getAdminReceiver().getId());
             dto.setReceiverType("ADMIN");
         } else {
-            // For cases like fund additions to platform
+            // Default to SYSTEM if no receiver is found
             dto.setReceiverType("SYSTEM");
         }
 
-        // Special case handling
+        // Special case handling for FUND_ADDITION
         if ("FUND_ADDITION".equals(transaction.getPaymentType())) {
             dto.setReceiverType("SYSTEM");
         }
 
         return dto;
     }
-
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

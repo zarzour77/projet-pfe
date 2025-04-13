@@ -307,6 +307,9 @@ public class EntrepriseService {
             if (updatedEntreprise.getTypeEntreprise() != null) {
                 entreprise.setTypeEntreprise(updatedEntreprise.getTypeEntreprise());
             }
+            if (updatedEntreprise.getFrozenBalance() != null) {
+                entreprise.setFrozenBalance(updatedEntreprise.getFrozenBalance());
+            }
             if (entreprise.getDateInscription() == null) {
                 entreprise.setDateInscription(new Date());
             }
@@ -314,8 +317,25 @@ public class EntrepriseService {
         }).orElseThrow(() -> new RuntimeException("Entreprise not found with id " + id));
     }
 
-    public void deleteEntreprise(Long id) {
-        entrepriseRepository.deleteById(id);
+    @Transactional
+    public void deleteEntreprise(Long entrepriseId) {
+        Optional<Entreprise> optionalEntreprise = entrepriseRepository.findById(entrepriseId);
+        if (optionalEntreprise.isPresent()) {
+            Entreprise entreprise = optionalEntreprise.get();
+
+            // Dissociate the entreprise from its consultants.
+            if (entreprise.getConsultants() != null) {
+                for (Consultant consultant : entreprise.getConsultants()) {
+                    consultant.setEntrepriseSsi(null);
+                    consultantRepository.save(consultant);  // Update consultant in the database.
+                }
+            }
+
+            // Now delete the enterprise.
+            entrepriseRepository.delete(entreprise);
+        } else {
+            throw new RuntimeException("Entreprise not found with id " + entrepriseId);
+        }
     }
 
     @Transactional

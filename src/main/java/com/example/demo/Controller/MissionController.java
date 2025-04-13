@@ -51,7 +51,15 @@ public class MissionController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteMission(@PathVariable Long id) {
+        try {
+            missionService.deleteMission(id); // Call the service to handle the deletion
+            return ResponseEntity.noContent().build(); // Successfully deleted, return 204 status
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // Mission not found
+        }
+    }
     @PutMapping("/{id}")
     public ResponseEntity<Mission> updateMission(@PathVariable Long id, @RequestBody Mission mission) {
         try {

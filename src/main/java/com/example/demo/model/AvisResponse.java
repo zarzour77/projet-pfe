@@ -12,4 +12,19 @@ public class AvisResponse {
     private String commentaire;
     private LocalDateTime dateAvis;
     private String missionTitre;
+
+    // Add this constructor
+    public AvisResponse(Long id, String auteurNom, Double note, String commentaire,
+                        LocalDateTime dateAvis, String missionTitre) {
+        this.id = id;
+        this.auteurNom = auteurNom;
+        this.note = note;
+        this.commentaire = commentaire;
+        this.dateAvis = dateAvis;
+        this.missionTitre = missionTitre;
+    }
+
+    // Add empty constructor if needed
+    public AvisResponse() {
+    }
 }

@@ -4,6 +4,7 @@ import com.example.demo.Payment.PaymentBusinessService;
 import com.example.demo.Payment.PaymentRequest;
 import com.example.demo.Payment.PaymentResponse;
 import com.example.demo.dto.BalanceDTO;
+import com.example.demo.dto.ResolveDisputeRequest;
 import com.example.demo.exception.MissionNotFoundException;
 import com.example.demo.repository.PaymentTransactionRepository;
 import com.stripe.exception.StripeException;
@@ -12,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -405,6 +407,32 @@ public class PaymentController {
                     .body("Stripe error: " + e.getMessage());
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    @PostMapping("/disputes/resolve")
+    public ResponseEntity<?> resolveDisputePayment(@RequestBody ResolveDisputeRequest request) {
+        try {
+            paymentBusinessService.resolvePaymentDispute(
+                    request.getDisputeId(),
+                    request.getPayerId(),
+                    request.getPayeeId(),
+                    request.getPayerType(),
+                    request.getAmount()
+            );
+            return ResponseEntity.ok("Dispute resolved successfully");
+        } catch (StripeException e) {
+            return ResponseEntity.status(500).body("Stripe error: " + e.getMessage());
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+    @GetMapping("/frozen-balance/{enterpriseId}")
+    public ResponseEntity<?> getFrozenBalance(@PathVariable Long enterpriseId) {
+        try {
+            double balance = paymentBusinessService.getFrozenBalance(enterpriseId);
+            return ResponseEntity.ok(Map.of("frozenBalance", balance));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 }

@@ -15,4 +15,6 @@ public interface AvisRepository extends JpaRepository<Avis, Long> {
     @Query("SELECT AVG(a.note) FROM Avis a WHERE a.cible.id = :consultantId")
     Double findAverageRatingByCibleId(@Param("consultantId") Long consultantId);
     boolean existsByMissionIdAndAuteurId(Long missionId, Long auteurId);
+    List<Avis> findByCibleIdAndMissionIsNotNull(Long consultantId);
+
 }

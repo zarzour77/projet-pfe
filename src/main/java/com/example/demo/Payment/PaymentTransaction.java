@@ -21,9 +21,11 @@ public class PaymentTransaction {
     @ManyToOne
     @JoinColumn(name = "entreprise_sender_id")
     private Entreprise entrepriseSender;
+
     @ManyToOne
     @JoinColumn(name = "entreprise_receiver_id")
     private Entreprise entrepriseReceiver;
+
     @ManyToOne
     @JoinColumn(name = "consultant_receiver_id")
     private Consultant consultantReceiver;
@@ -67,13 +69,20 @@ public class PaymentTransaction {
     private String customerId;          // The enterprise or consultant making the payment
     private String consultantAccountId; // Consultant’s Stripe Account ID for mission payments
     private Long ssiCommission;  // Commission for SSI partner in cents
+
     @ManyToOne
     @JoinColumn(name = "ssi_entreprise_id")
     private Entreprise ssiEnterprise;
+
+    // New field to record dispute reference, if applicable
+    private Long disputeId;
+
     private LocalDateTime createdAt;
+
     @ManyToOne
     @JoinColumn(name = "mission_id")
     private Mission mission;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -128,29 +137,24 @@ public class PaymentTransaction {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
     public Mission getMission() { return mission; }
     public void setMission(Mission mission) { this.mission = mission; }
-    public Long getSsiCommission() {
-        return ssiCommission;
-    }
 
-    public void setSsiCommission(Long ssiCommission) {
-        this.ssiCommission = ssiCommission;
-    }
+    public Long getSsiCommission() { return ssiCommission; }
+    public void setSsiCommission(Long ssiCommission) { this.ssiCommission = ssiCommission; }
 
-    public Entreprise getSsiEnterprise() {
-        return ssiEnterprise;
-    }
+    public Entreprise getSsiEnterprise() { return ssiEnterprise; }
+    public void setSsiEnterprise(Entreprise ssiEnterprise) { this.ssiEnterprise = ssiEnterprise; }
 
-    public void setSsiEnterprise(Entreprise ssiEnterprise) {
-        this.ssiEnterprise = ssiEnterprise;
-    }
+    public Entreprise getEntrepriseReceiver() { return entrepriseReceiver; }
+    public void setEntrepriseReceiver(Entreprise entrepriseReceiver) { this.entrepriseReceiver = entrepriseReceiver; }
 
-    public Entreprise getEntrepriseReceiver() {
-        return entrepriseReceiver;
+    // New getter and setter for disputeId
+    public Long getDisputeId() {
+        return disputeId;
     }
-
-    public void setEntrepriseReceiver(Entreprise entrepriseReceiver) {
-        this.entrepriseReceiver = entrepriseReceiver;
+    public void setDisputeId(Long disputeId) {
+        this.disputeId = disputeId;
     }
 }

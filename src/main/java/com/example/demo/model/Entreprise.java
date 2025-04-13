@@ -124,4 +124,3 @@ public class Entreprise extends User {
         this.frozenBalance = frozenBalance != null ? frozenBalance : 0.00;
     }
 }
-

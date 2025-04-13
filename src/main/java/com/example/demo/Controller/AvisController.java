@@ -6,6 +6,8 @@ import com.example.demo.model.AvisResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/avis")
 public class AvisController {
@@ -22,5 +24,12 @@ public class AvisController {
     ) {
         AvisResponse response = avisService.createAvis(avisRequest, missionId);
         return ResponseEntity.ok(response);
+    }
+    @GetMapping("/consultant/{consultantId}")
+    public ResponseEntity<List<AvisResponse>> getAvisByConsultantId(
+            @PathVariable Long consultantId
+    ) {
+        List<AvisResponse> avis = avisService.getAvisByConsultantId(consultantId);
+        return ResponseEntity.ok(avis);
     }
 }

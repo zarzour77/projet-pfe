@@ -22,11 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class PaymentBusinessService {
@@ -464,5 +460,97 @@ public class PaymentBusinessService {
         }
 
         transactionRepository.save(transaction);
+    }
+
+    @Transactional
+    public PaymentResponse resolvePaymentDispute(Long disputeId, Long payerId, Long payeeId, String payerType, double amount)
+            throws StripeException {
+
+        // Validate payer type
+        if (!Arrays.asList("ENTREPRISE", "CONSULTANT").contains(payerType.toUpperCase())) {
+            throw new RuntimeException("Invalid payer type");
+        }
+
+        // Common validation
+        if (amount <= 0) {
+            throw new RuntimeException("Invalid transfer amount");
+        }
+
+        long amountInCents = (long) (amount * 100);
+
+        // Handle different payer types
+        if ("ENTREPRISE".equalsIgnoreCase(payerType)) {
+            Entreprise enterprise = entrepriseRepository.findById(payerId)
+                    .orElseThrow(() -> new RuntimeException("Enterprise not found"));
+            Consultant consultant = consultantRepository.findById(payeeId)
+                    .orElseThrow(() -> new RuntimeException("Consultant not found"));
+
+            // Enterprise to Consultant transfer logic
+            if (enterprise.getFrozenBalance() < amount) {
+                throw new RuntimeException("Insufficient frozen balance in enterprise account");
+            }
+
+            stripeService.adjustCustomerBalance(
+                    consultant.getStripeCustomerId(),
+                    amountInCents
+            );
+            enterprise.setFrozenBalance(enterprise.getFrozenBalance() - amount);
+            entrepriseRepository.save(enterprise);
+        } else {
+            // Consultant to Enterprise transfer logic
+            Consultant consultant = consultantRepository.findById(payerId)
+                    .orElseThrow(() -> new RuntimeException("Consultant not found"));
+            Entreprise enterprise = entrepriseRepository.findById(payeeId)
+                    .orElseThrow(() -> new RuntimeException("Enterprise not found"));
+
+            // Check consultant balance
+            Customer consultantCustomer = stripeService.getCustomerBalance(consultant.getStripeCustomerId());
+            double consultantBalance = consultantCustomer.getBalance() != null ?
+                    consultantCustomer.getBalance() / 100.0 : 0.0;
+
+            if (consultantBalance < amount) {
+                throw new RuntimeException("Insufficient balance in consultant account");
+            }
+
+            stripeService.adjustCustomerBalance(
+                    consultant.getStripeCustomerId(),
+                    -amountInCents
+            );
+            stripeService.adjustCustomerBalance(
+                    enterprise.getStripeCustomerId(),
+                    amountInCents
+            );
+        }
+
+        // Create transaction record
+        PaymentTransaction transaction = new PaymentTransaction();
+        transaction.setPaymentType("DISPUTE_RESOLUTION");
+        transaction.setAmount(amountInCents);
+        transaction.setCurrency("EUR");
+        transaction.setStatus("PROCESSED");
+        transaction.setCreatedAt(LocalDateTime.now());
+        transaction.setDisputeId(disputeId);
+
+        if ("ENTREPRISE".equalsIgnoreCase(payerType)) {
+            transaction.setEntrepriseSender(entrepriseRepository.findById(payerId).orElseThrow());
+            transaction.setConsultantReceiver(consultantRepository.findById(payeeId).orElseThrow());
+        } else {
+            transaction.setConsultantSender(consultantRepository.findById(payerId).orElseThrow());
+            transaction.setEntrepriseReceiver(entrepriseRepository.findById(payeeId).orElseThrow());
+        }
+
+        transactionRepository.save(transaction);
+
+        return PaymentResponse.builder()
+                .status("SUCCESS")
+                .message("Dispute resolved successfully")
+                .build();
+    }
+
+
+    public double getFrozenBalance(Long enterpriseId) {
+        return entrepriseRepository.findById(enterpriseId)
+                .map(Entreprise::getFrozenBalance)
+                .orElseThrow(() -> new RuntimeException("Enterprise not found"));
     }
 }

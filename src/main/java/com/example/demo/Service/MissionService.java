@@ -1,6 +1,5 @@
 package com.example.demo.Service;
 
-
 import com.example.demo.Payment.PaymentBusinessService;
 import com.example.demo.Payment.PaymentIntentRequest;
 import com.example.demo.Payment.PaymentTransaction;
@@ -18,6 +17,8 @@ import com.example.demo.repository.EntrepriseRepository;
 import com.example.demo.repository.MissionRepository;
 import com.example.demo.exception.MissionNotFoundException;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -25,7 +26,6 @@ import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
@@ -62,6 +62,9 @@ public class MissionService {
     StripeService stripeService;
     @Autowired
     private PaymentTransactionRepository paymentTransactionRepository;
+    @Autowired
+    private  EntityManager entityManager;
+
     public MissionService(MissionRepository missionRepository) {
         this.missionRepository = missionRepository;
     }
@@ -119,8 +122,10 @@ public class MissionService {
         mission.setStatut(newStatus);
         return missionRepository.save(mission);
     }
+
     // Seuil à définir selon vos tests (par exemple 0.6)
     private static final double MATCH_THRESHOLD = 0.6;
+
     public Mission ajoutermission(Mission mission) {
         Long entrepriseId = mission.getEntreprise().getId();
         Entreprise entreprise = entrepriseRepository.findById(entrepriseId)
@@ -146,12 +151,13 @@ public class MissionService {
         processNotificationsAsync(savedMission);
         return savedMission;
     }
+
     @Async
     public void processNotificationsAsync(Mission savedMission) {
         List<Consultant> consultants = consultantRepository.findAll();
         for (Consultant consultant : consultants) {
             double score = matchingService.computeGlobalMatchScore(consultant, savedMission);
-            if (score > 0.6) {  // Using your MATCH_THRESHOLD directly inline
+            if (score > MATCH_THRESHOLD) {  // Using your MATCH_THRESHOLD directly inline
                 String message = "Nouvelle mission \"" + savedMission.getTitre() +
                         "\" correspondant à vos compétences (score: " + score + ").";
                 notificationService.sendNotification(consultant, message);
@@ -166,6 +172,30 @@ public class MissionService {
             }
         }
     }
+
+    @Transactional
+    public void deleteMission(Long missionId) {
+        // Step 1: Delete all propositions linked to the mission
+        entityManager.createNativeQuery("DELETE FROM proposition WHERE mission_id = ?")
+                .setParameter(1, missionId)
+                .executeUpdate();
+
+        // Step 2: Clear join tables (domain and competence relationships)
+        entityManager.createNativeQuery("DELETE FROM mission_domaines WHERE mission_id = ?")
+                .setParameter(1, missionId)
+                .executeUpdate();
+
+        entityManager.createNativeQuery("DELETE FROM mission_competences WHERE mission_id = ?")
+                .setParameter(1, missionId)
+                .executeUpdate();
+
+        // Step 3: Delete the mission itself
+        Mission mission = missionRepository.findById(missionId)
+                .orElseThrow(() -> new RuntimeException("Mission not found"));
+
+        missionRepository.delete(mission);
+    }
+
     public List<Mission> getAllMissions() {
         return missionRepository.findAll();
     }
@@ -219,7 +249,8 @@ public class MissionService {
         }).collect(Collectors.toList());
         return missions;
     }
-      // NEW: Terminate a mission by setting its status to "terminée" and filling the end date.
+
+    // NEW: Terminate a mission by setting its status to "terminée" and filling the end date.
     public Mission terminateMission(Long missionId, String endDateStr) {
         Mission mission = missionRepository.findById(missionId)
                 .orElseThrow(() -> new MissionNotFoundException(missionId));
@@ -235,8 +266,8 @@ public class MissionService {
         }
         return missionRepository.save(mission);
     }
+
     public List<Mission> searchMissions(String query) {
         return missionRepository.search(query);
     }
-
 }
