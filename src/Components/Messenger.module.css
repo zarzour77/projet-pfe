@@ -1,6 +1,6 @@
 /* Container: below the 60px header, full height minus header */
 .container {
-  margin-top: 60px;                /* Space for the fixed header */
+  margin-top: 65px;                /* Space for the fixed header */
   height: calc(100vh - 60px);      /* Occupies the rest of the viewport */
   display: flex;
   background-color: #f0f2f5;

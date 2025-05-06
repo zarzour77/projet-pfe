@@ -1,17 +1,20 @@
 /* eslint-disable react/no-unescaped-entities */
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import styles from "./Subscription.module.css";
 import PaymentService from "../Services/PaymentService";
 import { useNavigate } from "react-router-dom";
+import ConsultantService from "../Services/ConsultantService";
 
 const Subscription = () => {
   const [selectedPlan, setSelectedPlan] = useState("Standard");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Add loading state
+
+  const [currentPlan, setCurrentPlan] = useState("Standard");
   const navigate = useNavigate();
   const storedUser = JSON.parse(localStorage.getItem("user"));
   const consultantId = storedUser?.id;
-
   const plans = {
     Standard: {
       price: 0,
@@ -36,7 +39,25 @@ const Subscription = () => {
       fee: "Frais de service : 10%"
     }
   };
-
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      if (consultantId) {
+        try {
+          const plan = await ConsultantService.getCurrentSubscription(consultantId);
+          setCurrentPlan(plan);
+          setSelectedPlan(plan);
+        } catch (error) {
+          console.error("Error fetching subscription:", error);
+        } finally {
+          setIsLoading(false); // Update loading state regardless of success/error
+        }
+      } else {
+        setIsLoading(false);
+      }
+    };
+    fetchSubscription();
+  }, [consultantId]);
+  
   const handleSubscribe = async (planType) => {
     if (planType === "Premium") {
       setLoading(true);
@@ -61,7 +82,43 @@ const Subscription = () => {
       setLoading(false);
     }
   };
+  const renderPriceSection = (planKey) => {
+    if (isLoading) {
+      return <div className={styles.loadingPlaceholder}>Chargement...</div>;
+    }
 
+    if (planKey === "Standard") {
+      return <div className={styles.currentPlan}>Plan standard activé</div>;
+    }
+    
+    if (currentPlan === "Premium") {
+      return <div className={styles.currentPlan}>Plan courant</div>;
+    }
+
+    return (
+      <button 
+        className={styles.selectButton}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleSubscribe(planKey);
+        }}
+        disabled={loading || currentPlan === "Premium"}
+      >
+        {loading ? "Traitement..." : "Sélectionner le plan"}
+      </button>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loadingOverlay}>
+          <div className={styles.loadingSpinner} />
+          <p>Chargement de votre abonnement...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className={styles.container}>
       <button 
@@ -76,30 +133,17 @@ const Subscription = () => {
       <div className={styles.plansContainer}>
         {Object.entries(plans).map(([planKey, details]) => (
           <div 
-            key={planKey}
-            className={`${styles.planCard} ${selectedPlan === planKey ? styles.selected : ""}`}
-            onClick={() => setSelectedPlan(planKey)}
-          >
+          key={planKey}
+          className={`${styles.planCard} ${selectedPlan === planKey ? styles.selected : ""}`}
+          onClick={() => currentPlan !== "Premium" && setSelectedPlan(planKey)}
+        >
             <div className={styles.planHeader}>
               <h3>{planKey}</h3>
               <span className={styles.serviceFee}>{details.fee}</span>
             </div>
             
             <div className={styles.priceSection}>
-              {planKey === "Standard" ? (
-                <div className={styles.currentPlan}>Plan standard activé</div>
-              ) : (
-                <button 
-                  className={styles.selectButton}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSubscribe(planKey);
-                  }}
-                  disabled={loading}
-                >
-                  {loading ? "Traitement..." : "Sélectionner le plan"}
-                </button>
-              )}
+              {renderPriceSection(planKey)}
             </div>
 
             <ul className={styles.featuresList}>

@@ -35,19 +35,46 @@ import Settings from "./Components/Settings";
 import Dispute from "./Components/Dispute";
 import AdminDispute from "./Components/Admindispute";
 import { AuthProvider } from "./Services/AuthContext";
+import VoirAllUsers from "./Components/VoirAllUsers";
 
 const App = () => {
   return (
     <AuthProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Home />} />
+        <Route
+            path="/VoirAllUsers"
+            element={
+              <ProtectedRoute allowedRoles={[ "Admin"]}>
+                <Header />
+                <VirtualAssistant />
+                <VoirAllUsers />
+              </ProtectedRoute>
+            }
+          />         <Route path="/login" element={<Login />} />
           <Route path="/UserInformation" element={<UserInformation />} />
           <Route path="/Notification" element={<Notification />} />
-          <Route path="/Dispute" element={<Dispute />} />
-          <Route path="/Admindispute" element={<AdminDispute />} />
-          {/* Updated Stat Routes */}
+          <Route
+            path="/Dispute"
+            element={
+              <ProtectedRoute allowedRoles={[ "Entreprise","Consultant","Admin"]}>
+                <Header />
+                <VirtualAssistant />
+                <Dispute />
+              </ProtectedRoute>
+            }
+          />           
+          <Route
+            path="/AdminDispute"
+            element={
+              <ProtectedRoute allowedRoles={[ "Admin"]}>
+                <Header />
+                <VirtualAssistant />
+                <AdminDispute />
+              </ProtectedRoute>
+            }
+          />          {/* Updated Stat Routes */}
           <Route
             path="/StatConsultant"
             element={
@@ -89,7 +116,16 @@ const App = () => {
               </ProtectedRoute>
             }
           />
-
+<Route
+            path="/mission/:missoinId"
+            element={
+              <ProtectedRoute allowedRoles={["Entreprise", "Consultant", "Admin"]}>
+                <Header />
+                <VirtualAssistant />
+                <SearchMission />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/entreprise/:entrepriseId"
             element={

@@ -155,7 +155,7 @@
 /* Carte d'une mission */
 .jobItem {
   background-color: #fff;
-  border: 1px solid #00999030;
+  border: 1px solid rgba(255, 255, 255, 0.537);
   padding: 1rem;
   border-radius: 4px;
   transition: all 0.3s ease;
@@ -163,9 +163,7 @@
 }
 
 .jobItem:hover {
-  box-shadow: 0 4px 12px rgba(0, 153, 144, 0.15);
-  background-color: #00999010;
-  border-color: #009990;
+  box-shadow: 0 1px 1px rgb(169, 169, 169);
 }
 
 .gridItem {
@@ -262,7 +260,7 @@
 }
 
 .pagination span {
-  color: #001A6E;
+  color: #1a1a2e;
   font-weight: 500;
 }
 
@@ -278,7 +276,7 @@
 }
 
 .pagination :global(.MuiButton-root:hover:not(:disabled)) {
-  background: #000000 !important;
+  background: #1a1a2e !important;
   color: white;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 153, 144, 0.2);
@@ -334,6 +332,11 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+.jobList h2{
+  font-size: 1.5rem;
+  text-align:start;
+
 }
 .modalContent h2{
   font-size: 1.5rem;
@@ -410,7 +413,7 @@
 }
 .modalSubmitBtn {
   padding: 0.8rem 2rem; /* Adjust padding */
-  width: 150px;
+  width: 260px;
     background: linear-gradient(135deg, #28a745, #218838);
   border: none;
   border-radius: 8px;
@@ -456,4 +459,37 @@
   justify-content: flex-end;
   margin-top: 1.5rem;
   justify-content: center; /* Center the button */
+}
+.actionButton {
+  padding: 0.8rem 2rem;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #007bff, #0062cc);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 123, 255, 0.1);
+}
+
+.actionButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(0, 123, 255, 0.2);
+}
+.saveButton {
+  padding: 0.8rem 1.5rem;
+  border: 2px solid #007bff !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: #007bff !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+  text-transform: none !important;
+}
+
+.saveButton:hover {
+  background: linear-gradient(135deg, #007bff, #0062cc) !important;
+  color: white !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 123, 255, 0.1);
 }

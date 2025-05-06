@@ -14,13 +14,23 @@ const VoirProfileConsultant = () => {
   const [loading, setLoading] = useState(true);
   const [showCvModal, setShowCvModal] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState("");
+  const [reviews, setReviews] = useState([]); // Add reviews state
+  const [selectedReview, setSelectedReview] = useState(null);
+
+  const handleReviewClick = (review) => {
+    setSelectedReview(review);
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         setLoading(true);
-        const consultantData = await VoirProfileConsultantService.getConsultantById(consultantId);
+        const [consultantData, reviewsData] = await Promise.all([
+          VoirProfileConsultantService.getConsultantById(consultantId),
+          VoirProfileConsultantService.getConsultantReviews(consultantId)
+        ]);
         setUser(consultantData);
+        setReviews(reviewsData);        setUser(consultantData);
       } catch (error) {
         console.error("Erreur lors de la récupération:", error);
       } finally {
@@ -105,47 +115,82 @@ const VoirProfileConsultant = () => {
             </div>
           </div>
           {/* Job Success Circular Progress */}
-          <div className={styles.jobSuccessContainer}>
-            <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-              <CircularProgress
-                variant="determinate"
-                value={100}
-                size={40}
-                thickness={4}
-                sx={{ color: '#f0f0f0' }}
-              />
-              <CircularProgress
-                variant="determinate"
-                value={user.jobSuccess || 0}
-                size={40}
-                thickness={4}
-                sx={{
-                  color: '#00796b',
-                  position: 'absolute',
-                  left: 0,
-                }}
-              />
-              <Box
-                sx={{
-                  top: 0,
-                  left: 0,
-                  bottom: 0,
-                  right: 0,
-                  position: 'absolute',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <Typography variant="caption" component="div" sx={{ fontWeight: 'bold' }}>
-                  {`${user.jobSuccess || 0}%`}
-                </Typography>
-              </Box>
-            </Box>
-            <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary', mt: 1, textAlign: 'center' }}>
-              Score de Succès
-            </Typography>
-          </div>
+<div className={styles.jobSuccessContainer}>
+  <Box 
+    sx={{ 
+      position: 'relative', 
+      display: 'inline-flex',
+      transition: 'transform 0.3s ease',
+      '&:hover': {
+        transform: 'scale(1.05)'
+      }
+    }}
+    title={`Taux de réussite: ${user.jobSuccess || 0}%`}
+  >
+    <CircularProgress
+      variant="determinate"
+      value={100}
+      size={100}
+      thickness={6}
+      sx={{ 
+        color: '#f0f3f5',
+        transition: 'opacity 0.3s ease' 
+      }}
+    />
+    <CircularProgress
+      variant="determinate"
+      value={user.jobSuccess || 0}
+      size={100}
+      thickness={6}
+      sx={{
+        color: 'primary.main',
+        position: 'absolute',
+        left: 0,
+        transition: 'stroke-dashoffset 0.5s ease-out 0.3s',
+        '& .MuiCircularProgress-circle': {
+          strokeLinecap: 'round'
+        }
+      }}
+    />
+    <Box
+      sx={{
+        top: 0,
+        left: 0,
+        bottom: 0,
+        right: 0,
+        position: 'absolute',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        animation: `${styles.bounce} 0.5s ease-out`
+      }}
+    >
+      <Typography 
+        variant="h6" 
+        component="div" 
+        sx={{ 
+          fontWeight: '800',
+          color: 'primary.main',
+          textShadow: '0 2px 4px rgba(0, 121, 107, 0.2)'
+        }}
+      >
+        {`${user.jobSuccess || 0}%`}
+      </Typography>
+    </Box>
+  </Box>
+  <Typography 
+    variant="body2" 
+    sx={{ 
+      fontWeight: 600, 
+      color: 'text.secondary', 
+      mt: 2, 
+      textAlign: 'center',
+      animation: `${styles.fadeInUp} 0.5s ease-out`
+    }}
+  >
+    Taux de réussite
+  </Typography>
+</div>
         </div>
       </div>
 
@@ -206,6 +251,7 @@ const VoirProfileConsultant = () => {
       {user.experiences && (
         <div className={styles.profileSection}>
           <h2 className={styles.sectionTitle}>Expériences professionnelles</h2>
+          {user.experiences?.length > 0 ? (
           <div className={styles.experiencesGrid}>
             {user.experiences.map((exp) => (
               <div key={exp.id} className={styles.experienceCard}>
@@ -217,12 +263,16 @@ const VoirProfileConsultant = () => {
               </div>
             ))}
           </div>
+          ) : (
+            <span className={styles.noData}>Aucune expérience professionnelle à afficher</span>
+          )}
         </div>
       )}
 
       {user.formations && (
         <div className={styles.profileSection}>
           <h2 className={styles.sectionTitle}>Formations</h2>
+          {user.formations?.length > 0 ? (
           <div className={styles.experiencesGrid}>
             {user.formations.map((formation) => (
               <div key={formation.id} className={styles.experienceCard}>
@@ -234,12 +284,16 @@ const VoirProfileConsultant = () => {
               </div>
             ))}
           </div>
+          ) : (
+            <span className={styles.noData}>Aucune formation à afficher</span>
+          )}
         </div>
       )}
 
       {user.certifications && (
         <div className={styles.profileSection}>
           <h2 className={styles.sectionTitle}>Certifications</h2>
+          {user.certifications?.length > 0 ? (
           <div className={styles.experiencesGrid}>
             {user.certifications.map((certification) => (
               <div key={certification.id} className={styles.experienceCard}>
@@ -251,49 +305,78 @@ const VoirProfileConsultant = () => {
               </div>
             ))}
           </div>
+          ) : (
+            <span className={styles.noData}>Aucune certification à afficher</span>
+          )}
         </div>
       )}
 
-      <div className={styles.profileSection}>
-        <h2 className={styles.sectionTitle}>Avis</h2>
+<div className={styles.profileSection}>
+        <h2 className={styles.sectionTitle}>Avis reçus</h2>
         <div className={styles.reviewsWrapper}>
           <div className={styles.reviewsColumn}>
-            <h3 className={styles.subSectionTitle}>Avis reçus</h3>
-            {user.avisRecus?.length > 0 ? (
-              user.avisRecus.map((review) => (
-                <div key={review.id} className={styles.reviewCard}>
-                  <p className={styles.reviewText}>{review.comment}</p>
-                  <div className={styles.reviewRating}>
-                    Évaluation : {review.rating}/5
-                  </div>
+            {reviews.length > 0 ? (
+              reviews.map((review) => (
+                <div 
+                  key={review.id} 
+                  className={styles.reviewCard}
+                  onClick={() => handleReviewClick(review)}
+                >
+                  <p className={styles.reviewText}>
+                    {review.commentaire.length > 100 
+                      ? `${review.commentaire.substring(0, 100)}...` 
+                      : review.commentaire}
+                  </p>
+                  <span className={styles.reviewDate}>
+                    {new Date(review.dateAvis).toLocaleDateString('fr-FR')}
+                  </span>
                 </div>
               ))
             ) : (
               <p className={styles.noReviews}>Aucun avis reçu</p>
             )}
           </div>
-          <div className={styles.reviewsColumn}>
-            <h3 className={styles.subSectionTitle}>Avis donnés</h3>
-            {user.avisDonnes?.length > 0 ? (
-              user.avisDonnes.map((review) => (
-                <div key={review.id} className={styles.reviewCard}>
-                  <p className={styles.reviewText}>{review.comment}</p>
-                  <div className={styles.reviewRating}>
-                    Évaluation : {review.rating}/5
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className={styles.noReviews}>Aucun avis donné</p>
-            )}
-          </div>
         </div>
       </div>
-
+{selectedReview && (
+  <div className={styles.modalOverlay} onClick={() => setSelectedReview(null)}>
+    <div className={styles.reviewModalContent} onClick={(e) => e.stopPropagation()}>
+      <button 
+        className={styles.modalCloseBtn} 
+        onClick={() => setSelectedReview(null)}
+      >
+        &times; 
+      </button>
+      <h3 className={styles.reviewModalTitle}>Détails de l'avis</h3>
+      <div className={styles.reviewModalMeta}>
+        <div className={styles.reviewMetaItem}>
+          <span className={styles.metaLabel}>Auteur:</span>
+          <span className={styles.reviewAuthor}>{selectedReview.auteurNom}</span>
+        </div>
+        <div className={styles.reviewMetaItem}>
+          <span className={styles.metaLabel}>Mission:</span>
+          <span className={styles.reviewMission}>{selectedReview.missionTitre}</span>
+        </div>
+        <div className={styles.reviewMetaItem}>
+          <span className={styles.metaLabel}>Note:</span>
+          <span className={styles.reviewRating}>{selectedReview.note}/5</span>
+        </div>
+      </div>
+      <div className={styles.reviewContent}>
+        <span className={styles.metaLabel}>Commentaire:</span>
+        <p className={styles.reviewFullText}>{selectedReview.commentaire}</p>
+      </div>
+      <span className={styles.reviewModalDate}>
+        <span className={styles.metaLabel}>Posté le : </span> 
+        {new Date(selectedReview.dateAvis).toLocaleDateString('fr-FR')}
+      </span>
+    </div>
+  </div>
+)}
       {/* Add CV Preview Modal */}
       {showCvModal && (
         <div className={styles.modalOverlay} onClick={() => { setShowCvModal(false); setPdfPreviewUrl(""); }}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+          <div className={`${styles.modalContent} ${styles.cvModalContentBig}`} onClick={(e) => e.stopPropagation()}>
             <h2 className={styles.pdfPreviewTitle}>Aperçu du CV</h2>
             {pdfPreviewUrl ? (
               <>

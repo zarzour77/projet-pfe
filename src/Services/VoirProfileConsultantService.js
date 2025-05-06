@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const API_URL = 'http://localhost:8181/api/consultants';
+const AVIS_URL = 'http://localhost:8181/api/avis'; // Add avis API URL
 
 // Fonction utilitaire pour récupérer la configuration avec le token JWT
 const getTokenConfig = () => {
@@ -46,8 +47,19 @@ const getConsultantExperiences = async (consultantId) => {
   }
 };
 
+const getConsultantReviews = async (consultantId) => {
+  try {
+    const config = getTokenConfig();
+    const response = await axios.get(`${AVIS_URL}/consultant/${consultantId}`, config);
+    return response.data;
+  } catch (error) {
+    throw new Error('Erreur lors de la récupération des avis');
+  }
+};
 export default {
   getConsultantById,
   getConsultantCompetences,
   getConsultantExperiences,
+  getConsultantReviews, // Add the new method to exports
+
 };

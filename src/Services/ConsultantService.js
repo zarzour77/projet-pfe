@@ -2,6 +2,8 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:8181/api/consultants';
 const API_cv = 'http://localhost:8181/api/cv';
+const AVIS_URL = 'http://localhost:8181/api/avis'; // Add avis API URL
+const SUBSCRIPTION_URL = 'http://localhost:8181/api/subscriptions';
 
 
 const ConsultantService = {
@@ -36,7 +38,18 @@ const ConsultantService = {
       throw error;
     }
   },
-
+  getAllConsultants: async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await axios.get(API_URL, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching all consultants:", error);
+      throw error;
+    }
+  },
   updateConsultant: async (id, consultantData) => {
     const token = localStorage.getItem("token");
     console.log(id,consultantData)
@@ -344,6 +357,37 @@ try {
       console.error("Error searching consultants:", error);
       throw error;
     }
-  }
+  },
+  getCurrentSubscription: async (consultantId) => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await axios.get(
+        `${SUBSCRIPTION_URL}/current/${consultantId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      console.log(response)
+
+      return response.data;
+      
+    } catch (error) {
+      console.error("Error fetching subscription:", error);
+      return "Standard";
+    }
+  },
+  getConsultantReviews: async (consultantId) => {
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await axios.get(
+        `${AVIS_URL}/consultant/${consultantId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching consultant reviews:", error);
+      throw error;
+    }
+  },
 };
+
 export default ConsultantService;

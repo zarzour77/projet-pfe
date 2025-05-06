@@ -6,6 +6,7 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #333;
     background-color: #f5f7fa;
+    margin-top: 50px;
   }
   
   .title {
@@ -96,15 +97,17 @@
   /* Boutons */
   .chooseTransactionButton,
   .submitButton {
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    padding: 0.75rem 1.2rem;
-    font-size: 1rem;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
-  }
+      padding: 0.9rem 2rem;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #007bff, #0062cc);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 6px rgba(0, 123, 255, 0.1);
+    }
+  
   
   .chooseTransactionButton:hover,
   .submitButton:hover {
@@ -122,6 +125,7 @@
   
   .formGroupSubmit {
     margin-top: 1.5rem;
+    text-align: center;
   }
   
   /* Historique des tickets */

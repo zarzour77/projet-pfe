@@ -34,14 +34,20 @@ const TransactionService = {
           typeLabel = 'Fonds gelés';
         } else if (tx.paymentType === 'SSI_COMMISSION') {
           typeLabel = 'Commission SSI';
+        } else if (tx.paymentType === 'DISPUTE_RESOLUTION') { // Add this
+          typeLabel = 'Résolution de litige';
         } else {
           typeLabel = 'Mission';
         }
 
         // Transaction direction logic
         let isIncoming = false;
-        let isOutgoing = false;
-        if (isSSICommission) {
+let isOutgoing = false;
+if (tx.paymentType === 'DISPUTE_RESOLUTION') {
+  // Generic logic based on sender/receiver IDs
+  isOutgoing = tx.senderId === userId;
+  isIncoming = tx.receiverId === userId;
+} else if (isSSICommission) {
           const isSSIReceiver = tx.receiverId === userId && userTypeEntreprise === "SSI";
           const isSSISender = tx.senderId === userId && userTypeEntreprise === "SSI";
           if (isSSIReceiver) {
@@ -69,6 +75,7 @@ const TransactionService = {
           ) {
             isOutgoing = true;
           }
+          
         }
 
         return {

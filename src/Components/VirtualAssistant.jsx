@@ -119,6 +119,7 @@ const VirtualAssistant = () => {
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       sendMessage();
+      setShowSuggestions(false);
     }
   };
 

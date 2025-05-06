@@ -830,7 +830,7 @@ const handleSubmitRating = async () => {
             Fermer
           </Button>
           {/* If the consultant's proposition is accepted, show the "Payer" button */}
-          {consultantProposition?.statut === "accepted" && (
+          {consultantProposition?.statut === "ACCEPTED" && (
             <Button 
               variant="contained" 
               color="primary" 

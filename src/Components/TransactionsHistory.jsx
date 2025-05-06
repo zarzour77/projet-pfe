@@ -1,6 +1,5 @@
-// src/Components/TransactionsHistory.jsx
 import { useEffect, useState, useMemo } from "react";
-import TransactionService from "../Services/TransactionService";
+import TransactionService from "../services/TransactionService";
 import styles from "./TransactionsHistory.module.css";
 import PaymentService from "../Services/PaymentService";
 import EntrepriseService from "../Services/EntrepriseService"; // Adjust path as needed
@@ -16,6 +15,7 @@ const TransactionsHistory = () => {
   const [availableBalance, setAvailableBalance] = useState(0);
   const [frozenBalance, setFrozenBalance] = useState(0);
   const [entrepriseType, setEntrepriseType] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
   const storedUser = JSON.parse(localStorage.getItem("user"));
   const userId = storedUser?.id;
@@ -47,6 +47,8 @@ const TransactionsHistory = () => {
         console.error("Error fetching balances:", error);
         setAvailableBalance(0);
         setFrozenBalance(0);
+      } finally {
+        setIsLoading(false); // Update loading state
       }
     };
 
@@ -80,6 +82,9 @@ const TransactionsHistory = () => {
         .catch((error) => {
           console.error("Error fetching transactions:", error);
           setLoading(false);
+        })
+        .finally(() => {
+          setIsLoading(false); // Update loading state
         });
     } else {
       setLoading(false);
@@ -176,15 +181,24 @@ const TransactionsHistory = () => {
     setSortConfig({ key: null, direction: "ascending" });
   };
 
-  if (loading) {
+  // Combine both loading states to render the same overlay effect as in Subscription
+  if (loading || isLoading) {
     return (
       <div className={styles.container}>
-        <h2>Loading transactions...</h2>
+        <div className={styles.loadingOverlay}>
+          <div className={styles.loadingSpinner} />
+          <p>Chargement des transactions...</p>
+        </div>
       </div>
     );
   }
 
   const getAmountDisplay = (tx) => {
+    if (tx.type === "Résolution de litige") {
+      return tx.isOutgoing 
+        ? `- ${tx.montant} ${tx.currency}`
+        : `+ ${tx.montant} ${tx.currency}`;
+    }
     if (userRole === "Admin" && tx.isAdminMissionFee) {
       return `+ ${(tx.applicationFee / 100).toFixed(2)} ${tx.currency}`;
     }
@@ -198,6 +212,12 @@ const TransactionsHistory = () => {
   };
 
   const getAmountStyle = (tx) => {
+    if (tx.type === "Résolution de litige") {
+      return tx.isOutgoing ? styles.sentAmount : styles.receivedAmount;
+    }
+    if (tx.type === "Résolution de litige" && userRole === "Entreprise") {
+      return styles.sentAmount;
+    }
     if (userRole === "Admin" && tx.isAdminMissionFee) {
       return styles.receivedAmount;
     }
@@ -252,6 +272,7 @@ const TransactionsHistory = () => {
             <option>Ajout de fonds</option>
             <option>Fonds gelés</option>
             <option>Commission SSI</option>
+            <option>Résolution de litige</option>
           </select>
         </div>
         <div className={styles.filterItem}>
@@ -282,6 +303,7 @@ const TransactionsHistory = () => {
         <span className={styles.sortableHeader} onClick={() => requestSort("statut")}>
           Statut {getSortIcon("statut")}
         </span>
+
         {sortConfig.key !== null && (
           <button className={styles.resetSortIcon} onClick={resetSorting}>
             ✖

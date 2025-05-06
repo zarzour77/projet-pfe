@@ -1,57 +1,130 @@
+/* SignupSuccess.module.css */
 .signupSuccessContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f0f4f8, #dfe7ef);
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.contentWrapper {
+  background: white;
+  padding: 3rem 4rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
   text-align: center;
-  background: linear-gradient(135deg, #e0f7fa, #80deea);
-  padding: 20px;
+  max-width: 600px;
+  width: 90%;
+  position: relative;
+  border: 1px solid rgba(0,0,0,0.05);
 }
 
-/* Styling for heading */
+.successIcon {
+  width: 80px !important;
+  height: 80px !important;
+  color: #4299e1;
+  margin-bottom: 1.5rem;
+  filter: drop-shadow(0 4px 8px rgba(76,175,80,0.2));
+  animation: iconBounce 1s ease-in-out;
+}
+
 .signupSuccessContainer h1 {
-  font-size: 3rem;
-  color: #4caf50;
-  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+  font-size: 2.5rem;
+  color: #2d3748;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.message {
+  font-size: 1.25rem;
+  color: #4a5568;
+  line-height: 1.6;
+  margin: 1rem 0;
   opacity: 0;
-  animation: fadeIn 1s forwards, scaleUp 0.5s ease-out 0.5s forwards;
-  margin-bottom: 20px;
+  animation: fadeInUp 0.8s ease-out 0.3s forwards;
 }
 
-/* Styling for paragraphs */
-.signupSuccessContainer p {
-  font-size: 1.2rem;
-  color: #555;
-  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);
+.redirectMessage {
+  color: #718096;
+  margin: 1.5rem 0;
   opacity: 0;
-  animation: fadeIn 1s forwards;
-  margin: 10px 0;
+  animation: fadeInUp 0.8s ease-out 0.6s forwards;
 }
 
-/* Delay effect for paragraphs */
-.delay {
-  animation-delay: 1s;
+.progressBar {
+  width: 100%;
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  margin: 2rem 0;
+  overflow: hidden;
 }
 
-/* Fade-in animation */
-@keyframes fadeIn {
-  0% {
+.progressFill {
+  width: 100%;
+  height: 100%;
+  background: #4299e1;
+  animation: progressFill 3.8s linear forwards;
+}
+
+.manualButton {
+  background: #4299e1;
+  color: white;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  opacity: 0;
+  animation: fadeIn 0.5s ease-out 1s forwards;
+}
+
+.manualButton:hover {
+  background: #43a047;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(76,175,80,0.3);
+}
+
+@keyframes iconBounce {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.1); }
+  80% { transform: scale(0.95); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
     opacity: 0;
     transform: translateY(20px);
   }
-  100% {
+  to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-/* Scale effect for the h1 */
-@keyframes scaleUp {
-  0% {
-    transform: scale(1);
+@keyframes progressFill {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@media (max-width: 768px) {
+  .contentWrapper {
+    padding: 2rem;
   }
-  100% {
-    transform: scale(1.1);
+  
+  .signupSuccessContainer h1 {
+    font-size: 2rem;
+  }
+  
+  .message {
+    font-size: 1.1rem;
   }
 }

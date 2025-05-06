@@ -1,4 +1,4 @@
-// Dans StatAdminService.js
+// File: StatAdminService.js
 import axios from 'axios';
 
 const INSCRIPTIONS_API_URL = 'http://localhost:8181/api/entreprises/inscriptions';
@@ -7,8 +7,11 @@ const USER_ROLE_STATS_API_URL = 'http://localhost:8181/api/users/role-stats';
 const CONSULTANT_COUNTRY_STATS_API_URL = 'http://localhost:8181/api/consultants/countrystats';
 const CONNECTION_STATS_API_URL = 'http://localhost:8181/api/users/connection-stats';
 const TRANSACTIONS_VOLUME_API_URL = 'http://localhost:8181/api/payments/transactions/volume/all';
+const REVENUE_DISTRIBUTION_API_URL = 'http://localhost:8181/api/payments/revenue-distribution'; // API dédiée pour la répartition
 
-
+// API pour le graphique "Revenus générés par l'admin"
+// Cette API renvoie une réponse de la forme : 
+// { labels: [...], applicationFee: [...], subscription: [...] }
 export const fetchGlobalApplicationFeeStats = async (period = "6months") => {
   const token = localStorage.getItem("token");
   try {
@@ -21,12 +24,29 @@ export const fetchGlobalApplicationFeeStats = async (period = "6months") => {
         },
       }
     );
-    return response.data; // doit renvoyer { labels: [...], data: [...] }
+    return response.data; 
   } catch (error) {
     console.error("Erreur lors de la récupération des stats globales d'applicationFee :", error);
     throw error;
   }
 };
+
+export const fetchRevenueDistribution = async () => {
+  const token = localStorage.getItem("token");
+  try {
+    const response = await axios.get(REVENUE_DISTRIBUTION_API_URL, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data; 
+  } catch (error) {
+    console.error("Erreur lors de la récupération de la répartition des revenus :", error);
+    throw error;
+  }
+};
+
 export const fetchTransactionsVolume = async (period = "month") => {
   const token = localStorage.getItem("token");
   try {
@@ -42,6 +62,7 @@ export const fetchTransactionsVolume = async (period = "month") => {
     throw error;
   }
 };
+
 export const fetchInscriptions = async (filter = "all") => {
   const token = localStorage.getItem("token");
   try {

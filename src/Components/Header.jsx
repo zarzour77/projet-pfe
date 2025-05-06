@@ -1,46 +1,53 @@
-import { useState, useEffect, useRef } from "react";
+/* eslint-disable react/no-unescaped-entities */
+import { useState, useEffect, useRef, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import notificationService from "../Services/NotificationService";
-// Instead of fetching generic user data, we use these based on role
 import EntrepriseService from "../Services/EntrepriseService";
 import ConsultantService from "../Services/ConsultantService";
 import styles from "./Header.module.css";
 import UserService from "../Services/UserService";
-import logo from '../assets/logo3.png'
+import logo from '../assets/logo3.png';
 import { debounce } from "lodash";
 import MissionService from "../Services/MissionService";
+import { AuthContext } from "../Services/AuthContext";
+
 const Header = () => {
   const navigate = useNavigate();
+  const { currentUser, setCurrentUser } = useContext(AuthContext);
 
-  // Initialize state with basicUser data immediately so the header can render
-  const storedUser = localStorage.getItem("user");
-  const basicUser = storedUser ? JSON.parse(storedUser) : null;
-  const [user, setUser] = useState(basicUser);
+  // Use the context value for user info
+  const user = currentUser;
+  const isGuest = !user; // true if no user is logged in
   const userId = user?.id;
-  const role = basicUser?.role; // role from basic data is used for initial render
+  const role = user?.role; // use role from context
 
+  // Helper to return a destination if logged in or always /login if guest
+  const getLinkDestination = (destination) => isGuest ? "/login" : destination;
+
+  // Search state remains for both cases
   const [selectedSearchType, setSelectedSearchType] = useState('talent');
-const [searchQuery, setSearchQuery] = useState('');
-const [searchResults, setSearchResults] = useState([]);
-const [showResults, setShowResults] = useState(false);
-  // Fetch extended user data in background and update state when available
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [showResults, setShowResults] = useState(false);
+
+  // Fetch extended user data in background if the user exists
   useEffect(() => {
     let isMounted = true;
     const fetchExtendedUser = async () => {
-      if (!basicUser?.id) return;
+      if (!user?.id) return;
       try {
         let fetchedUser = null;
-        if (basicUser.role === "Entreprise") {
-          fetchedUser = await EntrepriseService.getEntrepriseById(basicUser.id);
-        } else if (basicUser.role === "Consultant") {
-          fetchedUser = await ConsultantService.getConsultantById(basicUser.id);
-        } else if (basicUser.role === "Admin") {
-          fetchedUser = await UserService.getById(basicUser.id);
+        if (user.role === "Entreprise") {
+          fetchedUser = await EntrepriseService.getEntrepriseById(user.id);
+        } else if (user.role === "Consultant") {
+          fetchedUser = await ConsultantService.getConsultantById(user.id);
+        } else if (user.role === "Admin") {
+          fetchedUser = await UserService.getById(user.id);
         }
         if (isMounted && fetchedUser) {
-          setUser(fetchedUser);
+          setCurrentUser(fetchedUser);
           localStorage.setItem("user", JSON.stringify(fetchedUser));
         }
       } catch (error) {
@@ -52,41 +59,45 @@ const [showResults, setShowResults] = useState(false);
     return () => {
       isMounted = false;
     };
-  }, [basicUser?.id]);
-const getSearchOptions = () => {
-  if (role === 'Admin') return ['talent', 'entreprise', 'mission'];
-  if (role === 'Entreprise') return ['talent', 'entreprise', 'mission'];
-  if (role === 'Consultant') return ['entreprise', 'mission'];
-  return [];
-};
-const debouncedSearch = useRef(
-  debounce(async (query, type) => {
-    try {
-      const results = query ? await performSearch(query, type) : [];
-      setSearchResults(results);
-    } catch (error) {
-      console.error('Search error:', error);
-      setSearchResults([]);
+  }, [user?.id, setCurrentUser]);
+
+  const getSearchOptions = () => {
+    if (role === 'Admin') return ['talent', 'entreprise', 'mission'];
+    if (role === 'Entreprise') return ['talent', 'entreprise'];
+    if (role === 'Consultant') return ['entreprise', 'mission'];
+    return ['talent', 'entreprise', 'mission'];
+  };
+
+  const debouncedSearch = useRef(
+    debounce(async (query, type) => {
+      try {
+        const results = query ? await performSearch(query, type) : [];
+        setSearchResults(results);
+      } catch (error) {
+        console.error('Search error:', error);
+        setSearchResults([]);
+      }
+    }, 100)
+  ).current;
+
+  const performSearch = async (query, type) => {
+    switch (type) {
+      case 'talent':
+        return ConsultantService.searchConsultants(query);
+      case 'entreprise':
+        return EntrepriseService.searchEntreprises(query);
+      case 'mission':
+        return MissionService.searchMissions(query);
+      default:
+        return [];
     }
-  }, 100)
-).current;
-const performSearch = async (query, type) => {
-  switch (type) {
-    case 'talent':
-      return ConsultantService.searchConsultants(query);
-    case 'entreprise':
-      return EntrepriseService.searchEntreprises(query);
-    case 'mission':
-      return MissionService.searchMissions(query);
-    default:
-      return [];
-  }
-};
-  // Notification state and fetching
+  };
+
+  // Notification and user-specific states/effects run only if a user is logged in.
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [visibleCount, setVisibleCount] = useState(5);
-  const [filter, setFilter] = useState("all"); // "all" or "unread"
+  const [filter, setFilter] = useState("all");
   const [openMenuId, setOpenMenuId] = useState(null);
   const [showMarkAllMenu, setShowMarkAllMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -105,7 +116,6 @@ const performSearch = async (query, type) => {
     }
   };
 
-  // Fetch notifications when userId is available or when notifications dropdown opens.
   useEffect(() => {
     if (userId) {
       fetchNotifications();
@@ -113,13 +123,12 @@ const performSearch = async (query, type) => {
   }, [userId]);
 
   useEffect(() => {
-    if (showNotifications) {
+    if (showNotifications && userId) {
       fetchNotifications();
       setOpenMenuId(null);
     }
   }, [showNotifications, userId]);
 
-  // Handlers for marking and deleting notifications
   const handleMarkAllAsRead = async () => {
     try {
       const unreadNotifications = notifications.filter((n) => !n.readStatus);
@@ -176,11 +185,12 @@ const performSearch = async (query, type) => {
   const toggleProfileMenu = () => setShowProfileMenu((prev) => !prev);
 
   const handleLogout = () => {
+    setCurrentUser(null); // update context
     localStorage.removeItem("user");
-    navigate("/login");
+    navigate("/");
   };
 
-  // Close dropdowns when clicking outside
+  // Close notifications dropdown when clicking outside
   const notificationsRef = useRef(null);
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -240,223 +250,268 @@ const performSearch = async (query, type) => {
     };
   }, [showProfileMenu]);
 
+  // Handler to redirect guests to the login page
+  const redirectToLogin = () => navigate("/login");
+
   return (
     <>
       <header className={styles.header}>
         <nav className={styles.navbar}>
           {/* Left: Logo */}
           <div className={styles.leftSection}>
-          <div className={styles.logo}>
-  <Link to={role === "Entreprise" ? "/landingEntreprise" : "/SearchMission"}>
-    <img 
-      src={logo}
-      alt="Trade for Talent Logo"
-      className={styles.logoImage}
-    />
-  </Link>
-</div>
+            <div className={styles.logo}>
+              <Link to={getLinkDestination("/")}>
+                <img 
+                  src={logo}
+                  alt="Trade for Talent Logo"
+                  className={styles.logoImage}
+                />
+              </Link>
+            </div>
           </div>
 
           {/* Center: Navigation links */}
           <div className={styles.centerSection}>
             <ul className={styles.navLinks}>
-              {role === "Admin" ? (
+              {isGuest ? (
                 <>
-                  <li className={styles.dropdown}>
-                    <span className={styles.dropdownTitle}>Management</span>
-                    <ul className={styles.dropdownMenu}>
-                      <li>
-                        <Link to="/manage-users">Utilisateurs</Link>
-                      </li>
-                      <li>
-                        <Link to="/manage-missions">Missions</Link>
-                      </li>
-                      <li>
-                        <Link to="/transactions">Transactions</Link>
-                      </li>
-                    </ul>
+                  <li>
+                    <Link to={getLinkDestination("/")}>Home</Link>
+                  </li>
+                  <li>
+                    <Link to={getLinkDestination("/login")}>About</Link>
+                  </li>
+                  <li>
+                    <Link to={getLinkDestination("/login")}>Contact</Link>
                   </li>
                 </>
-              ) : role === "Entreprise" ? (
+              ) : (
                 <>
-
-                  {user?.typeEntreprise === "CLIENTE" ? (
+                  {role === "Admin" ? (
                     <>
-                      <li className={styles.dropdown}>
-                        <span className={styles.dropdownTitle}>Missions</span>
-                        <ul className={styles.dropdownMenu}>
-                          <li>
-                            <Link to="/publierMission">Publier une mission</Link>
+<li className={styles.dropdown}>
+  <span className={styles.dropdownTitle}>Gestion</span>
+  <ul className={styles.dropdownMenu}>
+    <li>
+      <Link to={getLinkDestination("/VoirAllUsers?role=Consultant")}>Consultants</Link>
+    </li>
+    <li>
+      <Link to={getLinkDestination("/VoirAllUsers?role=Entreprise")}>Entreprises</Link>
+    </li>
+    <li>
+      <Link to={getLinkDestination("/manage-missions")}>Missions</Link>
+    </li>
+  </ul>
+</li>
+                    </>
+                  ) : role === "Entreprise" ? (
+                    <>
+                      {user?.typeEntreprise === "CLIENTE" ? (
+                        <>
+                          <li className={styles.dropdown}>
+                            <span className={styles.dropdownTitle}>Missions</span>
+                            <ul className={styles.dropdownMenu}>
+                              <li>
+                                <Link to={getLinkDestination("/publierMission")}>Publier une mission</Link>
+                              </li>
+                              <li>
+                                <Link to={getLinkDestination("/EntrepriseMission")}>Mes Missions</Link>
+                              </li>
+                            </ul>
                           </li>
                           <li>
-                            <Link to="/EntrepriseMission">Mes Missions</Link>
+                            <Link to={getLinkDestination("/landingEntreprise")}>Trouver des talents</Link>
                           </li>
-                        </ul>
+                        </>
+                      ) : user?.typeEntreprise === "SSI" ? (
+                        <>
+                          <li className={styles.dropdown}>
+                            <span className={styles.dropdownTitle}>Consultants</span>
+                            <ul className={styles.dropdownMenu}>
+                              <li>
+                                <Link to={getLinkDestination("/collaboratorsList")}>Collaborateurs</Link>
+                              </li>
+                              <li>
+                                <Link to={getLinkDestination("/landingEntreprise")}>Voir les consultants</Link>
+                              </li>
+                              <li>
+                                <Link to={getLinkDestination("/SearchMission")}>Attribuer des missions</Link>
+                              </li>
+                            </ul>
+                          </li>
+                        </>
+                      ) : (
+                        <li>
+                          <Link to={getLinkDestination("/landingEntreprise")}>Trouver des talents</Link>
+                        </li>
+                      )}
+                    </>
+                  ) : role === "Consultant" ? (
+                    <>
+                      <li>
+                        <Link to={getLinkDestination("/SearchMission")}>Trouver un emploi</Link>
                       </li>
                       <li>
-                        <Link to="/landingEntreprise">Trouver des talents</Link>
-                      </li>
-                    </>
-                  ) : user?.typeEntreprise === "SSI" ? (
-                    <>
-                      <li className={styles.dropdown}>
-                        <span className={styles.dropdownTitle}>Consultants</span>
-                        <ul className={styles.dropdownMenu}>
-                          <li>
-                            <Link to="/collaboratorsList">Collaborateurs</Link>
-                          </li>
-                          <li>
-                            <Link to="/landingEntreprise">Voir les consultants</Link>
-                          </li>
-                          <li>
-                            <Link to="/SearchMission">Attribuer des missions</Link>
-                          </li>
-                        </ul>
+                        <Link to={getLinkDestination("/ConsultantPropositions")}>Mes Propositions</Link>
                       </li>
                     </>
                   ) : (
                     <li>
-                      <Link to="/landingEntreprise">Trouver des talents</Link>
+                      <Link to={getLinkDestination("/SearchMission")}>Trouver un emploi</Link>
                     </li>
                   )}
-                </>
-              ) : role === "Consultant" ? (
-                <>
-                  <li>
-                    <Link to="/SearchMission">Trouver un emploi</Link>
-                  </li>
-                  <li>
-                    <Link to="/ConsultantPropositions">Mes Propositions</Link>
-                  </li>
-                </>
-              ) : (
-                <li>
-                  <Link to="/SearchMission">Trouver un emploi</Link>
-                </li>
-              )}
 
-              {/* Finance Dropdown for all non-admin roles */}
-              <li className={styles.dropdown}>
-                <span className={styles.dropdownTitle}>Gestion Finances</span>
-                <ul className={styles.dropdownMenu}>
-                  <li>
-                    <Link to="/transactions">Transactions</Link>
+                  {/* Finance Dropdown for all non-admin roles */}
+                  <li className={styles.dropdown}>
+                    <span className={styles.dropdownTitle}>Gestion Finances</span>
+                    <ul className={styles.dropdownMenu}>
+                      <li>
+                        <Link to={getLinkDestination("/transactions")}>Transactions</Link>
+                      </li>
+                      {role === "Admin" && (
+                        <li>
+                          <Link to={getLinkDestination("/financial-reports")}>Rapports</Link>
+                        </li>
+                      )}
+                    </ul>
                   </li>
-                  {role === "Admin" && (
-                    <li>
-                      <Link to="/financial-reports">Rapports</Link>
-                    </li>
-                  )}
-                </ul>
-              </li>
+                </>
+              )}
             </ul>
           </div>
 
-          {/* Right: Search, Messages, Notifications, Profile */}
+          {/* Right: Search (always visible) and authentication or user icons */}
           <div className={styles.rightSection}>
-          <div className={styles.searchContainer}>
-
-  <i className={`fa fa-search ${styles.searchIcon}`}></i>
-  <input
-  type="text"
-  placeholder={`Rechercher ${selectedSearchType}s...`}
-  className={styles.searchInput}
-  value={searchQuery}
-  onChange={(e) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    setShowResults(true);
-    debouncedSearch(query, selectedSearchType);
-  }}
-  onFocus={() => setShowResults(true)}
-  onBlur={() => setTimeout(() => setShowResults(false), 200)}
-/>
-<select 
-  className={styles.searchSelect}
-  value={selectedSearchType}
-  onChange={(e) => setSelectedSearchType(e.target.value)}
->
-  {getSearchOptions().map((option) => (
-    <option key={option} value={option}>
-      {option.charAt(0).toUpperCase() + option.slice(1)}
-    </option>
-  ))}
-</select>
-  {showResults && (
-  <div className={styles.searchResults}>
-    {searchResults.length === 0 ? (
-      <div className={styles.noResults}>
-        {searchQuery ? "Aucun résultat trouvé" : "Commencez à taper pour rechercher"}
-      </div>
-    ) : (
-      searchResults.map((result) => (
-        <Link
-          key={result.id}
-          to={
-            selectedSearchType === 'talent' ? `/consultant/${result.id}` :
-            selectedSearchType === 'entreprise' ? `/entreprise/${result.id}` :
-            `/mission/${result.id}`
-          }
-          className={styles.searchResultItem}
-        >
-          {selectedSearchType !== 'mission' && (
-            <img
-              src={result.photoprofile || 'default-avatar.png'}
-              alt={result.nom}
-              className={styles.searchResultImage}
-            />
-          )}
-          <div>
-            <div className={styles.searchResultName}>
-              {selectedSearchType === 'mission' ? (
-                <>
-                  <div>{result.titre}</div>
-                  {result.entreprise?.nom && (
-                    <div className={styles.searchResultCompany}>
-                      {result.entreprise.nom}
+            <div className={styles.searchContainer}>
+              <i className={`fa fa-search ${styles.searchIcon}`}></i>
+              <input
+                type="text"
+                placeholder={`Rechercher ${selectedSearchType}s...`}
+                className={styles.searchInput}
+                value={searchQuery}
+                onChange={(e) => {
+                  if (isGuest) return redirectToLogin();
+                  const query = e.target.value;
+                  setSearchQuery(query);
+                  setShowResults(true);
+                  debouncedSearch(query, selectedSearchType);
+                }}
+                onFocus={() => {
+                  if (isGuest) return redirectToLogin();
+                  setShowResults(true);
+                }}
+                onBlur={() => setTimeout(() => setShowResults(false), 200)}
+              />
+              <select 
+                className={styles.searchSelect}
+                value={selectedSearchType}
+                onChange={(e) => {
+                  if (isGuest) return redirectToLogin();
+                  setSelectedSearchType(e.target.value);
+                }}
+              >
+                {getSearchOptions().map((option) => (
+                  <option key={option} value={option}>
+                    {option.charAt(0).toUpperCase() + option.slice(1)}
+                  </option>
+                ))}
+              </select>
+              {showResults && (
+                <div className={styles.searchResults}>
+                  {searchResults.length === 0 ? (
+                    <div className={styles.noResults}>
+                      {searchQuery ? "Aucun résultat trouvé" : "Commencez à taper pour rechercher"}
                     </div>
+                  ) : (
+                    searchResults.map((result) => (
+                      <Link
+                        key={result.id}
+                        to={
+                          selectedSearchType === 'talent'
+                            ? getLinkDestination(`/consultant/${result.id}`)
+                            : selectedSearchType === 'entreprise'
+                            ? getLinkDestination(`/entreprise/${result.id}`)
+                            : getLinkDestination(`/SearchMission?missionId=${result.id}`)
+                        }
+                        className={styles.searchResultItem}
+                      >
+                        {selectedSearchType !== 'mission' && (
+                          <img
+                            src={result.photoprofile || 'default-avatar.png'}
+                            alt={result.nom}
+                            className={styles.searchResultImage}
+                          />
+                        )}
+                        <div>
+                          <div className={styles.searchResultName}>
+                            {selectedSearchType === 'mission' ? (
+                              <>
+                                <div>{result.titre}</div>
+                                {result.entreprise?.nom && (
+                                  <div className={styles.searchResultCompany}>
+                                    {result.entreprise.nom}
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              `${result.prenom} ${result.nom}`
+                            )}
+                          </div>
+                        </div>
+                      </Link>
+                    ))
                   )}
-                </>
-              ) : (
-                `${result.prenom} ${result.nom}`
+                </div>
               )}
             </div>
-          </div>
-        </Link>
-      ))
-    )}
-    </div>
-  )}
-</div>
-  
-            <button className={styles.iconButton} onClick={() => navigate("/Messenger")}>
-              <i className="fa fa-comment"></i>
-            </button>
 
-            <button className={styles.iconButton} onClick={toggleNotifications}>
-              <div className={styles.notificationIconContainer}>
-                <i className="fa fa-bell"></i>
-                {notifications.filter((n) => !n.readStatus).length > 0 && (
-                  <span className={styles.notificationBadge}>
-                    {Math.min(notifications.filter((n) => !n.readStatus).length, 9)}
-                    {notifications.filter((n) => !n.readStatus).length > 9 && "+"}
-                  </span>
-                )}
+            {isGuest ? (
+              <div className={styles.authButtons}>
+                <Link 
+                  to="/login" 
+                  className={`${styles.authButton} ${styles.loginButton}`}
+                >
+                  Se connecter
+                </Link>
+                <Link
+                  to="/login?signup=true"
+                  className={`${styles.authButton} ${styles.signupButton}`}
+                >
+                  S'inscrire
+                </Link>
               </div>
-            </button>
+            ) : (
+              <>
+                <button className={styles.iconButton} onClick={() => navigate("/Messenger")}>
+                  <i className="fa fa-comment"></i>
+                </button>
 
-            <button className={styles.profileButton} onClick={toggleProfileMenu}>
-              <img
-                src={user?.photoprofile || "default-avatar.png"}
-                alt="Profile"
-                className={styles.profileIcon}
-              />
-            </button>
+                <button className={styles.iconButton} onClick={toggleNotifications}>
+                  <div className={styles.notificationIconContainer}>
+                    <i className="fa fa-bell"></i>
+                    {notifications.filter((n) => !n.readStatus).length > 0 && (
+                      <span className={styles.notificationBadge}>
+                        {Math.min(notifications.filter((n) => !n.readStatus).length, 9)}
+                        {notifications.filter((n) => !n.readStatus).length > 9 && "+"}
+                      </span>
+                    )}
+                  </div>
+                </button>
+
+                <button className={styles.profileButton} onClick={toggleProfileMenu}>
+                  <img
+                    src={user?.photoprofile || "default-avatar.png"}
+                    alt="Profile"
+                    className={styles.profileIcon}
+                  />
+                </button>
+              </>
+            )}
           </div>
         </nav>
 
-        {/* Profile Dropdown */}
-        {showProfileMenu && (
+        {/* Profile Dropdown (logged-in users only) */}
+        {(!isGuest && showProfileMenu) && (
           <div className={styles.profileDropdown} ref={profileMenuRef}>
             <div className={styles.profileHeader}>
               <img
@@ -472,50 +527,57 @@ const performSearch = async (query, type) => {
               </div>
             </div>
             <div className={styles.dropdownDivider}></div>
-            {role !== "Admin" && (
+            <button
+              className={styles.dropdownItem}
+              onClick={() => {
+                setShowProfileMenu(false);
+                navigate(role === "Entreprise" ? "/EntrepriseProfilePage" : "/ProfilePage");
+              }}
+            >
+              <i className="fa fa-user"></i> Mon profil
+            </button>
+            {role === "Admin" && (
               <button
                 className={styles.dropdownItem}
                 onClick={() => {
                   setShowProfileMenu(false);
-                  navigate(role === "Entreprise" ? "/EntrepriseProfilePage" : "/ProfilePage");
+                  navigate("/StatAdmin");
                 }}
               >
-                <i className="fa fa-user"></i> Votre profil
+                <i className="fa fa-chart-line"></i> Statistiques
               </button>
             )}
-            {role === "Admin" && (
-        <button
-          className={styles.dropdownItem}
-          onClick={() => {
-            setShowProfileMenu(false);
-            navigate("/StatAdmin");
-          }}
-        >
-          <i className="fa fa-chart-line"></i> Statistiques
-        </button>
-      )}
-      {role === "Entreprise" && (
-        <button
-          className={styles.dropdownItem}
-          onClick={() => {
-            setShowProfileMenu(false);
-            navigate("/StatEntreprise");
-          }}
-        >
-          <i className="fa fa-chart-line"></i> Statistiques
-        </button>
-      )}
-      {role === "Consultant" && (
-        <button
-          className={styles.dropdownItem}
-          onClick={() => {
-            setShowProfileMenu(false);
-            navigate("/StatConsultant");
-          }}
-        >
-          <i className="fa fa-chart-line"></i> Statistiques
-        </button>
-      )}
+            {role === "Entreprise" && (
+              <button
+                className={styles.dropdownItem}
+                onClick={() => {
+                  setShowProfileMenu(false);
+                  navigate("/StatEntreprise");
+                }}
+              >
+                <i className="fa fa-chart-line"></i> Statistiques
+              </button>
+            )}
+            {role === "Consultant" && (
+              <button
+                className={styles.dropdownItem}
+                onClick={() => {
+                  setShowProfileMenu(false);
+                  navigate("/StatConsultant");
+                }}
+              >
+                <i className="fa fa-chart-line"></i> Statistiques
+              </button>
+            )}
+            <button
+              className={styles.dropdownItem}
+              onClick={() => {
+                setShowProfileMenu(false);
+                navigate(role !== "Admin" ? "/Dispute" : "/Admindispute");
+              }}
+            >
+              <i className="fa fa-balance-scale"></i> Litiges
+            </button>
             <button
               className={styles.dropdownItem}
               onClick={() => {
@@ -537,8 +599,8 @@ const performSearch = async (query, type) => {
           </div>
         )}
 
-        {/* Notifications Dropdown */}
-        {showNotifications && (
+        {/* Notifications Dropdown for logged-in users only */}
+        {(!isGuest && showNotifications) && (
           <div className={styles.notificationsDropdown} ref={notificationsRef}>
             <div className={styles.notificationsHeader}>
               <h4>Notifications</h4>

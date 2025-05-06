@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
-import  { useState, useEffect } from 'react'; 
+import  { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Bar, Doughnut } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,55 +10,119 @@ import {
   ArcElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
 } from 'chart.js';
-import StatEntrepriseService from '../Services/StatEntrepriseService';
-import styles from './StatEntreprise.module.css';
+import styles from './StatEntreprisessi.module.css';
+import RisingTalent from '../assets/Poduim.svg';
+import StatEntreprisessiService from '../services/StatEntreprisessiService';
+import ConsultantService from '../Services/ConsultantService';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
+// Enregistrement des composants Chart.js
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
-function StatEntreprise() {
-  // Données statiques pour d'autres cartes
-  const performanceScore = "88%";
+function StatEntrepriseSSI() {
+  const [earningsPeriod, setEarningsPeriod] = useState('month');
+  const [proposalPeriod, setProposalPeriod] = useState('Derniers 7 jours');
+  const [profilePeriod, setProfilePeriod] = useState('Derniers 7 jours');
+  
+  // État pour le score moyen de Job Success
+  const [jobSuccessAverage, setJobSuccessAverage] = useState(null);
+  
+  // États pour les graphiques et le podium
+  const [proposalsChartData, setProposalsChartData] = useState(null);
+  const [enterpriseEarnings, setEnterpriseEarnings] = useState(null);
+  const [collaboratorStatsData, setCollaboratorStatsData] = useState(null);
+  const [topCollaborators, setTopCollaborators] = useState([]);
 
-  // Récupération de l'ID de l'entreprise
+  // Récupération de l'ID de l'entreprise depuis le localStorage
   const user = JSON.parse(localStorage.getItem("user"));
   const entrepriseId = user?.id || 0;
+  console.log("Entreprise ID:", entrepriseId);
 
-  // États pour le donut chart des dépenses et son sélecteur (donutPeriod)
-  const [donutPeriod, setDonutPeriod] = useState("month"); // "month" ou "year"
-  const [donutExpenseData, setDonutExpenseData] = useState(null);
-  // Total des dépenses calculé à partir des données du donut (en centimes)
-  const [totalExpense, setTotalExpense] = useState(null);
-
-  // États pour le graphique des missions agrégées (Statut des projets)
-  const [projectsPeriod, setProjectsPeriod] = useState("month"); // On ajoute la valeur "day"
-  const [aggregatedData, setAggregatedData] = useState({
-    labels: [],
-    datasets: []
-  });
-
-  // États pour la période des profile views
-  const [profilePeriod, setProfilePeriod] = useState("Last 7 days");
-  const [profileChartData, setProfileChartData] = useState({
-    labels: [],
-    datasets: []
-  });
-
-  // Options pour le graphique des missions agrégées
-  const projectChartOptions = {
-    responsive: true,
-    plugins: {
-      legend: { display: true },
-      tooltip: { mode: 'index', intersect: false }
-    },
-    scales: {
-      x: { title: { display: true, text: 'Périodes' } },
-      y: { title: { display: true, text: 'Nombre de missions' }, beginAtZero: true }
-    }
+  // Utilitaire pour déterminer le nombre de jours en fonction de la période sélectionnée
+  const getPeriodDays = (periodStr) => {
+    if (periodStr.includes("7")) return 7;
+    if (periodStr.includes("14")) return 14;
+    if (periodStr.includes("30")) return 30;
+    return 7;
   };
 
-  // Options pour le graphique des profile views
+  // 1. Récupération des statistiques de propositions
+  useEffect(() => {
+    const periodDays = getPeriodDays(proposalPeriod);
+    StatEntreprisessiService.getEntreprisessiStats(entrepriseId, periodDays)
+      .then(data => {
+        console.log("Données de propositions reçues :", data);
+        const statusDesignMapping = {
+          sent:       { label: "Proposals sent", borderColor: "#0C68FF", backgroundColor: "rgba(12,104,255,0.2)" },
+          invited:    { label: "Invited",       borderColor: "#FFA500", backgroundColor: "rgba(255,165,0,0.2)" },
+          inprogress: { label: "In Progress",   borderColor: "#2ecc71", backgroundColor: "rgba(46,204,113,0.2)" },
+          terminated: { label: "Terminated",    borderColor: "#FF0000", backgroundColor: "rgba(255,0,0,0.2)" },
+          refused:    { label: "Refused",       borderColor: "#8e44ad", backgroundColor: "rgba(142,68,173,0.2)" }
+        };
+
+        const filteredDatasets = data.datasets.filter(ds => ds.label.toLowerCase() !== "invited");
+        const chartData = {
+          labels: data.labels,
+          datasets: filteredDatasets.map(ds => {
+            const design = statusDesignMapping[ds.label.toLowerCase()] || { 
+              label: ds.label,
+              borderColor: '#0C68FF',
+              backgroundColor: 'rgba(12,104,255,0.2)'
+            };
+            return {
+              label: design.label,
+              data: ds.data,
+              borderColor: design.borderColor,
+              backgroundColor: design.backgroundColor,
+            };
+          })
+        };
+        setProposalsChartData(chartData);
+      })
+      .catch(error => {
+        console.error("Erreur lors de la récupération des stats de l'entreprise :", error);
+      });
+  }, [entrepriseId, proposalPeriod]);
+
+  // 2. Récupération des revenus
+  useEffect(() => {
+    StatEntreprisessiService.getEnterpriseEarnings(entrepriseId, earningsPeriod)
+      .then(data => {
+        console.log("Données de revenus reçues :", data);
+        setEnterpriseEarnings(data);
+      })
+      .catch(error => {
+        console.error("Erreur lors de la récupération des revenus de l'entreprise :", error);
+      });
+  }, [entrepriseId, earningsPeriod]);
+
+  // 3. Données statiques pour les vues de profil
+  const staticProfileStats = {
+    labels: ['2025-03-01', '2025-03-02', '2025-03-03', '2025-03-04', '2025-03-05'],
+    data: [100, 150, 120, 130, 110]
+  };
+
+  const profileChartData = {
+    labels: staticProfileStats.labels,
+    datasets: [
+      {
+        label: 'Profile Views',
+        data: staticProfileStats.data,
+        borderColor: '#0C68FF',
+        backgroundColor: 'rgba(12,104,255,0.2)'
+      }
+    ]
+  };
+
   const profileOptions = {
     responsive: true,
     plugins: {
@@ -67,133 +131,137 @@ function StatEntreprise() {
     },
     scales: {
       x: { title: { display: true, text: 'Date' } },
-      y: { title: { display: true, text: 'Vues du profil' } }
+      y: { title: { display: true, text: 'Profile Views' } }
     }
   };
 
-  // Options pour le donut chart des dépenses avec tooltip formaté
-  const donutExpenseOptions = {
+  // 4. Récupération des statistiques des consultants
+  useEffect(() => {
+    StatEntreprisessiService.getConsultantsStats(entrepriseId, 'month')
+      .then(stats => {
+        console.log("Données des stats consultants :", stats);
+        const labels = stats.map(item => item.consultantName);
+        const missions = stats.map(item => item.missionCount);
+        const revenues = stats.map(item => item.revenue);
+        const jobSuccess = stats.map(item => item.jobSuccess === 0 ? null : item.jobSuccess);
+
+        const chartData = {
+          labels,
+          datasets: [
+            {
+              label: "Missions",
+              data: missions,
+              backgroundColor: "#0C68FF",
+              xAxisID: 'x'
+            },
+            {
+              label: "Revenu (EUR)",
+              data: revenues,
+              backgroundColor: "#2ecc71",
+              xAxisID: 'x1'
+            },
+            {
+              label: "Job Success (%)",
+              data: jobSuccess,
+              backgroundColor: "#FFCE56",
+              xAxisID: 'x'
+            }
+          ]
+        };
+        setCollaboratorStatsData(chartData);
+
+        const consultantsWithScore = stats.map(item => {
+          const score = (item.missionCount * 10) + (item.jobSuccess || 0) + ((item.revenue || 0) / 1000);
+          return { ...item, score };
+        });
+        const sorted = consultantsWithScore.sort((a, b) => b.score - a.score);
+        const topThree = sorted.slice(0, 3);
+        setTopCollaborators(topThree);
+      })
+      .catch(error => {
+        console.error("Erreur lors de la récupération des stats consultants :", error);
+      });
+  }, [entrepriseId]);
+
+  // 5. Mise à jour des Top Collaborateurs avec leur profil complet
+  useEffect(() => {
+    if (topCollaborators.length > 0) {
+      Promise.all(
+        topCollaborators.map(collab =>
+          ConsultantService.getConsultantById(collab.id)
+            .then(userData => ({ ...collab, photo: userData.photoprofile }))
+            .catch(error => {
+              console.error("Erreur pour consultant id", collab.id, error);
+              return collab;
+            })
+        )
+      )
+      .then(updatedCollaborators => {
+        updatedCollaborators.forEach(collab => {
+          console.log(`Consultant: ${collab.consultantName}, Photo: ${collab.photo}`);
+        });
+        setTopCollaborators(updatedCollaborators);
+      });
+    }
+  }, [topCollaborators.length]);
+
+  // 6. Récupération de la moyenne du jobSuccess via l'API
+  useEffect(() => {
+    StatEntreprisessiService.getJobSuccessAverage(entrepriseId)
+      .then(average => {
+        console.log("Moyenne jobSuccess :", average);
+        setJobSuccessAverage(average);
+      })
+      .catch(error => {
+        console.error("Erreur lors de la récupération du jobSuccess average :", error);
+      });
+  }, [entrepriseId]);
+
+  // Fonction pour déterminer la note en français selon la moyenne
+  const getJobSuccessRating = (score) => {
+    if (score === null) return "";
+    if (score < 40) return "Mauvais";
+    if (score < 70) return "Pas mal";
+    return "Bon";
+  };
+
+  // Options du graphique Propositions
+  const proposalsOptions = {
     responsive: true,
-    maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'bottom' },
-      tooltip: {
-        callbacks: {
-          label: (context) => {
-            const value = context.raw || 0;
-            return (value / 100).toFixed(2) + "€";
-          }
-        }
-      }
+      legend: { display: true },
+      tooltip: { mode: 'index', intersect: false }
+    },
+    scales: {
+      x: { stacked: true, title: { display: true, text: 'Date' } },
+      y: { stacked: true, title: { display: true, text: 'Nombre de propositions' } }
     }
   };
 
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
-  };
-
-  // Chargement dynamique des données du donut chart pour les dépenses via l'API
-  useEffect(() => {
-    async function fetchDonutExpenseData() {
-      try {
-        const data = await StatEntrepriseService.getDonutExpenseData(entrepriseId, donutPeriod);
-        // La réponse doit contenir firstSlice, finalPayment et frozenFunds (en centimes)
-        const firstSlice = data.firstSlice || 0;
-        const finalPayment = data.finalPayment || 0;
-        const frozenFunds = data.frozenFunds || 0;
-        setDonutExpenseData({
-          labels: ["Première tranche de mission", "Deuxième tranche de mission", "Fonds gelés"],
-          datasets: [
-            {
-              data: [firstSlice, finalPayment, frozenFunds],
-              backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56"]
-            }
-          ]
-        });
-        // Calcul du total des dépenses en centimes
-        setTotalExpense(firstSlice + finalPayment + frozenFunds);
-      } catch (error) {
-        console.error("Erreur lors de la récupération des données du donut chart des dépenses :", error);
+  // Options du graphique Collaborateurs
+  const collaboratorStatsOptions = {
+    indexAxis: 'y',
+    responsive: true,
+    scales: {
+      x: {
+        beginAtZero: true,
+        title: { display: true, text: 'Valeur' }
+      },
+      x1: {
+        type: 'linear',
+        position: 'top',
+        grid: { drawOnChartArea: false },
+        title: { display: true, text: 'Revenu (EUR)' }
+      },
+      y: {
+        title: { display: true, text: 'Consultants' },
+        type: 'category'
       }
-    }
-    if (entrepriseId) {
-      fetchDonutExpenseData();
-    }
-  }, [entrepriseId, donutPeriod]);
-
-  // Chargement des missions agrégées pour "Statut des projets"
-  useEffect(() => {
-    async function fetchAggregatedMissions() {
-      try {
-        const data = await StatEntrepriseService.getAggregatedMissions(entrepriseId, projectsPeriod);
-        // Forcer des couleurs pour chaque dataset
-        const forcedDatasets = data.datasets.map((dataset, index) => {
-          const borderColors = ["#0C68FF", "#F39C12", "#2ecc71", "#FF0000"];
-          const backgroundColors = [
-            "rgba(12,104,255,0.2)",
-            "rgba(243,156,18,0.2)",
-            "rgba(46,204,113,0.2)",
-            "rgba(255,0,0,0.2)"
-          ];
-          return {
-            ...dataset,
-            borderColor: borderColors[index] || "#000",
-            backgroundColor: backgroundColors[index] || "rgba(0,0,0,0.1)"
-          };
-        });
-        setAggregatedData({
-          labels: data.labels,
-          datasets: forcedDatasets
-        });
-      } catch (error) {
-        console.error("Erreur lors de la récupération des missions agrégées :", error);
-      }
-    }
-    if (entrepriseId) {
-      fetchAggregatedMissions();
-    }
-  }, [entrepriseId, projectsPeriod]);
-
-  // Mappez la sélection de la période en nombre de jours pour les profile views
-  const getPeriodDays = (period) => {
-    switch (period) {
-      case "Last 7 days":
-        return 7;
-      case "Last 14 days":
-        return 14;
-      case "Last 30 days":
-        return 30;
-      default:
-        return 7;
+    },
+    plugins: {
+      legend: { position: 'bottom' }
     }
   };
-
-  // Chargement des données pour les profile views
-  useEffect(() => {
-    async function fetchProfileViews() {
-      try {
-        const periodDays = getPeriodDays(profilePeriod);
-        const data = await StatEntrepriseService.getProfileViews(entrepriseId, periodDays);
-        setProfileChartData({
-          labels: data.labels,
-          datasets: [
-            {
-              label: 'Profile Views',
-              data: data.data,
-              borderColor: '#0C68FF',
-              backgroundColor: 'rgba(12,104,255,0.2)'
-            }
-          ]
-        });
-      } catch (error) {
-        console.error("Erreur lors du chargement des profile views :", error);
-      }
-    }
-    if (entrepriseId) {
-      fetchProfileViews();
-    }
-  }, [entrepriseId, profilePeriod]);
 
   return (
     <div className={styles.statsContainer}>
@@ -203,7 +271,7 @@ function StatEntreprise() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        Dashboard Entreprise
+        Statistiques Entreprise SSI
       </motion.h1>
       <motion.p 
         className={styles.subTitle}
@@ -211,7 +279,7 @@ function StatEntreprise() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.5 }}
       >
-        Visualisez les dépenses, le statut des projets et les alertes de risques.
+        Aperçu des propositions, des revenus et des analyses de profil.
       </motion.p>
       <motion.p 
         className={styles.note}
@@ -219,150 +287,180 @@ function StatEntreprise() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.5 }}
       >
-        Données dynamiques récupérées depuis l'API.
+        Les statistiques des propositions sont récupérées dynamiquement depuis l'API.
       </motion.p>
 
       <div className={styles.mainColumns}>
-        {/* Colonne de gauche (cartes statiques) */}
+        {/* COLONNE DE GAUCHE */}
         <div className={styles.leftColumn}>
+          {/* Conteneur pour Revenus et Job Success */}
+          <div className={styles.doubleCardContainer}>
+            {/* Carte : Revenus */}
+            <motion.div 
+              className={styles.card}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <div className={styles.earningsHeader}>
+                <h2 className={styles.cardTitle}>Revenus</h2>
+                <div className={styles.earningsPeriodSelect}>
+                  <select
+                    className={styles.select}
+                    value={earningsPeriod}
+                    onChange={(e) => setEarningsPeriod(e.target.value)}
+                  >
+                    <option value="month">Dernier Mois</option>
+                    <option value="year">Dernière Année</option>
+                  </select>
+                </div>
+              </div>
+              <a href="#transaction-history" className={styles.link}>
+                Historique des transactions
+              </a>
+              <div className={styles.earningsAmount}>
+                {enterpriseEarnings !== null 
+                  ? (enterpriseEarnings / 100).toFixed(2) + " EUR" 
+                  : "Chargement..."}
+              </div>
+            </motion.div>
+
+            {/* Carte : Job Success Score avec cercle de progress et score affiché à l'extérieur */}
+            <motion.div 
+              className={styles.card}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <h2 className={styles.cardTitle}>Job Success Score</h2>
+              <div className={styles.scoreContainer}>
+                {/* Cercle de progression */}
+                <div 
+                  className={styles.scoreCircle} 
+                  style={{
+                    background: jobSuccessAverage !== null 
+                      ? `conic-gradient(#31BF0D ${jobSuccessAverage * 3.6}deg, #e1e8ed ${jobSuccessAverage * 3.6}deg 360deg)` 
+                      : "#e1e8ed"
+                  }}
+                ></div>
+                {/* Affichage du score à l'extérieur du cercle */}
+                <div className={styles.scoreTextOutside}>
+                  <div className={styles.scoreValue}>
+                    {jobSuccessAverage !== null 
+                      ? `${jobSuccessAverage.toFixed(0)}%`
+                      : "0%"}
+                  </div>
+                  <div className={styles.scoreRating}>
+                    {jobSuccessAverage !== null ? getJobSuccessRating(jobSuccessAverage) : ""}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Carte : Statistiques par Collaborateur */}
           <motion.div 
             className={styles.card}
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            {/* Header avec titre et sélecteur indépendant en haut à droite */}
-            <div className={styles.cardHeader}>
-              <h2 className={styles.cardTitle}>Dépenses</h2>
-              <div className={styles.periodSelect}>
-                <select
-                  className={styles.select}
-                  value={donutPeriod}
-                  onChange={(e) => setDonutPeriod(e.target.value)}
-                >
-                  <option value="month">Last Month</option>
-                  <option value="year">Last Year</option>
-                </select>
-              </div>
-            </div>
-            <a href="#expense-history" className={styles.link}>
-              Historique des dépenses
-            </a>
-            {/* Affichage du total des dépenses converti en euros */}
-            <div className={styles.earningsAmount}>
-              {totalExpense !== null ? (totalExpense / 100).toFixed(2) + "€" : "Loading..."}
-            </div>
-            {/* Donut chart dynamique pour les dépenses */}
-            <div className={styles.donutChart}>
-              {donutExpenseData ? (
-                <Doughnut data={donutExpenseData} options={donutExpenseOptions} />
-              ) : (
-                <p>Loading donut chart...</p>
-              )}
-            </div>
-          </motion.div>
-
-          <motion.div 
-            className={styles.card}
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <h2 className={styles.cardTitle}>Performance Score</h2>
-            <p className={styles.cardDescription}>
-              Analysez la performance globale de l'entreprise.
-            </p>
-            <button className={styles.btn}>Voir les insights</button>
-            <div className={styles.scoreContainer}>
-              <div className={styles.scoreCircle}>
-                <span className={styles.scoreValue}>{performanceScore}</span>
-              </div>
-              <span className={styles.noScoreText}>Bon</span>
-            </div>
-          </motion.div>
-
-          {/* Section Profile Views */}
-          <motion.div 
-            className={styles.profileMetrics}
-            variants={cardVariants}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            <h3 className={styles.profileMetricsTitle}>Profile Views</h3>
+            <h3 className={styles.cardTitle}>Statistiques par Collaborateur</h3>
+            <div className={styles.collaboratorStatsChart}>
+              { collaboratorStatsData ? (
+                <Bar data={collaboratorStatsData} options={collaboratorStatsOptions} />
+              ) : <p>Chargement des stats consultants...</p> }
+            </div>
+          </motion.div>
+        </div>
+
+        {/* COLONNE DE DROITE */}
+        <div className={styles.rightColumn}>
+          {/* Carte : Propositions */}
+          <motion.div 
+            className={`${styles.card} ${styles.proposalsCard}`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <div className={styles.proposalsHeader}>
+              <h2 className={styles.cardTitle}>Propositions</h2>
+              <select
+                className={styles.select}
+                value={proposalPeriod}
+                onChange={(e) => setProposalPeriod(e.target.value)}
+              >
+                <option>Derniers 7 jours</option>
+                <option>Derniers 14 jours</option>
+                <option>Derniers 30 jours</option>
+              </select>
+            </div>
+            <div className={styles.proposalsChart}>
+              { proposalsChartData ? (
+                <Bar data={proposalsChartData} options={proposalsOptions} />
+              ) : <p>Chargement...</p> }
+            </div>
+            <a href="/ConsultantPropositions" className={styles.link}>Mes propositions</a>
+            <p className={styles.searchJobs}>
+              Découvrez de nouvelles opportunités sur notre plateforme.{' '}
+              <a href="#search-jobs">Rechercher des jobs</a>
+            </p>
+          </motion.div>
+
+          {/* Carte : Meilleurs Collaborateurs */}
+          <motion.div 
+            className={styles.card}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <h3 className={styles.cardTitle}>Meilleurs Collaborateurs</h3>
+            <div className={styles.collaboratorsPodium}>
+              <img src={RisingTalent} alt="Podium" className={styles.podiumImage} />
+              {topCollaborators.map((collab, index) => {
+                let photoUrl = '/default-photo.jpg';
+                if (collab.photo) {
+                  photoUrl = collab.photo;
+                }
+                return (
+                  <div
+                    key={index}
+                    className={`${styles.collaboratorItem} ${styles[`collaboratorPosition${index + 1}`]}`}
+                  >
+                    <img
+                      src={photoUrl}
+                      alt={collab.consultantName}
+                      className={styles.collaboratorPhoto}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+
+          {/* Carte : Vues de Profil */}
+          <motion.div 
+            className={styles.card}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <h3 className={styles.profileMetricsTitle}>Vues de Profil</h3>
             <div className={styles.metricsNav}>
               <select
                 className={styles.select}
                 value={profilePeriod}
                 onChange={(e) => setProfilePeriod(e.target.value)}
               >
-                <option>Last 7 days</option>
-                <option>Last 14 days</option>
-                <option>Last 30 days</option>
+                <option>Derniers 7 jours</option>
+                <option>Derniers 14 jours</option>
+                <option>Derniers 30 jours</option>
               </select>
             </div>
             <div className={styles.profileChart}>
               <Bar data={profileChartData} options={profileOptions} />
             </div>
-            <a href="/ProfilePage" className={styles.link}>My profile</a>
-          </motion.div>
-        </div>
-
-        {/* Colonne de droite */}
-        <div className={styles.rightColumn}>
-          <motion.div 
-            className={`${styles.card} ${styles.proposalsCard}`}
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            <div className={styles.proposalsHeader}>
-              <h2 className={styles.cardTitle}>Statut des projets</h2>
-              <select 
-                className={styles.select} 
-                value={projectsPeriod}
-                onChange={(e) => setProjectsPeriod(e.target.value)}
-              >
-                <option value="day">Ce Mois (par jour)</option>
-                <option value="week">Dernier mois (par semaine)</option>
-                <option value="month">Derniers 4 mois</option>
-                <option value="year">Dernière année</option>
-
-              </select>
-            </div>
-            <div className={styles.proposalsChart}>
-              <Bar data={aggregatedData} options={projectChartOptions} />
-            </div>
-            <a href="#project-details" className={styles.link}>Détails des projets</a>
-          </motion.div>
-
-          <motion.div 
-            className={styles.card}
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <h3 className={styles.clientRelTitle}>Relations clients</h3>
-            <p className={styles.clientRelDescription}>
-              Des relations clients solides pour renforcer la croissance.
-            </p>
-            <div className={styles.clientRelCircle}>
-              <span className={styles.clientRelValue}>85%</span>
-            </div>
-            <div className={styles.clientRelLegend}>
-              <div className={styles.legendItem}>
-                <span className={styles.legendDot} style={{ backgroundColor: '#0C68FF' }} />
-                <span>Clients actifs</span>
-              </div>
-              <div className={styles.legendItem}>
-                <span className={styles.legendDot} style={{ backgroundColor: '#00C4CC' }} />
-                <span>Prospects</span>
-              </div>
-            </div>
+            <a href="/ProfilePage" className={styles.link}>Mon profil</a>
           </motion.div>
         </div>
       </div>
@@ -370,4 +468,4 @@ function StatEntreprise() {
   );
 }
 
-export default StatEntreprise;
+export default StatEntrepriseSSI;

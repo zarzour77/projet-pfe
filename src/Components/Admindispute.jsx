@@ -1,16 +1,22 @@
 /* eslint-disable react/no-unescaped-entities */
-import  { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
+import { useState, useEffect } from 'react';
 import styles from './Admindispute.module.css';
-import { getAllDisputes, updateDisputeStatus, updateAdminResponse } from '../services/AdminDisputeService';
-
-// Fonction utilitaire pour extraire le MIME type d'une data URL
+import {
+  getAllDisputes,
+  updateDisputeStatus,
+  updateAdminResponse,
+  transferFunds
+} from '../services/AdminDisputeService';
+import ConsultantService from '../Services/ConsultantService';
+import EntrepriseService from '../Services/EntrepriseService';
+import UserService from '../Services/UserService';
+// Utility function: extract MIME type from a data URL
 const getMimeType = (dataUrl) => {
   const match = dataUrl.match(/^data:(.*?);/);
   return match ? match[1] : '';
 };
 
-// Fonction qui retourne une icône en fonction du MIME type
+// Return an appropriate icon based on MIME type
 const getFileIcon = (mimeType) => {
   if (mimeType.includes('pdf')) {
     return (
@@ -37,7 +43,7 @@ const getFileIcon = (mimeType) => {
         className={styles.fileIcon}
         viewBox="0 0 16 16"
       >
-        <path d="M4.5 0A1.5 1.5 0 0 0 3 1.5v13A1.5 1.5 0 0 0 4.5 16h7A1.5 1.5 0 0 0 13 14.5V4.121a1.5 1.5 0 0 0-.44-1.06L10.94.44A1.5 1.5 0 0 0 9.88 0H4.5zM9 1.5L12.5 5H9V1.5zM5 7h6v1H5V7zm0 2h6v1H5V9z" />
+        <path d="M4.5 0A1.5 1.5 0 0 0 3 1.5v13A1.5 1.5 0 0 0 4.5 16h7A1.5 1.5 0 0 0 13 14.5V4.121a1 1 0 0 0-.44-1.06L10.94.44A1.5 1.5 0 0 0 9.88 0H4.5zM9 1.5L12.5 5H9V1.5zM5 7h6v1H5V7zm0 2h6v1H5V9z" />
       </svg>
     );
   } else if (mimeType.includes('excel')) {
@@ -54,7 +60,6 @@ const getFileIcon = (mimeType) => {
       </svg>
     );
   } else {
-    // Icône générique pour les autres types
     return (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -76,23 +81,85 @@ const AdminDispute = () => {
   const [adminResponse, setAdminResponse] = useState("");
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [pdfPreviewEvidence, setPdfPreviewEvidence] = useState("");
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [transferAmount, setTransferAmount] = useState("");
+  const [selectedTransferDispute, setSelectedTransferDispute] = useState(null);
+
+  // State for entreprises for the select element
+  const [entreprises, setEntreprises] = useState([]);
+  const [selectedEntreprise, setSelectedEntreprise] = useState("");
+
+  // Fetch entreprises when transfer modal opens
+  // Fetch transfer options when transfer modal opens
+  useEffect(() => {
+    if (showTransferModal) {
+      const fetchTransferOptions = async () => {
+        try {
+          let rawData;
+          
+          // Use uppercase 'Entreprise' to match database value
+          if (selectedTransferDispute?.sender?.role === 'Entreprise') {
+            rawData = await ConsultantService.getAllConsultants();
+          } else {
+            rawData = await EntrepriseService.getAllEntreprises();
+          }
+  
+          const validOptions = rawData.map(entity => ({
+            id: entity.id,
+            name: selectedTransferDispute?.sender?.role === 'Entreprise'
+              ? `${entity.prenom || ''} ${entity.nom || ''}`.trim() 
+              : entity.nomEntreprise || entity.nom
+          })).sort((a, b) => a.name.localeCompare(b.name));
+  
+          setEntreprises(validOptions);
+        } catch (error) {
+          console.error("Error fetching transfer options:", error);
+          setEntreprises([]);
+        }
+      };
+      fetchTransferOptions();
+    }
+  }, [showTransferModal, selectedTransferDispute]);
 
   useEffect(() => {
     fetchDisputes();
   }, []);
 
+  // Fetch disputes and update sender info if needed
   const fetchDisputes = async () => {
     try {
       const data = await getAllDisputes();
-      console.log("Tickets récupérés depuis le back :", data);
-      setDisputes(data);
+      const updatedDisputes = await Promise.all(
+        data.map(async (dispute) => {
+          if (typeof dispute.sender === 'number') {
+            try {
+              // First get basic user info to check role
+              const user = await UserService.getById(dispute.sender);
+              
+              // Then fetch full profile based on role
+              let fullProfile;
+              if (user.role === 'Consultant') {
+                fullProfile = await ConsultantService.getConsultantById(dispute.sender);
+              } else if (user.role === 'Entreprise') {
+                fullProfile = await EntrepriseService.getEntrepriseById(dispute.sender);
+              }
+              
+              // Merge basic user info with role-specific data
+              dispute.sender = { ...user, ...fullProfile };
+            } catch (error) {
+              console.error(`Error fetching sender ID ${dispute.sender}:`, error);
+            }
+          }
+          return dispute;
+        })
+      );
+      setDisputes(updatedDisputes);
     } catch (error) {
       console.error("Erreur lors de la récupération des litiges :", error);
     }
   };
 
   const handleSelectDispute = (dispute) => {
-    console.log("Ticket sélectionné :", dispute);
     setSelectedDispute(dispute);
     setAdminResponse(dispute.adminResponse || "");
   };
@@ -100,8 +167,7 @@ const AdminDispute = () => {
   const handleStatusUpdate = async (id, status) => {
     try {
       const updated = await updateDisputeStatus(id, status);
-      console.log(`Mise à jour du ticket ${id} avec le statut ${status} :`, updated);
-      setDisputes(disputes.map(d => d.id === id ? updated : d));
+      setDisputes(disputes.map((d) => (d.id === id ? updated : d)));
       if (selectedDispute && selectedDispute.id === id) {
         setSelectedDispute(updated);
       }
@@ -114,9 +180,12 @@ const AdminDispute = () => {
     e.preventDefault();
     if (selectedDispute) {
       try {
-        const updated = await updateAdminResponse(selectedDispute.id, adminResponse, selectedDispute.status);
-        console.log("Réponse de l'admin mise à jour pour le ticket :", updated);
-        setDisputes(disputes.map(d => d.id === selectedDispute.id ? updated : d));
+        const updated = await updateAdminResponse(
+          selectedDispute.id,
+          adminResponse,
+          selectedDispute.status
+        );
+        setDisputes(disputes.map((d) => (d.id === selectedDispute.id ? updated : d)));
         setSelectedDispute(updated);
         alert("Réponse envoyée !");
       } catch (error) {
@@ -125,7 +194,36 @@ const AdminDispute = () => {
     }
   };
 
-  // Fonction utilitaire pour formater la transaction
+  const handleFundTransfer = async () => {
+    if (!selectedTransferDispute || !transferAmount || !selectedEntreprise) return;
+    
+    try {
+      const isSenderEntreprise = selectedTransferDispute.sender?.role === 'Entreprise';
+      console.log("ss",selectedTransferDispute.sender)
+  
+      await transferFunds({
+        disputeId: selectedTransferDispute.id,
+        amount: parseFloat(transferAmount),
+        payerId: isSenderEntreprise 
+          ? parseInt(selectedEntreprise)      // From selected consultant
+          : parseInt(selectedEntreprise),     // From selected entreprise
+        payeeId: isSenderEntreprise 
+          ? selectedTransferDispute.sender.id // To entreprise (victim)
+          : selectedTransferDispute.sender.id,// To consultant (victim)
+        payerType: isSenderEntreprise ? 'CONSULTANT' : 'ENTREPRISE'
+      });
+  
+      alert("Transfert effectué avec succès!");
+      setShowTransferModal(false);
+      setTransferAmount("");
+      setSelectedEntreprise("");
+      fetchDisputes();
+    } catch (error) {
+      console.error("Erreur lors du transfert:", error);
+      alert(`Erreur: ${error.response?.data?.message || error.message}`);
+    }
+  };
+
   const formatTransaction = (tx) => {
     if (!tx) return null;
     return {
@@ -137,52 +235,53 @@ const AdminDispute = () => {
     };
   };
 
-  const formattedTransaction = selectedDispute && selectedDispute.paymentTransaction
-    ? formatTransaction(selectedDispute.paymentTransaction)
-    : null;
-
-  // Ouvre la preview PDF dans un modal
-  const handlePdfPreview = (pdfData) => {
-    setPdfPreviewEvidence(pdfData);
-    setShowPdfModal(true);
-  };
-
-  // Rendu du modal PDF via React Portal pour l'affichage au-dessus
-  const pdfModal = showPdfModal
-    ? ReactDOM.createPortal(
-        <div className={styles.modalOverlay}>
-          <div className={styles.pdfModal}>
-            <button onClick={() => setShowPdfModal(false)} className={styles.closeModalButton}>
-              &times;
-            </button>
-            <iframe
-              src={pdfPreviewEvidence}
-              title="PDF Preview"
-              className={styles.pdfIframe}
-            />
-          </div>
-        </div>,
-        document.body
-      )
-    : null;
+  const formattedTransaction =
+    selectedDispute && selectedDispute.paymentTransaction
+      ? formatTransaction(selectedDispute.paymentTransaction)
+      : null;
 
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Gestion des Litiges</h1>
       <div className={styles.content}>
-        {/* Panneau gauche : Liste des tickets */}
+        {/* Left panel: list of tickets */}
         <div className={styles.leftPanel}>
-          <h2>Liste des tickets</h2>
+          <h2>Liste des litiges</h2>
           <div className={styles.ticketList}>
             {disputes.map((dispute) => (
               <div
                 key={dispute.id}
-                className={`${styles.ticketItem} ${selectedDispute && selectedDispute.id === dispute.id ? styles.activeTicket : ""}`}
+                className={`${styles.ticketItem} ${selectedDispute && selectedDispute.id === dispute.id ? styles.activeTicket : ''}`}
                 onClick={() => handleSelectDispute(dispute)}
               >
+                <div className={`${styles.statusBadge} ${
+                    dispute.status === 'OPEN'
+                      ? styles.statusPending
+                      : dispute.status === 'IN_PROGRESS'
+                      ? styles.statusInProgress
+                      : dispute.status === 'RESOLVED'
+                      ? styles.statusResolved
+                      : styles.statusClosed
+                  }`}>
+                  {dispute.status === 'OPEN' && 'En attente'}
+                  {dispute.status === 'IN_PROGRESS' && 'En cours'}
+                  {dispute.status === 'RESOLVED' && 'Résolu'}
+                  {dispute.status === 'CLOSED' && 'Refusé'}
+                </div>
                 <p><strong>{dispute.subject}</strong></p>
+                {dispute.sender && typeof dispute.sender === 'object' ? (
+  <p className={styles.senderInfo}>
+    <strong>De : </strong> 
+    {dispute.sender.role === 'Entreprise'
+      ? dispute.sender.nomEntreprise
+      : `${dispute.sender.prenom || ''} ${dispute.sender.nom || ''}`
+    }
+  </p>
+) : (
+  <p className={styles.senderInfo}><strong>De :</strong> Inconnu</p>
+)}
                 <p className={styles.ticketDate}>
-                  Créé le : {new Date(dispute.createdAt).toLocaleDateString()}
+                  Créé le : {new Date(dispute.createdAt).toLocaleDateString()} par (dispute.sender)
                 </p>
                 {dispute.adminResponse ? (
                   <p className={styles.responseStatus}>Répondu</p>
@@ -190,74 +289,36 @@ const AdminDispute = () => {
                   <p className={styles.responseStatus}>En attente</p>
                 )}
                 <div className={styles.statusButtons}>
-                  <button
-                    className={styles.statusButton}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleStatusUpdate(dispute.id, "IN_PROGRESS");
-                    }}
-                  >
-                    en cours
-                  </button>
-                  <button
-                    className={styles.statusButton}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleStatusUpdate(dispute.id, "RESOLVED");
-                    }}
-                  >
-                    terminé
-                  </button>
-                  <button
-                    className={styles.statusButton}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleStatusUpdate(dispute.id, "CLOSED");
-                    }}
-                  >
-                    fermé
-                  </button>
+                  <button className={styles.statusButton} onClick={(e) => { e.stopPropagation(); handleStatusUpdate(dispute.id, 'IN_PROGRESS'); }}>En cours</button>
+                  <button className={styles.statusButton} onClick={(e) => { e.stopPropagation(); handleStatusUpdate(dispute.id, 'RESOLVED'); }}>Terminer</button>
+                  <button className={styles.statusButton} onClick={(e) => { e.stopPropagation(); handleStatusUpdate(dispute.id, 'CLOSED'); }}>Refuser</button>
                 </div>
               </div>
             ))}
           </div>
         </div>
-        {/* Panneau droit : Détails du ticket et réponse */}
+        {/* Right panel: detailed view and admin response */}
         <div className={styles.rightPanel}>
           {selectedDispute ? (
             <div className={styles.disputeDetail}>
-              <h2>Détails du ticket</h2>
-              <p>
-                <strong>Sujet :</strong> {selectedDispute.subject}
-              </p>
-              <p className={styles.detailDescription}>
-                <strong>Description :</strong>
-                <br />
-                {selectedDispute.description}
-              </p>
+              <h2>Détails du litige</h2>
+              <p><strong>Sujet :</strong> {selectedDispute.subject}</p>
+              {selectedDispute.sender && typeof selectedDispute.sender === 'object' ? (
+                <p className={styles.senderInfo}><strong>De :</strong> {selectedDispute.sender.prenom} {selectedDispute.sender.nom}</p>
+              ) : (
+                <p className={styles.senderInfo}><strong>De :</strong> Inconnu</p>
+              )}
+              <p className={styles.detailDescription}><strong>Description :</strong><br />{selectedDispute.description}</p>
               <div className={styles.detailEvidence}>
-                <strong>Preuve :</strong>
-                <br />
-                {selectedDispute.evidence.startsWith("data:image") ? (
-                  <img
-                    src={selectedDispute.evidence}
-                    alt="Preuve"
-                    className={styles.evidenceImage}
-                    onClick={() => window.open(selectedDispute.evidence, '_blank')}
-                    style={{ cursor: 'pointer' }}
-                  />
-                ) : selectedDispute.evidence.startsWith("data:application/pdf") ? (
-                  <div
-                    onClick={() => handlePdfPreview(selectedDispute.evidence)}
-                    style={{ cursor: 'pointer', display: 'inline-block' }}
-                  >
-                    {getFileIcon("application/pdf")}
+                <strong>Preuve :</strong><br />
+                {selectedDispute.evidence.startsWith('data:image') ? (
+                  <img src={selectedDispute.evidence} alt="Preuve" className={styles.evidenceImage} onClick={() => window.open(selectedDispute.evidence, '_blank')} style={{ cursor: 'pointer' }} />
+                ) : selectedDispute.evidence.startsWith('data:application/pdf') ? (
+                  <div onClick={() => { setPdfPreviewEvidence(selectedDispute.evidence); setShowPdfModal(true); }} style={{ cursor: 'pointer', display: 'inline-block' }}>
+                    {getFileIcon('application/pdf')}
                   </div>
                 ) : (
-                  <div
-                    onClick={() => window.open(selectedDispute.evidence, '_blank')}
-                    style={{ cursor: 'pointer', display: 'inline-block' }}
-                  >
+                  <div onClick={() => window.open(selectedDispute.evidence, '_blank')} style={{ cursor: 'pointer', display: 'inline-block' }}>
                     {getFileIcon(getMimeType(selectedDispute.evidence))}
                   </div>
                 )}
@@ -267,31 +328,30 @@ const AdminDispute = () => {
                 <p>
                   {formattedTransaction ? (
                     <>
-                      {formattedTransaction.type} – {formattedTransaction.statut} <br />
-                      Date : {formattedTransaction.date} <br />
+                      {formattedTransaction.type} – {formattedTransaction.statut}<br />
+                      Date : {formattedTransaction.date}<br />
                       Montant : {formattedTransaction.montant} {formattedTransaction.currency}
                     </>
                   ) : (
                     <>
-                      – <br />
-                      Date : – <br />
-                      Montant : – USD
+                      –<br />Date : –<br />Montant : – USD
                     </>
                   )}
                 </p>
               </div>
+              {/* "Résoudre le paiement" button appears above the admin response */}
+              {selectedDispute.subject === 'Problème de paiement' && (
+                <div className={styles.detailActions}>
+                  <button className={styles.resolveButton} onClick={() => { setSelectedTransferDispute(selectedDispute); setShowTransferModal(true); }}>
+                    Résoudre le paiement
+                  </button>
+                </div>
+              )}
               <div className={styles.detailResponse}>
                 <strong>Réponse de l'admin :</strong>
                 <form onSubmit={handleResponseSubmit} className={styles.responseForm}>
-                  <textarea
-                    value={adminResponse}
-                    onChange={(e) => setAdminResponse(e.target.value)}
-                    placeholder="Entrez votre réponse ici..."
-                    required
-                  />
-                  <button type="submit" className={styles.submitResponseButton}>
-                    Envoyer la réponse
-                  </button>
+                  <textarea value={adminResponse} onChange={(e) => setAdminResponse(e.target.value)} placeholder="Entrez votre réponse ici..." required />
+                  <button type="submit" className={styles.submitResponseButton}>Envoyer la réponse</button>
                 </form>
               </div>
             </div>
@@ -302,7 +362,83 @@ const AdminDispute = () => {
           )}
         </div>
       </div>
-      {pdfModal}
+      {/* Inline PDF Modal */}
+      {showPdfModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.pdfModal}>
+            <button onClick={() => setShowPdfModal(false)} className={styles.closeModalButton}>&times;</button>
+            <iframe src={pdfPreviewEvidence} title="PDF Preview" className={styles.pdfIframe} />
+          </div>
+        </div>
+      )}
+      {/* Inline Transfer Modal */}
+      {showTransferModal && (
+  <div className={styles.modalOverlay}>
+    <div className={styles.transferModal}>
+      <button className={styles.modalCloseBtn} onClick={() => setShowTransferModal(false)}>
+        &times;
+      </button>
+      <h3>Résolution du litige de paiement</h3>
+
+      {/* Dynamic Select Section */}
+      <div className={styles.selectSection}>
+        <label>
+          {selectedTransferDispute?.sender?.role === 'Entreprise' 
+            ? 'Consultant payeur' 
+            : 'Entreprise payeuse'}
+        </label>
+        <select
+          value={selectedEntreprise}
+          onChange={(e) => setSelectedEntreprise(e.target.value)}
+        >
+          <option value="">-- Sélectionnez --</option>
+          {entreprises.map((ent) => (
+            <option key={ent.id} value={ent.id}>
+              {ent.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Transfer Direction Display */}
+      <div className={styles.transferDetails}>
+        <p>
+          <strong>Transfert :</strong> 
+          De {selectedEntreprise 
+            ? entreprises.find(e => e.id === parseInt(selectedEntreprise))?.name 
+            : '...'} 
+          {' → '}
+          {selectedTransferDispute?.sender?.role === 'Entreprise'
+            ? selectedTransferDispute.sender.nomEntreprise
+            : `${selectedTransferDispute?.sender?.prenom} ${selectedTransferDispute?.sender?.nom}`}
+        </p>
+      </div>
+
+      {/* Amount Input */}
+      <div className={styles.amountInput}>
+        <label>Montant à transférer (en euros) :</label>
+        <input
+          type="number"
+          value={transferAmount}
+          onChange={(e) => setTransferAmount(e.target.value)}
+          placeholder="Entrez le montant"
+          min="0"
+          step="0.01"
+        />
+      </div>
+
+      <div className={styles.modalActions}>
+        <button 
+          onClick={handleFundTransfer} 
+          className={styles.confirmButton} 
+          disabled={!selectedEntreprise || !transferAmount}
+        >
+          Confirmer le transfert
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };

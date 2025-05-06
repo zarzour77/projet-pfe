@@ -190,6 +190,7 @@ const AddCollaborator = () => {
                     Importer CV
                   </label>
                 </div>
+                <div className={styles.actionButtons}>
                 <button
                   type="submit"
                   className={styles.nextButton}
@@ -197,6 +198,7 @@ const AddCollaborator = () => {
                 >
                   {isSubmitting ? 'Création...' : 'Suivant'}
                 </button>
+              </div>
               </div>
             ) : (
               <div className={styles.stepContainer}>

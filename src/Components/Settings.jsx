@@ -99,7 +99,7 @@ const Settings = () => {
         </button>
       </div>
 
-      <button className={styles.cancelButton} onClick={() => navigate("/profilePage")}>
+      <button className={styles.cancelButton} onClick={() => navigate(storedUser.role === 'Entreprise' ? "/EntrepriseProfilePage" : "/ProfilePage")}>
       ← Retour au Profil
       </button>
 

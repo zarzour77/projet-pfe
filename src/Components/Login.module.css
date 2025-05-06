@@ -13,6 +13,8 @@
     justify-content: center;
     align-items: center;
     padding: 20px;
+    position: relative; /* Add this */
+
 }
 
 .container {
@@ -28,6 +30,8 @@
     justify-content: center;
     align-items: center;
     padding: 20px;
+    transition: transform 0.6s ease-in-out;
+
 }
 
 .container p {
@@ -49,8 +53,8 @@
 }
 
 .loginButton {
-    background-color: #074799;
-    color: #E1FFBB;
+    background-color: #1a1a2e;
+    color: #ffffff;
     font-size: 12px;
     padding: 10px 45px;
     border: 1px solid transparent;
@@ -64,14 +68,14 @@
 
 .loginButton:hover {
     background-color: white;
-    color: #074799;
-    border: 2px solid #074799;
+    color: #1a1a2e;
+    border: 2px solid #4299e1;
 }
 
 .toggle-left button.hidden,
 .toggle-right button.hidden {
     background-color: #fff;
-    color: #074799;
+    color: #4299e1;
     font-size: 12px;
     padding: 10px 45px;
     border: 1px solid transparent;
@@ -86,13 +90,13 @@
 .toggle-left button.hidden:hover {
     background-color: transparent;
     color: #fff;
-    border: 2px solid #E1FFBB;
+    border: 2px solid #ffffff;
 }
 
 .toggle-right button.hidden:hover {
     background-color: transparent;
     color: #fff ;
-    border: 2px solid #E1FFBB;
+    border: 2px solid #ffffff;
 }
 
 .container form {
@@ -209,6 +213,8 @@
     transition: all 0.6s ease-in-out;
     border-radius: 150px 0 0 100px;
     z-index: 1000;
+    transition: all 0.6s ease-in-out;
+
 }
 
 .container.active .toggle-container {
@@ -218,7 +224,7 @@
 
 .toggle {
     height: 100%;
-    background: #074799;
+    background: #1a1a2e;
     color: #fff ;
     position: relative;
     left: -100%;
@@ -309,3 +315,39 @@
     padding-left: 5px;
     font-weight: bold;
 }
+.logo {
+    position: absolute;
+    width: 140px;
+    height: auto;
+    transition: all 0.6s ease-in-out;
+    z-index: 1001;
+  }
+  
+  .toggle-left .logo {
+    top: 5px;
+    left: 10px;
+  }
+  
+  .toggle-right .logo {
+    top: 5px;
+    right: 10px;
+  }
+  .topLogoContainer {
+    position: absolute; /* Changed from fixed */
+    top: 20px;
+    left: 20px;
+    z-index: 3000;
+  }
+  
+  .topLogo {
+    height: 60px; 
+    width: auto;
+    transition: transform 0.3s ease;
+    /* Ensure visibility */
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+  
+  .topLogo:hover {
+    transform: scale(1.05);
+  }

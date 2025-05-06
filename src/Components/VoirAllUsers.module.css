@@ -1,0 +1,113 @@
+/* Palette et typographie globale */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    font-family: 'Roboto', sans-serif;
+    background-color: #f7f9fc;
+    color: #333;
+    margin-top: 50px;
+  }
+  
+  /* Breadcrumbs pour la navigation */
+  .breadcrumbs {
+    margin-bottom: 1rem;
+  }
+  
+  /* Header : titre et bouton d'ajout */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .title {
+    font-size: 2rem;
+    font-weight: bold;
+  }
+  
+  /* Bouton d'ajout personnalisé */
+  .addButton {
+    text-transform: none;
+    font-size: 1rem;
+    padding: 0.5rem 1.2rem;
+  }
+  
+  /* Section des filtres */
+  .filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .searchInput {
+    flex: 1;
+  }
+  
+  .roleSelect {
+    min-width: 180px;
+  }
+  
+  /* Style de la table des utilisateurs */
+  .userTable {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #ffffff;
+  }
+  
+  .userTable th,
+  .userTable td {
+    padding: 1rem;
+    border: 1px solid #dee2e6;
+    text-align: left;
+    font-size: 0.95rem;
+  }
+  
+  .userTable th {
+    background-color: #f1f3f5;
+    font-weight: 600;
+  }
+  
+  /* Lignes alternées */
+  .userRow:nth-child(even) {
+    background-color: #f8f9fa;
+  }
+  
+  /* Actions pour chaque ligne */
+  .actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  /* Boutons d’action avec transition */
+  .actionButton {
+    background-color: #6c757d;
+    color: #ffffff;
+    border: none;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.9rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  
+  .actionButton:hover {
+    background-color: #5a6268;
+    transform: scale(1.05);
+  }
+  
+  /* Message affiché lorsqu'aucun utilisateur n'est trouvé */
+  .noResults {
+    text-align: center;
+    padding: 2rem;
+    font-style: italic;
+  }
+  
+  /* Pagination : centrer le composant de pagination */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 1.5rem;
+  }
+  

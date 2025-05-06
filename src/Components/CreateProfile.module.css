@@ -1,77 +1,199 @@
-/* General Page Styling */
+/* CreateProfile.module.css */
 .container {
   display: flex;
   align-items: center;
-  justify-content: center; /* Center everything */
-  height: 100vh; /* Full-screen height */
-  padding: 20px;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  margin-top: -50px;
 }
 
-/* Profile Container */
 .profileContainer {
-  background: rgba(255, 255, 255, 0.1); /* Semi-transparent background */
-  padding: 40px;
-  border-radius: 12px;
-  backdrop-filter: blur(10px); /* Glass effect */
-  box-shadow: 0px 15px 50px rgba(0, 0, 0, 0.4); /* Intense box shadow */
-  max-width: 600px;
+  background: white;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  padding: 3rem;
+  max-width: 1200px;
+  width: 70%;
+}
+
+.header {
   text-align: center;
+  margin-bottom: 3rem;
 }
 
-
-/* Welcome Text */
-.texts h1 {
-  font-size: 26px;
-  font-weight: bold;
-  margin-bottom: 10px;
+.welcomeTitle {
+  font-size: 2.5rem;
+  color: #2d3748;
+  margin-bottom: 1rem;
+  font-weight: 700;
 }
 
-/* Additional Info */
-.additionalTexts {
-  margin-top: 45px;
-  font-size: 16px;
+.nameHighlight {
+  color: #1a1a2e;
 }
 
-.additionalTexts p {
+.subtitle {
+  font-size: 1.25rem;
+  color: #718096;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.contentGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+
+.illustrationSection {
+  padding: 2rem;
+}
+
+.illustration {
+  width: 100%;
+  height: auto;
+  max-width: 400px;
+}
+
+.stepsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.stepCard {
+  background: #f8f9fa;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+.stepCard:hover {
+  transform: translateY(-3px);
+}
+
+.stepIcon {
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+  color: #4299e1;
+  margin-bottom: 1rem;
+}
+
+.stepContent h3 {
+  font-size: 1.25rem;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+}
+
+.stepContent p {
+  color: #718096;
+  line-height: 1.6;
+}
+
+.stepBadge {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  background: #4299e1;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.benefitsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.benefitItem {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px; /* Space between icon and text */
-  margin-bottom: 8px;
-  font-size: 16px;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background: rgba(76, 175, 80, 0.05);
 }
 
-/* Bootstrap Icons Styling */
-.additionalTexts i {
-  font-size: 22px;
-  color: #ffcc00; /* Yellow for contrast */
+.benefitIcon {
+  color: #4299e1 !important;
+  flex-shrink: 0;
 }
 
-/* Start Button */
-.buttonContainer {
-  margin-top: 30px;
-}
-
-.showExp {
-  background: #ffcc00;
-  color: #333;
-  font-size: 18px;
-  padding: 12px 24px;
+.ctaButton {
+  background: #1a1a2e;
+  color: white;
   border: none;
-  border-radius: 30px;
+  padding: 1.25rem 2.5rem;
+  border-radius: 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   cursor: pointer;
-  transition: 0.3s ease-in-out;
-  font-weight: bold;
+  transition: all 0.3s ease;
+  width: 100%;
+  justify-content: center;
 }
 
-.showExp:hover {
-  background: #ffdb4d; /* Lighter yellow */
-  transform: scale(1.05);
+.ctaButton:hover {
+  background: #1a1a2e;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px 1a1a2e;
 }
 
-/* Small Text Below Button */
+.buttonIcon {
+  margin-left: 0.5rem;
+}
+
 .timeInfo {
-  font-size: 14px;
-  margin-top: 10px;
-  opacity: 0.9;
+  text-align: center;
+  color: #718096;
+  margin-top: 1.5rem;
+  font-size: 0.875rem;
+}
+
+.timeEstimate {
+  display: block;
+  font-weight: 600;
+  color: #4299e1;
+  margin-bottom: 0.25rem;
+}
+
+@media (max-width: 768px) {
+  .contentGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .welcomeTitle {
+    font-size: 2rem;
+  }
+  
+  .profileContainer {
+    padding: 2rem;
+  }
+  
+  .ctaButton {
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

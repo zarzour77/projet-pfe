@@ -4,7 +4,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CreatableSelect from "react-select/creatable";
 import styles from "./ProfessionalDetails.module.css";
-import langueService from "../services/LangueService"; // Ajustez le chemin si nécessaire
+import langueService from "../Services/LangueService"; // Ajustez le chemin si nécessaire
 import consultantService from "../Services/ConsultantService"; // Importez votre service consultant
 import { useNavigate } from "react-router-dom";
 
@@ -76,8 +76,7 @@ const ProfessionalDetails = () => {
     fetchLanguages();
   }, []);
 
-  // Auto-remplissage de la langue depuis le CV si le champ est vide,
-  // en vérifiant si la langue existe dans la BDD (fetchedLangues)
+  // Auto-remplissage de la langue depuis le CV
   useEffect(() => {
     if (
       cvLangues.length > 0 &&
@@ -87,7 +86,6 @@ const ProfessionalDetails = () => {
     ) {
       let index = cvLanguageIndex;
       let langueValide = null;
-      // Parcourt les langues du CV à partir de l'index courant
       while (index < cvLangues.length && !langueValide) {
         const autoLang = cvLangues[index];
         if (
@@ -236,7 +234,9 @@ const ProfessionalDetails = () => {
     }
   };
 
+  // Navigation entre les étapes
   const nextStep = () => setStep((prev) => prev + 1);
+  const previousStep = () => setStep((prev) => (prev > 1 ? prev - 1 : prev));
   const ignoreStep = () => setStep((prev) => prev + 1);
 
   const handleSubmit = async () => {
@@ -334,6 +334,12 @@ const ProfessionalDetails = () => {
               <button onClick={ignoreStep} className={styles.skipButton}>
                 Ignorer pour le moment
               </button>
+              {/* Only show the "Précédant" button if not on first step */}
+              {step > 1 && (
+                <button onClick={previousStep} className={styles.skipButton}>
+                  Précédant
+                </button>
+              )}
               <button onClick={nextStep} className={styles.nextButton}>
                 Suivant
               </button>
@@ -393,6 +399,9 @@ const ProfessionalDetails = () => {
               </ul>
             )}
             <div className={styles.buttonGroup}>
+              <button onClick={previousStep} className={styles.skipButton}>
+                Précédant
+              </button>
               <button onClick={ignoreStep} className={styles.skipButton}>
                 Ignorer pour le moment
               </button>
@@ -448,6 +457,9 @@ const ProfessionalDetails = () => {
               </ul>
             )}
             <div className={styles.buttonGroup}>
+              <button onClick={previousStep} className={styles.skipButton}>
+                Précédant
+              </button>
               <button onClick={ignoreStep} className={styles.skipButton}>
                 Ignorer pour le moment
               </button>
@@ -458,52 +470,65 @@ const ProfessionalDetails = () => {
           </motion.div>
         )}
 
-        {step === 4 && (
-          <motion.div
-            key="step4"
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 50 }}
-            className={styles.stepContainer}
-          >
-            <h3>Récapitulatif</h3>
-            <div>
-              <p>
-                <strong>Langues:</strong>
-              </p>
-              <ul>
-                {langues.map((l, idx) => (
-                  <li key={idx}>
-                    {l.languageName} - {l.languageLevel}
-                  </li>
-                ))}
-              </ul>
-              <p>
-                <strong>Formations:</strong>
-              </p>
-              <ul>
-                {formations.map((f, idx) => (
-                  <li key={idx}>
-                    {f.diplome} à {f.universite} ({f.formationStart} - {f.formationEnd})
-                  </li>
-                ))}
-              </ul>
-              <p>
-                <strong>Certifications:</strong>
-              </p>
-              <ul>
-                {certifications.map((c, idx) => (
-                  <li key={idx}>
-                    {c.certName} - {c.organisme} ({c.certDate})
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <button onClick={handleSubmit} className={styles.nextButton}>
-              Envoyer
-            </button>
-          </motion.div>
-        )}
+{step === 4 && (
+  <motion.div
+    key="step4"
+    initial={{ opacity: 0, x: -50 }}
+    animate={{ opacity: 1, x: 0 }}
+    exit={{ opacity: 0, x: 50 }}
+    className={styles.stepContainer}
+  >
+    <h3>Récapitulatif</h3>
+    <div>
+      <p><strong>Langues:</strong></p>
+      {langues.length > 0 ? (
+        <ul>
+          {langues.map((l, idx) => (
+            <li key={idx}>
+              {l.languageName} - {l.languageLevel}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className={styles.noData}>Aucune langue ajoutée</p>
+      )}
+
+      <p><strong>Formations:</strong></p>
+      {formations.length > 0 ? (
+        <ul>
+          {formations.map((f, idx) => (
+            <li key={idx}>
+              {f.diplome} à {f.universite} ({f.formationStart} - {f.formationEnd})
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className={styles.noData}>Aucune formation ajoutée</p>
+      )}
+
+      <p><strong>Certifications:</strong></p>
+      {certifications.length > 0 ? (
+        <ul>
+          {certifications.map((c, idx) => (
+            <li key={idx}>
+              {c.certName} - {c.organisme} ({c.certDate})
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className={styles.noData}>Aucune certification ajoutée</p>
+      )}
+    </div>
+    <div className={styles.buttonGroup}>
+      <button onClick={previousStep} className={styles.skipButton}>
+        Précédant
+      </button>
+      <button onClick={handleSubmit} className={styles.nextButton}>
+        Suivant
+      </button>
+    </div>
+  </motion.div>
+)}
       </AnimatePresence>
       <ToastContainer />
     </div>

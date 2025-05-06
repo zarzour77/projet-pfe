@@ -9,9 +9,11 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Header from "./Header";
 import { useNavigate } from "react-router-dom";
-
+import { Box, CircularProgress, Typography } from '@mui/material';
+import UserService from '../Services/UserService';
 const ProfilePage = () => {
   const navigate = useNavigate();
+  const [reviews, setReviews] = useState([]); // Add reviews state
 
   const storedUser = JSON.parse(localStorage.getItem("user"));
   const consultantId = storedUser?.id;
@@ -36,10 +38,19 @@ const ProfilePage = () => {
     });
     setShowUpdateModal(true);
   };
+  const [selectedReview, setSelectedReview] = useState(null);
 
+  const handleReviewClick = (review) => {
+    setSelectedReview(review);
+  };
   const handleBasicInfoUpdate = async () => {
     try {
-      const updatedUser = await ConsultantService.updateConsultant(user.id, updatedUserData);
+      let updatedUser;
+      if (user.role === 'Admin') {
+        updatedUser = await UserService.updateUser(user.id, updatedUserData);
+      } else {
+        updatedUser = await ConsultantService.updateConsultant(user.id, updatedUserData);
+      }
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
       toast.success("Profil mis à jour avec succès!");
@@ -115,8 +126,18 @@ const ProfilePage = () => {
     const fetchUserData = async () => {
       try {
         setLoading(true);
-        const consultantData = await ConsultantService.getConsultantById(consultantId);
-        setUser(consultantData);
+        if (storedUser.role === 'Admin') {
+          const userData = await UserService.getById(consultantId);
+          setUser(userData);
+          setReviews([]);
+        } else {
+          const [consultantData, reviewsData] = await Promise.all([
+            ConsultantService.getConsultantById(consultantId),
+            ConsultantService.getConsultantReviews(consultantId)
+          ]);
+          setUser(consultantData);
+          setReviews(reviewsData);
+        }
       } catch (error) {
         console.error("Erreur lors de la récupération:", error);
         toast.error("Erreur lors du chargement du profil");
@@ -159,8 +180,14 @@ const ProfilePage = () => {
     const file = e.target.files[0];
     if (!file) return;
     try {
-      await ConsultantService.uploadProfilePicture(user.id, file);
-      const updatedUser = await ConsultantService.getConsultantById(user.id);
+      if (user.role === 'Admin') {
+        await UserService.uploadProfilePicture(user.id, file);
+      } else {
+        await ConsultantService.uploadProfilePicture(user.id, file);
+      }
+      const updatedUser = user.role === 'Admin' 
+        ? await UserService.getById(user.id)
+        : await ConsultantService.getConsultantById(user.id);
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
       toast.success("Image de profil mise à jour avec succès!");
@@ -516,16 +543,19 @@ const ProfilePage = () => {
         <ToastContainer position="top-right" />
         
         <div className={styles.profileHeader}>
-          <button className={styles.cvButton} onClick={handleGenerateCV}>
-            <i className={`bi bi-file-earmark-text ${styles.cvIcon}`}></i>
-            <span className={styles.cvText}>Générer mon CV</span>
-          </button>
+        {user.role !== 'Admin' && (
+            <button className={styles.cvButton} onClick={handleGenerateCV}>
+              <i className={`bi bi-file-earmark-text ${styles.cvIcon}`}></i>
+              <span className={styles.cvText}>Générer mon CV</span>
+            </button>
+          )}
           <div className={styles.profilePhotoContainer}>
             <img
               src={user.photoprofile || '/default-avatar.png'}
               alt="Profil"
               className={styles.profilePhoto}
             />
+
             <button
               className={styles.profilePhotoEditBtn}
               onClick={handleProfilePicClick}
@@ -534,7 +564,7 @@ const ProfilePage = () => {
                 <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
                 <path fillRule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z" />
               </svg>
-            </button>
+            </button>  
             <input
               type="file"
               accept="image/*"
@@ -582,6 +612,7 @@ const ProfilePage = () => {
                 <p className={styles.infoValue}>{user.adresse || "Non fourni"}</p>
               </div>
             </div>
+            {user.role !== 'Admin' && (
 
             <div className={styles.rightColumn}>
   <div className={styles.infoItem}>
@@ -592,23 +623,97 @@ const ProfilePage = () => {
             (sub) =>
               sub.statut &&
               sub.statut.toLowerCase() === "actif"
-          )?.planType || "Aucun abonnement renseigné"
-        : "Aucun abonnement renseigné"}
+          )?.planType || "Standard"
+        : "Standard"}
     </p>
     <button className={styles.changeOfferButton} onClick={() => navigate("/Subscription")}>
       Changer l'offre
     </button>
   </div>
-</div>
+  <div className={styles.jobSuccessContainer}>
+    <Box 
+      sx={{ 
+        position: 'relative', 
+        display: 'inline-flex',
+        transition: 'transform 0.3s ease',
+        '&:hover': {
+          transform: 'scale(1.05)'
+        }
+      }}
+      title={`Taux de réussite: ${user.jobSuccess || 0}%`}
+    >
+      <CircularProgress
+        variant="determinate"
+        value={100}
+        size={100}
+        thickness={6}
+        sx={{ 
+          color: '#f0f3f5',
+          transition: 'opacity 0.3s ease' 
+        }}
+      />
+      <CircularProgress
+        variant="determinate"
+        value={user.jobSuccess || 0}
+        size={100}
+        thickness={6}
+        sx={{
+          color: 'primary.main',
+          position: 'absolute',
+          left: 0,
+          transition: 'stroke-dashoffset 0.5s ease-out 0.3s',
+          '& .MuiCircularProgress-circle': {
+            strokeLinecap: 'round'
+          }
+        }}
+      />
+      <Box
+        sx={{
+          top: 0,
+          left: 0,
+          bottom: 0,
+          right: 0,
+          position: 'absolute',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          animation: `${styles.bounce} 0.5s ease-out`
+        }}
+      >
+        <Typography 
+          variant="h6" 
+          component="div" 
+          sx={{ 
+            fontWeight: '800',
+            color: 'primary.main',
+            textShadow: '0 2px 4px rgba(0, 121, 107, 0.2)'
+          }}
+        >
+          {`${user.jobSuccess || 0}%`}
+        </Typography>
+      </Box>
+    </Box>
+    <Typography 
+      variant="body2" 
+      sx={{ 
+        fontWeight: 600, 
+        color: 'text.secondary', 
+        mt: 2, 
+        textAlign: 'center',
+        animation: `${styles.fadeInUp} 0.5s ease-out`
+      }}
+    >
+      Taux de réussite
+    </Typography>
+  </div>
+</div>)}
           </div>
         </div>
 
         {showUpdateModal && (
           <div className={styles.modalOverlay} onClick={() => setShowUpdateModal(false)}>
             <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <button className={styles.modalCloseBtn} onClick={closeAddCompetenceModal}>&times;</button>
-
-              <h2>Modifier les informations de base</h2>
+            <button className={styles.modalCloseBtn} onClick={() => setShowUpdateModal(false)}>&times;</button>              <h2>Modifier les informations de base</h2>
               <form className={styles.form}>
   <div className={styles.formRow}>
     <div className={styles.formGroup}>
@@ -888,42 +993,70 @@ const ProfilePage = () => {
             )}
           </div>
         )}
+        {user.role !== 'Admin' && (
 
-        <div className={styles.profileSection}>
-          <h2 className={styles.sectionTitle}>Avis</h2>
-          <div className={styles.reviewsWrapper}>
-            <div className={styles.reviewsColumn}>
-              <h3 className={styles.subSectionTitle}>Avis reçus</h3>
-              {user.avisRecus?.length > 0 ? (
-                user.avisRecus.map((review) => (
-                  <div key={review.id} className={styles.reviewCard}>
-                    <p className={styles.reviewText}>{review.comment}</p>
-                    <div className={styles.reviewRating}>
-                      Évaluation : {review.rating}/5
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className={styles.noReviews}>Aucun avis reçu</p>
-              )}
-            </div>
-            <div className={styles.reviewsColumn}>
-              <h3 className={styles.subSectionTitle}>Avis donnés</h3>
-              {user.avisDonnes?.length > 0 ? (
-                user.avisDonnes.map((review) => (
-                  <div key={review.id} className={styles.reviewCard}>
-                    <p className={styles.reviewText}>{review.comment}</p>
-                    <div className={styles.reviewRating}>
-                      Évaluation : {review.rating}/5
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className={styles.noReviews}>Aucun avis donné</p>
-              )}
-            </div>
+<div className={styles.profileSection}>
+        <h2 className={styles.sectionTitle}>Avis reçus</h2>
+        <div className={styles.reviewsWrapper}>
+          <div className={styles.reviewsColumn}>
+            {reviews.length > 0 ? (
+              reviews.map((review) => (
+                <div 
+                  key={review.id} 
+                  className={styles.reviewCard}
+                  onClick={() => handleReviewClick(review)}
+                >
+                  <p className={styles.reviewText}>
+                    {review.commentaire.length > 100 
+                      ? `${review.commentaire.substring(0, 100)}...` 
+                      : review.commentaire}
+                  </p>
+                  <span className={styles.reviewDate}>
+                    {new Date(review.dateAvis).toLocaleDateString('fr-FR')}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className={styles.noReviews}>Aucun avis reçu</p>
+            )}
           </div>
         </div>
+      </div>)}
+{selectedReview && (
+  <div className={styles.modalOverlay} onClick={() => setSelectedReview(null)}>
+    <div className={styles.reviewModalContent} onClick={(e) => e.stopPropagation()}>
+      <button 
+        className={styles.modalCloseBtn} 
+        onClick={() => setSelectedReview(null)}
+      >
+        &times; 
+      </button>
+      <h3 className={styles.reviewModalTitle}>Détails de l'avis</h3>
+      <div className={styles.reviewModalMeta}>
+        <div className={styles.reviewMetaItem}>
+          <span className={styles.metaLabel}>Auteur:</span>
+          <span className={styles.reviewAuthor}>{selectedReview.auteurNom}</span>
+        </div>
+        <div className={styles.reviewMetaItem}>
+          <span className={styles.metaLabel}>Mission:</span>
+          <span className={styles.reviewMission}>{selectedReview.missionTitre}</span>
+        </div>
+        <div className={styles.reviewMetaItem}>
+          <span className={styles.metaLabel}>Note:</span>
+          <span className={styles.reviewRating}>{selectedReview.note}/5</span>
+        </div>
+      </div>
+      <div className={styles.reviewContent}>
+        <span className={styles.metaLabel}>Commentaire:</span>
+        <p className={styles.reviewFullText}>{selectedReview.commentaire}</p>
+      </div>
+      <span className={styles.reviewModalDate}>
+        <span className={styles.metaLabel}>Posté le : </span> 
+        {new Date(selectedReview.dateAvis).toLocaleDateString('fr-FR')}
+      </span>
+    </div>
+  </div>
+)}
 
         {showCvModal && (
   <div className={styles.modalOverlay} onClick={() => { setShowCvModal(false); setPdfPreviewUrl(""); }}>

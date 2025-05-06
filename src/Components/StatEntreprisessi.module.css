@@ -47,30 +47,18 @@
   gap: 20px;
 }
 
-/* Conteneur du double card */
-.doubleCardContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  min-height: 500px;
-}
-
-.doubleCardContainer .card {
-  flex: 1;
-}
-
 /* Cartes */
 .card {
   background: #fff;
   border: 1px solid #e1e8ed;
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 .card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 /* Titres et liens */
@@ -131,51 +119,34 @@
   background: linear-gradient(135deg, #094fbf, #0c68ff);
 }
 
-/* Score Container */
+/* Score */
 .scoreContainer {
   display: flex;
-  flex-direction: column;
   align-items: center;
   margin-top: 20px;
 }
 
-/* Cercle de progression */
 .scoreCircle {
-  width: 120px;
-  height: 120px;
-  border: 8px solid #e1e8ed;
+  width: 60px;
+  height: 60px;
+  border: 3px solid #e1e8ed;
   border-radius: 50%;
-  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  background: #f0f4f8;
 }
 
-/* Le texte sera affiché à l'extérieur du cercle */
-.scoreTextOutside {
-  margin-top: 15px;
-  text-align: center;
-}
-
-/* Valeur du score (pourcentage) */
 .scoreValue {
-  font-size: 28px;
-  color: #31BF0D;
+  font-size: 24px;
+  color: #0c68ff;
   font-weight: 700;
-  margin-bottom: 4px;
 }
 
-/* Label "Job Success" */
-.scoreLabel {
+.noScoreText {
   font-size: 14px;
   color: #555;
-  font-weight: 500;
-}
-
-/* Note (ex: Mauvais, Pas mal, Bon) */
-.scoreRating {
-  margin-top: 10px;
-  margin-left: 1px;
-  font-size: 16px;
-  font-weight: 500;
-  color: #333;
 }
 
 /* Propositions */
@@ -219,56 +190,95 @@
   min-height: 200px;
 }
 
-/* Meilleurs Collaborateurs */
+/* Section : Meilleurs Collaborateurs avec Podium */
 .collaboratorsPodium {
   position: relative;
-  width: 400px;
-  height: 300px;
+  width: 400px;  /* Agrandi */
+  height: 300px; /* Agrandi */
   margin: 20px auto 0;
 }
+
 .podiumImage {
-  width: 120%;
+  width: 100%;
   height: 100%;
   object-fit: cover;
 }
+
+/* Positionnement absolu pour chaque collaborateur sur le podium */
+/* Vous pouvez ajuster ces positions en fonction de votre podium agrandi */
 .collaboratorItem {
   position: absolute;
   text-align: center;
   cursor: pointer;
   transition: transform 0.3s ease;
 }
+.collaboratorItem:hover {
+  transform: scale(1.05);
+}
+
+/* Par exemple, réajustement des positions sur le podium agrandi */
 .collaboratorPosition1 {
-  left: 63%;
-  top: 40px;
+  left: 50%;
+  top: 40px;        /* Position centrale plus basse */
   transform: translateX(-50%);
 }
+
 .collaboratorPosition2 {
-  left: 31%;
-  top: 70px;
+  left: 20%;
+  top: 100px;       /* Position gauche */
   transform: translateX(-50%);
 }
+
 .collaboratorPosition3 {
-  left: 95%;
-  top: 80px;
+  left: 80%;
+  top: 100px;       /* Position droite */
   transform: translateX(-50%);
 }
+
 .collaboratorPhoto {
-  width: 110px;
+  width: 120px;
   height: 120px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid #0c68ff;
 }
+
 .collaboratorName {
   margin-top: 5px;
   font-size: 16px;
   font-weight: 500;
-  color: rgb(28, 28, 34);
 }
 
-/* Graphique Collaborateurs */
-.collaboratorStatsChart {
+/* Overlay affiché au survol */
+.collaboratorOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 120px;
+  height: 120px;
+  background: rgba(12,104,255,0.8);
+  color: #fff;
+  opacity: 0;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease;
+  font-size: 14px;
+}
+.collaboratorItem:hover .collaboratorOverlay {
+  opacity: 1;
+}
+
+/* Donut Chart */
+.donutChart {
   width: 100%;
-  height: auto;
-  min-height: 300px;
+  height: 200px;
+  margin-top: 20px;
+}
+
+/* Vous pouvez également ajuster la largeur de la carte "Meilleurs Collaborateurs" si besoin */
+.rightColumn .card {
+  width: 100%; /* Permet d'occuper plus de largeur dans la colonne de droite */
 }

@@ -145,7 +145,7 @@
 
 /* Adjust add button for better alignment */
 .addButton {
-  background-color: #074799;
+  background: linear-gradient(135deg, #007bff, #0062cc);
   color: white;
   padding: 0.6rem 1.2rem;
   border-radius: 5px;

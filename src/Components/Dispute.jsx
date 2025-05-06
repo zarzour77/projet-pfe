@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import styles from './Dispute.module.css';
 import { createDispute, getDisputesByUser } from '../services/DisputeService';
 import TransactionService from '../services/TransactionService';
@@ -207,7 +207,7 @@ const Dispute = () => {
         {/* Partie gauche : Formulaire d'envoi */}
         <div className={styles.leftPanel}>
           <div className={styles.newDispute}>
-            <h2>Envoyer un nouveau ticket</h2>
+            <h2>Envoyer une nouvelle dispute</h2>
             <form onSubmit={handleSubmit} className={styles.form}>
               <div className={styles.formGroup}>
                 <label htmlFor="subject">Sujet</label>
@@ -278,7 +278,7 @@ const Dispute = () => {
               </div>
               <div className={styles.formGroupSubmit}>
                 <button type="submit" className={styles.submitButton}>
-                  Envoyer le ticket
+                  Envoyer la disupte
                 </button>
               </div>
             </form>
@@ -287,7 +287,7 @@ const Dispute = () => {
         {/* Partie droite : Historique des tickets */}
         <div className={styles.rightPanel}>
           <div className={styles.ticketList}>
-            <h2>Historique des tickets</h2>
+            <h2>Historique des disputes</h2>
             {disputes.length > 0 ? (
               disputes.map((dispute) => {
                 const formattedTransaction = formatTransaction(dispute.paymentTransaction);
@@ -359,7 +359,7 @@ const Dispute = () => {
                 );
               })
             ) : (
-              <p>Aucun ticket trouvé.</p>
+              <p>Aucune litige trouvée.</p>
             )}
           </div>
         </div>

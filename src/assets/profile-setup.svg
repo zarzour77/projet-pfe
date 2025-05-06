@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="500" height="400" viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Gradient for elements -->
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#4CAF50;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#43A047;stop-opacity:1" />
+    </linearGradient>
+    <!-- Background gradient -->
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f8f9fa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e9ecef;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="500" height="400" fill="url(#grad2)" />
+  
+  <!-- Laptop -->
+  <rect x="100" y="200" width="300" height="150" rx="15" fill="#fff" stroke="#ccc" stroke-width="2"/>
+  <rect x="120" y="215" width="260" height="120" rx="10" fill="#f0f0f0" />
+  <!-- Keyboard (abstract representation) -->
+  <rect x="110" y="350" width="280" height="10" fill="#ccc" rx="5"/>
+  
+  <!-- Person (Profile Icon) -->
+  <circle cx="250" cy="120" r="50" fill="#FFCC80" stroke="#F57C00" stroke-width="2"/>
+  <!-- Smiling mouth -->
+  <path d="M210,180 Q250,220 290,180" fill="none" stroke="#F57C00" stroke-width="4" stroke-linecap="round"/>
+  <!-- Body -->
+  <path d="M250,170 L250,250" stroke="#F57C00" stroke-width="4"/>
+  <path d="M250,200 L210,240" stroke="#F57C00" stroke-width="4" stroke-linecap="round"/>
+  <path d="M250,200 L290,240" stroke="#F57C00" stroke-width="4" stroke-linecap="round"/>
+  
+  <!-- Additional Digital Elements -->
+  <circle cx="420" cy="80" r="20" fill="url(#grad1)" opacity="0.7"/>
+  <circle cx="80" cy="80" r="15" fill="url(#grad1)" opacity="0.7"/>
+  <rect x="400" y="150" width="40" height="10" fill="#4caf50" opacity="0.7" />
+  
+  <!-- Title Text -->
+  <text x="250" y="390" text-anchor="middle" fill="#2d3748" font-size="20" font-family="Arial">
+    Configurez votre profil professionnel
+  </text>
+</svg>

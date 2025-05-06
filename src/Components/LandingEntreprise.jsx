@@ -347,12 +347,23 @@ function LandingEntreprise() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
+          style={{ 
+            maxWidth: '30%',
+            marginTop: '20px',
+            marginLeft: '0', // Align to left
+            marginRight: 'auto'
+          }}
         >
           <TextField
             fullWidth
             variant="outlined"
-            placeholder="Rechercher un consultant (nom, adresse, domaine, compétence...)"
+            placeholder="Rechercher un consultant (nom, adresse, domaine ...)"
             value={searchKeyword}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '8px', // Border radius for the input
+              }
+            }}
             onChange={e => setSearchKeyword(e.target.value)}
           />
         </motion.div>
@@ -560,47 +571,86 @@ function LandingEntreprise() {
             <span>${Number(consultant.taux_horaire) || 0}/h</span>
           </div>
           
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, mb: 1 }}>
-            <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-              <CircularProgress
-                variant="determinate"
-                value={100}
-                size={40}
-                thickness={4}
-                sx={{ color: '#f0f0f0' }}
-              />
-              <CircularProgress
-                variant="determinate"
-                value={jobSuccessValue}
-                size={40}
-                thickness={4}
-                sx={{ 
-                  color: '#00796b',
-                  position: 'absolute',
-                  left: 0
-                }}
-              />
-              <Box
-                sx={{
-                  top: 0,
-                  left: 0,
-                  bottom: 0,
-                  right: 0,
-                  position: 'absolute',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <Typography variant="caption" component="div" sx={{ fontWeight: 'bold' }}>
-                  {`${jobSuccessValue}%`}
-                </Typography>
-              </Box>
-            </Box>
-            <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary', minWidth: 70 }}>
-            Taux de réussite
-            </Typography>
-          </Box>
+          {/* Replace the existing Box and Circular Progress code with this */}
+          <Box 
+  sx={{ 
+    position: 'relative', 
+    display: 'inline-flex',
+    transition: 'transform 0.3s ease',
+    '&:hover': {
+      transform: 'scale(1.05)'
+    }
+  }}
+  title={`Taux de réussite: ${jobSuccessValue}%`}
+>
+  <CircularProgress
+    variant="determinate"
+    value={100}
+    size={40}
+    thickness={4}
+    sx={{ 
+      color: '#f0f3f5',
+      transition: 'opacity 0.3s ease' 
+    }}
+  />
+  <CircularProgress
+    variant="determinate"
+    value={jobSuccessValue}
+    size={40}
+    thickness={5}
+    sx={{
+      color: 'primary.main',
+      position: 'absolute',
+      left: 0,
+      transition: 'stroke-dashoffset 0.5s ease-out 0.3s ease-out',
+      '& .MuiCircularProgress-circle': {
+        strokeLinecap: 'round'
+      }
+    }}
+  />
+  <Box
+    sx={{
+      top: 0,
+      left: 0,
+      bottom: 0,
+      right: 0,
+      position: 'absolute',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      animation: `${styles.bounce} 0.5s ease-out`
+    }}
+  >
+    <Typography 
+      variant="caption" 
+      component="div" 
+      sx={{ 
+        fontWeight: '700',
+        color: 'primary.main',
+        fontSize: '0.8rem',
+        textShadow: '0 1px 2px rgba(0, 121, 107, 0.2)'
+      }}
+    >
+      {`${jobSuccessValue}%`}
+    </Typography>
+  </Box>
+</Box>
+<Typography 
+  variant="caption" 
+  sx={{ 
+    fontWeight: 500, 
+    color: 'text.secondary', 
+    mt: 0.5,  // Changed from mt: 1 to reduce top margin
+    fontSize: '0.7rem',
+    textAlign: 'center',
+    animation: `${styles.fadeInUp} 0.3s ease-out`,
+    position: 'relative',
+    left : '5px',
+    top: '-16px'  // Added negative positioning
+  }}
+>
+  Taux de réussite
+</Typography>
 
           <div className={styles.talentSkills}>
             {consultant.domaines?.map((dom) => (
@@ -616,7 +666,11 @@ function LandingEntreprise() {
               </span>
             ))}
           </div>
-          <p className={styles.talentBio}>{consultant.workload >0 ? 'En travail' : 'Disponible' }</p>
+          <p className={`${styles.talentBio} ${
+  consultant.workload > 0 
+    ? styles.talentBioWorking 
+    : styles.talentBioAvailable
+}`}>{consultant.workload >0 ? 'En travail' : 'Disponible' }</p>
           <div className={styles.actionButtons} onClick={(e) => e.stopPropagation()}>
             <MUITooltip title="Voir le profil" arrow>
               <Button variant="contained" className={styles.viewProfile} onClick={() => handleOpenProfile(consultant)}>
@@ -714,11 +768,14 @@ function LandingEntreprise() {
     const selectedId = e.target.value;
     const mission = missionsEntreprise
       .filter(m => m.statut?.toLowerCase() === 'en attente')
-      .find(m => m.id === parseInt(selectedId, 10)); // Convert to number
+      .find(m => m.id === parseInt(selectedId, 10));
     setSelectedMissionForInvite(mission);
   }}
   className={styles.formControl}
 >
+  <option value="" disabled>
+    Sélectionner une mission
+  </option>
   {missionsEntreprise
     .filter(mission => mission.statut?.toLowerCase() === 'en attente')
     .map(mission => (

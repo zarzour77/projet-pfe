@@ -436,7 +436,8 @@ const UserInformation = () => {
         role: userRole,
         longitude: values.longitude,
         latitude: values.latitude,
-        typeEntreprise: values.typeEntreprise  // Nouveau champ envoyé vers le backend
+        typeEntreprise: values.typeEntreprise,  // Nouveau champ envoyé vers le backend
+        frozenBalance:0
       };
       const updatedEntreprise = await EntrepriseService.updateEntreprise(userId, entrepriseData);
       console.log("Réponse du backend:", updatedEntreprise);
@@ -828,7 +829,6 @@ const UserInformation = () => {
               <p><strong>Adresse:</strong> {modalData.adresse}</p>
               {preview && (
                 <div>
-                  <br />
                   <img src={preview} className={styles.modalPhoto} alt="Aperçu" style={{ width: '150px', height: '150px', borderRadius: '8px' }} />
                 </div>
               )}
