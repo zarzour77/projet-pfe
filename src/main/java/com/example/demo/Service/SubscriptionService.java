@@ -30,4 +30,12 @@ public class SubscriptionService {
         }
         System.out.println("Updated expired subscriptions: " + subscriptions.size());
     }
+    // SubscriptionService.java
+    public String getCurrentSubscriptionPlan(Long consultantId) {
+        Subscription subscription = subscriptionRepository.findByConsultantId(consultantId);
+        if (subscription != null && "actif".equals(subscription.getStatut())) {
+            return subscription.getPlanType();
+        }
+        return "Standard"; // Default value
+    }
 }

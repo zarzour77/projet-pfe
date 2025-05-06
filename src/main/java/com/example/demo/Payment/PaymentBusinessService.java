@@ -120,7 +120,23 @@ public class PaymentBusinessService {
         Mission mission = missionRepository.findById(missionId)
                 .orElseThrow(() -> new MissionNotFoundException(missionId));
 
-        // Try to find an accepted proposition first.
+        // Handle terminated missions differently
+        if ("Terminée".equalsIgnoreCase(mission.getStatut())) {
+            double totalBudget = mission.getBudget();
+            double firstSlice = totalBudget * 0.20;
+            double applicationFee = totalBudget * 0.10;
+            double ssiCommission = 0; // No commission for terminated missions
+            double frozenAmount = totalBudget - firstSlice - applicationFee - ssiCommission;
+
+            return Map.of(
+                    "firstSlice", firstSlice,
+                    "frozenAmount", frozenAmount,
+                    "applicationFee", applicationFee,
+                    "ssiCommission", ssiCommission
+            );
+        }
+
+        // Original logic for non-terminated missions
         Optional<Proposition> acceptedPropOpt = mission.getPropositions().stream()
                 .filter(p -> "ACCEPTED".equalsIgnoreCase(p.getStatut()))
                 .findFirst();
@@ -129,7 +145,6 @@ public class PaymentBusinessService {
         if (acceptedPropOpt.isPresent()) {
             proposition = acceptedPropOpt.get();
         } else {
-            // If no accepted proposition exists, try to use a proposition made by an SSI enterprise.
             proposition = mission.getPropositions().stream()
                     .filter(p -> "APPLIED".equalsIgnoreCase(p.getOrigine()) && p.getEntreprise() != null)
                     .findFirst()

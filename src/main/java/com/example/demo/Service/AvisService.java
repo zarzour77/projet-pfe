@@ -5,6 +5,7 @@ import com.example.demo.repository.AvisRepository;
 import com.example.demo.repository.ConsultantRepository;
 import com.example.demo.repository.MissionRepository;
 import com.example.demo.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -77,6 +78,7 @@ public class AvisService {
         response.setMissionTitre(avis.getMission().getTitre());
         return response;
     }
+    @Transactional
     public List<AvisResponse> getAvisByConsultantId(Long consultantId) {
         List<Avis> avisList = avisRepository.findByCibleIdAndMissionIsNotNull(consultantId);
         return avisList.stream()
