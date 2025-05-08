@@ -1,7 +1,9 @@
 package com.example.demo.Service;
 
 import com.example.demo.model.Dispute;
+import com.example.demo.model.User;
 import com.example.demo.repository.DisputeRepository;
+import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,13 +16,34 @@ public class DisputeService {
 
     @Autowired
     private DisputeRepository disputeRepository;
+    @Autowired
+    private NotificationService notificationService;
 
+    @Autowired
+    private UserRepository userRepository;
     public Dispute createDispute(Dispute dispute) {
         dispute.setCreatedAt(LocalDateTime.now());
         dispute.setStatus(Dispute.DisputeStatus.OPEN);
-        return disputeRepository.save(dispute);
-    }
 
+        // Sauvegarde de la dispute
+        Dispute createdDispute = disputeRepository.save(dispute);
+
+        // Recherche d'un utilisateur avec le rôle "Admin" via Optional
+        Optional<User> adminOptional = userRepository.findByRole("Admin");
+
+        // Création du message de notification (vous pouvez personnaliser ce message)
+        String message = "Nouvelle dispute reçue : " + dispute.getDescription();
+
+        if (adminOptional.isPresent()) {
+            // Envoi de la notification pour l'admin trouvé
+            User admin = adminOptional.get();
+            notificationService.createNotificationForAdmin(message, admin);
+        } else {
+            System.out.println("Aucun utilisateur de rôle Admin n'a été trouvé.");
+        }
+
+        return createdDispute;
+    }
     public List<Dispute> getDisputesByUserId(Long userId) {
         return disputeRepository.findBySenderIdWithTransaction(userId);
     }

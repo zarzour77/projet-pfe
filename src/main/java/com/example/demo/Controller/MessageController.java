@@ -28,21 +28,6 @@ public class MessageController {
     @Autowired
     private UserRepository userRepository;
 
-    /**
-     * Envoie un message via une requête POST.
-     * L'objet JSON attendu doit correspondre à ChatMessage, par exemple :
-     * {
-     *   "type": "CHAT",
-     *   "sender": "expediteur@mail.com",
-     *   "receiver": "destinataire@mail.com",
-     *   "content": "Bonjour, comment ça va ?"
-     * }
-     *
-     * Cette méthode :
-     *  - Récupère (ou crée) la conversation entre l'expéditeur et le destinataire.
-     *  - Récupère les identifiants des utilisateurs.
-     *  - Enregistre le message dans la conversation.
-     */
     @PostMapping
     public Message sendMessage(@RequestBody ChatMessage chatMessage) throws Exception {
         // Création ou récupération de la conversation entre les deux utilisateurs
@@ -56,18 +41,11 @@ public class MessageController {
         return messageService.saveMessage(chatMessage, conversation.getId(), senderId, receiverId);
     }
 
-    /**
-     * Récupère tous les messages d'une conversation donnée
-     * Exemple d'URL : GET /api/messages/conversation/123
-     */
     @GetMapping("/conversation/{idConversation}")
     public List<Message> getMessages(@PathVariable Long idConversation) {
         return messageService.getMessagesByConversation(idConversation);
     }
 
-    /**
-     * Méthode utilitaire pour récupérer l'identifiant d'un utilisateur via son email.
-     */
     private Long getUserId(String email) throws Exception {
         User user = userRepository.findUserByEmail(email);
         if (user == null) {

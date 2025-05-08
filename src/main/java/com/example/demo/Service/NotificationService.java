@@ -3,6 +3,7 @@ package com.example.demo.Service;
 import com.example.demo.model.Entreprise;
 import com.example.demo.model.Consultant;
 import com.example.demo.model.Notification;
+import com.example.demo.model.User;
 import com.example.demo.repository.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,12 @@ public class NotificationService {
     public Notification createNotificationConsultant(String message, Consultant consultant) {
         Notification notification = new Notification(message, consultant);
         System.out.println("Notification créée pour le consultant ID: " + consultant.getId() + " avec le message: " + message);
+        return notificationRepository.save(notification);
+    }
+    // Nouvelle méthode pour créer une notification pour un admin
+    public Notification createNotificationForAdmin(String message, User admin) {
+        Notification notification = new Notification(message, admin);
+        System.out.println("Notification créée pour l'admin ID: " + admin.getId() + " avec le message: " + message);
         return notificationRepository.save(notification);
     }
 
