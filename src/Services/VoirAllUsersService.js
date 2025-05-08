@@ -3,6 +3,21 @@ import EntrepriseService from "./EntrepriseService"; // Assurez-vous du bon chem
 
 const API_BASE_URL = "http://localhost:8081/api"; // À adapter selon votre configuration
 
+
+export const fetchMissions = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await axios.get(`${API_BASE_URL}/missions`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Erreur lors de la récupération des missions :", error);
+    throw error;
+  }
+};
 export const fetchAllUsers = async () => {
   try {
     const token = localStorage.getItem("token");
@@ -116,6 +131,18 @@ export const unsuspendUser = async (id) => {
     throw error;
   }
 };
+export const updateMission = async (id, missionData) => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await axios.put(`${API_BASE_URL}/missions/${id}`, missionData, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Erreur lors de la mise à jour de la mission ${id}:`, error);
+    throw error;
+  }
+};
 
 export default {
   fetchAllUsers,
@@ -123,4 +150,6 @@ export default {
   deleteUser,
   suspendUser,
   unsuspendUser,
+  fetchMissions,
+  updateMission,
 };

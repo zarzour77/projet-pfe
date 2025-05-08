@@ -33,7 +33,7 @@ import {
 } from '../Services/EntrepriseMissionService';
 
 // Import du service Entreprise pour récupérer les détails
-import EntrepriseService from '../Services/EntrepriseService';
+import EntrepriseService from '../services/EntrepriseService';
 
 import styles from './ConsultantPropositions.module.css';
 
