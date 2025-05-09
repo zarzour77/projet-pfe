@@ -2,6 +2,21 @@ import axios from 'axios';
 
 const BASE_URL = 'http://localhost:8181/api';
 
+
+export async function fetchPremiumConsultants () {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${BASE_URL}/consultants/premium`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Erreur lors de la récupération des consultants premium', error);
+    throw error;
+  }
+};
 // Retrieve all consultants
 export async function getById(entrepriseId) {
   const token = localStorage.getItem("token");

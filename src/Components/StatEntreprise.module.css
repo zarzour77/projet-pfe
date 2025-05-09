@@ -38,7 +38,6 @@
   flex-wrap: wrap;
 }
 
-/* Colonnes gauche et droite */
 .leftColumn,
 .rightColumn {
   flex: 1;
@@ -47,44 +46,30 @@
   gap: 20px;
 }
 
-/* Conteneur du double card */
-.doubleCardContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  min-height: 500px;
-}
-
-.doubleCardContainer .card {
-  flex: 1;
-}
-
 /* Cartes */
 .card {
   background: #fff;
   border: 1px solid #e1e8ed;
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
 }
 .card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* Titres et liens */
 .cardTitle {
   font-size: 20px;
-  margin: 0 0 8px;
+  margin-bottom: 8px;
   color: #333;
   font-weight: 500;
 }
 
 .cardDescription {
   font-size: 14px;
-  margin-bottom: 10px;
   color: #555;
+  margin-bottom: 10px;
 }
 
 .link {
@@ -97,25 +82,13 @@
   text-decoration: underline;
 }
 
-/* Revenus */
 .earningsAmount {
   font-size: 28px;
-  margin-top: 10px;
   color: #0c68ff;
   font-weight: 700;
+  margin-top: 10px;
 }
 
-.earningsHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.earningsPeriodSelect {
-  display: inline-block;
-}
-
-/* Boutons */
 .btn {
   background: linear-gradient(135deg, #0c68ff, #094fbf);
   color: #fff;
@@ -131,54 +104,36 @@
   background: linear-gradient(135deg, #094fbf, #0c68ff);
 }
 
-/* Score Container */
 .scoreContainer {
   display: flex;
-  flex-direction: column;
   align-items: center;
   margin-top: 20px;
 }
 
-/* Cercle de progression */
 .scoreCircle {
-  width: 120px;
-  height: 120px;
-  border: 8px solid #e1e8ed;
+  width: 60px;
+  height: 60px;
+  border: 3px solid #e1e8ed;
   border-radius: 50%;
-  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  background: #f0f4f8;
 }
 
-/* Le texte sera affiché à l'extérieur du cercle */
-.scoreTextOutside {
-  margin-top: 15px;
-  text-align: center;
-}
-
-/* Valeur du score (pourcentage) */
 .scoreValue {
-  font-size: 28px;
-  color: #31BF0D;
+  font-size: 24px;
+  color: #0c68ff;
   font-weight: 700;
-  margin-bottom: 4px;
 }
 
-/* Label "Job Success" */
-.scoreLabel {
+.noScoreText {
   font-size: 14px;
   color: #555;
-  font-weight: 500;
 }
 
-/* Note (ex: Mauvais, Pas mal, Bon) */
-.scoreRating {
-  margin-top: 10px;
-  margin-left: 1px;
-  font-size: 16px;
-  font-weight: 500;
-  color: #333;
-}
-
-/* Propositions */
+/* Proposals / Statut des projets */
 .proposalsHeader {
   display: flex;
   justify-content: space-between;
@@ -195,18 +150,69 @@
   margin-top: 15px;
 }
 
-/* Profil */
+.searchJobs {
+  font-size: 12px;
+  color: #888;
+  margin-top: 20px;
+}
+
+/* Relations clients */
+.clientRelTitle {
+  font-size: 18px;
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.clientRelDescription {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 20px;
+}
+.clientRelCircle {
+  width: 60px;
+  height: 60px;
+  border: 3px solid #e1e8ed;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
+  background: #f0f4f8;
+}
+.clientRelValue {
+  font-size: 24px;
+  color: #0c68ff;
+  font-weight: 700;
+}
+.clientRelLegend {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 10px;
+}
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.legendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Profile Metrics (Profile Views) */
 .profileMetrics {
   background: #fff;
   border: 1px solid #e1e8ed;
   border-radius: 8px;
   padding: 20px;
+  margin-top: 40px;
 }
 .profileMetricsTitle {
-  margin-top: 0;
   font-size: 18px;
   color: #333;
-  font-weight: 500;
+  margin-bottom: 10px;
 }
 .metricsNav {
   display: flex;
@@ -215,60 +221,22 @@
 }
 .profileChart {
   width: 100%;
-  height: auto;
   min-height: 200px;
 }
+ /* Ajoutez cette section dans votre fichier CSS existant */
 
-/* Meilleurs Collaborateurs */
-.collaboratorsPodium {
-  position: relative;
-  width: 400px;
-  height: 300px;
-  margin: 20px auto 0;
-}
-.podiumImage {
-  width: 120%;
-  height: 100%;
-  object-fit: cover;
-}
-.collaboratorItem {
-  position: absolute;
-  text-align: center;
-  cursor: pointer;
-  transition: transform 0.3s ease;
-}
-.collaboratorPosition1 {
-  left: 63%;
-  top: 40px;
-  transform: translateX(-50%);
-}
-.collaboratorPosition2 {
-  left: 31%;
-  top: 70px;
-  transform: translateX(-50%);
-}
-.collaboratorPosition3 {
-  left: 95%;
-  top: 80px;
-  transform: translateX(-50%);
-}
-.collaboratorPhoto {
-  width: 110px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #0c68ff;
-}
-.collaboratorName {
-  margin-top: 5px;
-  font-size: 16px;
-  font-weight: 500;
-  color: rgb(28, 28, 34);
-}
-
-/* Graphique Collaborateurs */
-.collaboratorStatsChart {
+.donutChart {
   width: 100%;
-  height: auto;
-  min-height: 300px;
+  height: 250px; /* Ajustez la hauteur selon vos besoins */
+  margin-top: 20px;
+}
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.periodSelect {
+  display: inline-block;
 }

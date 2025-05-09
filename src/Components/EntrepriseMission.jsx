@@ -377,6 +377,7 @@ const handleSubmitRating = async () => {
   return (
     <div className={styles.mainContainer}>
       {/* Search bar */}
+      <div className={styles.headerContainer}>
       <div className={styles.searchBar}>
         <Autocomplete
           freeSolo
@@ -384,10 +385,25 @@ const handleSubmitRating = async () => {
           value={searchTerm}
           onInputChange={(event, newInputValue) => setSearchTerm(newInputValue)}
           renderInput={(params) => (
-            <TextField {...params} label="Rechercher une mission" variant="outlined" fullWidth />
+            <TextField 
+              {...params} 
+              label="Rechercher une mission" 
+              variant="outlined" 
+              fullWidth
+            />
           )}
         />
       </div>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => navigate('/publiermission')}
+        className={styles.publishButton}
+        startIcon={<i className="bi bi-plus-lg"></i>}
+      >
+        Publier une mission
+      </Button>
+    </div>
 
       {/* Two columns */}
       <div className={styles.contentContainer}>
@@ -611,36 +627,56 @@ const handleSubmitRating = async () => {
 
   {!isRefused && !isAccepted && (
     <div className={styles.actionButtons}>
-      <div className={styles.leftActions}>
-        <MUITooltip title="Voir le profil" arrow>
-          <Button 
-            variant="contained" 
-            size="small"
-            onClick={() => handleViewProfile(consultant)}
-          >
-            Profil
-          </Button>
-        </MUITooltip>
-        <MUITooltip title="Contacter" arrow>
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={() => handleContacter(consultant)}
-          >
-            Contacter
-          </Button>
-        </MUITooltip>
-        <MUITooltip title="Voir Proposition" arrow>
-          <Button 
-            variant="outlined" 
-            size="small"
-            onClick={() => handleOpenPropositionModal(consultant)}
-          >
-            Voir Proposition
-          </Button>
-        </MUITooltip>
+    <div className={styles.leftActions}>
+      <MUITooltip title="Voir le profil" arrow>
+        <Button 
+          variant="contained" 
+          size="small"
+          onClick={() => handleViewProfile(consultant)}
+        >
+          Profil
+        </Button>
+      </MUITooltip>
+      <MUITooltip title="Contacter" arrow>
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={() => handleContacter(consultant)}
+        >
+          Contacter
+        </Button>
+      </MUITooltip>
+      <MUITooltip title="Voir Proposition" arrow>
+        <Button 
+          variant="outlined" 
+          size="small"
+          onClick={() => handleOpenPropositionModal(consultant)}
+        >
+          Voir Proposition
+        </Button>
+      </MUITooltip>
+    </div>
+    
+    {(propositionForConsultant?.statut === "ACCEPTED" || 
+      selectedMission?.statut.toLowerCase() === 'terminée' || 
+      propositionForConsultant?.origine === 'INVITED') ? (
+      <div className={styles.rightActions}>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={() => {
+            setSelectedConsultant(consultant);
+            setOpenPaymentOptionsModal(true);
+          }}
+        >
+          Payer
+        </Button>
       </div>
-      {!(propositionForConsultant && (propositionForConsultant.origine?.toLowerCase() === 'invited' || propositionForConsultant.statut === "ACCEPTED" || propositionForConsultant.statut === "terminée" )) && (
+    ) : (
+      !(propositionForConsultant && 
+        (propositionForConsultant.origine?.toLowerCase() === 'invited' || 
+        propositionForConsultant.statut === "ACCEPTED" || 
+        propositionForConsultant.statut === "terminée")) && (
         <div className={styles.rightActions}>
           <MUITooltip title="Accepter" arrow>
             <Button 
@@ -663,26 +699,11 @@ const handleSubmitRating = async () => {
             </Button>
           </MUITooltip>
         </div>
-      )}
-    </div>
+      )
+    )}
+  </div>
   )}
-  {/* If the consultant's proposition status is accepted, display the "Payer" button */}
-  {(propositionForConsultant?.statut === "ACCEPTED" || 
-    selectedMission?.statut.toLowerCase() === 'terminée' || 
-    propositionForConsultant?.origine === 'INVITED') && (
-    <div className={styles.payButtonContainer}>
-      <Button 
-        variant="contained" 
-        color="primary" 
-        onClick={() => {
-          setSelectedConsultant(consultant);
-          setOpenPaymentOptionsModal(true);
-        }}
-      >
-        Payer
-      </Button>
-    </div>
-  )}
+  
 </motion.div>
 
                     );

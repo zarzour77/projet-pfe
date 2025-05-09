@@ -36,6 +36,7 @@ import Dispute from "./Components/Dispute";
 import AdminDispute from "./Components/Admindispute";
 import { AuthProvider } from "./Services/AuthContext";
 import VoirAllUsers from "./Components/VoirAllUsers";
+import StatEntreprisessi from "./Components/StatEntreprisessi";
 
 const App = () => {
   return (
@@ -55,6 +56,8 @@ const App = () => {
           />         <Route path="/login" element={<Login />} />
           <Route path="/UserInformation" element={<UserInformation />} />
           <Route path="/Notification" element={<Notification />} />
+          <Route path="/StatEntreprisessi" element={<StatEntreprisessi />} />
+
           <Route
             path="/Dispute"
             element={
@@ -70,7 +73,6 @@ const App = () => {
             element={
               <ProtectedRoute allowedRoles={[ "Admin"]}>
                 <Header />
-                <VirtualAssistant />
                 <AdminDispute />
               </ProtectedRoute>
             }

@@ -1,113 +1,192 @@
-/* Palette et typographie globale */
+/* Conteneur général */
 .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-    font-family: 'Roboto', sans-serif;
-    background-color: #f7f9fc;
-    color: #333;
-    margin-top: 50px;
-  }
-  
-  /* Breadcrumbs pour la navigation */
-  .breadcrumbs {
-    margin-bottom: 1rem;
-  }
-  
-  /* Header : titre et bouton d'ajout */
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-  }
-  
-  .title {
-    font-size: 2rem;
-    font-weight: bold;
-  }
-  
-  /* Bouton d'ajout personnalisé */
-  .addButton {
-    text-transform: none;
-    font-size: 1rem;
-    padding: 0.5rem 1.2rem;
-  }
-  
-  /* Section des filtres */
-  .filters {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-  }
-  
-  .searchInput {
-    flex: 1;
-  }
-  
-  .roleSelect {
-    min-width: 180px;
-  }
-  
-  /* Style de la table des utilisateurs */
-  .userTable {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: #ffffff;
-  }
-  
-  .userTable th,
-  .userTable td {
-    padding: 1rem;
-    border: 1px solid #dee2e6;
-    text-align: left;
-    font-size: 0.95rem;
-  }
-  
-  .userTable th {
-    background-color: #f1f3f5;
-    font-weight: 600;
-  }
-  
-  /* Lignes alternées */
-  .userRow:nth-child(even) {
-    background-color: #f8f9fa;
-  }
-  
-  /* Actions pour chaque ligne */
-  .actions {
-    display: flex;
-    gap: 0.5rem;
-  }
-  
-  /* Boutons d’action avec transition */
-  .actionButton {
-    background-color: #6c757d;
-    color: #ffffff;
-    border: none;
-    padding: 0.3rem 0.8rem;
-    font-size: 0.9rem;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-  }
-  
-  .actionButton:hover {
-    background-color: #5a6268;
-    transform: scale(1.05);
-  }
-  
-  /* Message affiché lorsqu'aucun utilisateur n'est trouvé */
-  .noResults {
-    text-align: center;
-    padding: 2rem;
-    font-style: italic;
-  }
-  
-  /* Pagination : centrer le composant de pagination */
-  .pagination {
-    display: flex;
-    justify-content: center;
-    margin-top: 1.5rem;
-  }
-  
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: 'Roboto', sans-serif;
+  background-color: #f7f9fc;
+  color: #333;
+}
+
+/* Breadcrumbs */
+.breadcrumbs {
+  margin-bottom: 1rem;
+}
+
+/* En-tête */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+/* Bouton d'ajout */
+.addButton {
+  text-transform: none;
+  font-size: 1rem;
+  padding: 0.5rem 1.2rem;
+}
+
+/* Filtres */
+.filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.searchInput {
+  flex: 1;
+}
+
+.roleSelect {
+  min-width: 180px;
+}
+
+/* Tableaux pour utilisateurs et missions */
+.userTable, .missionTable {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+  background-color: #ffffff;
+}
+
+.userTable th, .userTable td,
+.missionTable th, .missionTable td {
+  padding: 1rem;
+  border: 1px solid #dee2e6;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.userTable th, .missionTable th {
+  background-color: #f1f3f5;
+  font-weight: 600;
+}
+
+/* Gestion du champ description, qui se divise sur plusieurs lignes */
+.descriptionCell {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 300px; /* Ajustez cette valeur en fonction de votre mise en page */
+}
+
+/* Lignes alternées */
+.userRow:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+/* Boutons d'actions */
+.actions {
+  display: flex;
+  align-items: center; /* Aligne verticalement les boutons */
+  gap: 0.5rem;
+}
+
+.actionButton {
+  background-color: #6c757d;
+  color: #ffffff;
+  border: none;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.actionButton:hover {
+  background-color: #5a6268;
+  transform: scale(1.05);
+}
+
+/* Message d'absence de résultat */
+.noResults {
+  text-align: center;
+  padding: 2rem;
+  font-style: italic;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+/* Modal Overlay */
+.modalOverlay {
+  position: fixed;
+  top: 0; 
+  left: 0; 
+  right: 0; 
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+}
+
+.modal {
+  background: white;
+  width: 90%;
+  max-width: 500px;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.formGroup {
+  margin-bottom: 1rem;
+}
+
+/* Actions du modal */
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.modalActions button {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modalActions button:first-child {
+  background: #f8f9fa;
+  color: #444;
+  border: 1px solid #e0e0e0;
+}
+
+.modalActions button:first-child:hover {
+  background: #f1f1f1;
+}
+
+.modalActions button:last-child {
+  background: linear-gradient(135deg, #007bff, #0062cc);
+  color: white;
+  box-shadow: 0 4px 6px rgba(0, 123, 255, 0.1);
+}
+
+.modalActions button:last-child:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(0, 123, 255, 0.2);
+}

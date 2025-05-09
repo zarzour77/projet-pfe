@@ -275,13 +275,7 @@ const TransactionsHistory = () => {
             <option>Résolution de litige</option>
           </select>
         </div>
-        <div className={styles.filterItem}>
-          <label>Télécharger en</label>
-          <select>
-            <option>CSV</option>
-            <option>PDF</option>
-          </select>
-        </div>
+
       </div>
 
       <div className={styles.filteredTotals}>

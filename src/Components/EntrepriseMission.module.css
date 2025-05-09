@@ -18,7 +18,8 @@
   min-height: 100vh;
   font-family: var(--font-family);
   color: var(--secondary-color);
-  margin-top: 50px;
+  margin-top: 70px;
+  width: 100%;
 }
   .originBadge {
     margin: 0.5rem 0;
@@ -44,12 +45,53 @@
     align-items: center;
     gap: 0.5rem;
   }
-  
-  /* Barre de recherche en haut */
-  .searchBar {
-    width: 100%;
+  /* Publish button styling */
+  .publishButton {
+    padding: 0.9rem 2rem;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #007bff, #0062cc);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px rgba(0, 123, 255, 0.1);
   }
   
+  .publishButton:hover {
+    transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(0, 123, 255, 0.2);
+  }
+  .headerContainer {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    width: 100%;
+  }
+  /* Barre de recherche en haut */
+  .searchBar {
+    flex: 1;
+    max-width: 400px; /* Adjust this value for desired search bar width */
+    min-width: 250px;
+  }
+  @media (max-width: 768px) {
+    .headerContainer {
+      flex-direction: column;
+    }
+    
+    .searchBar {
+      max-width: 100%;
+      width: 100%;
+      margin-right: 0;
+    }
+    
+    .publishButton {
+      width: 100%;
+      margin-left: 0;
+    }
+  }
   /* Conteneur pour les deux colonnes */
   .contentContainer {
     display: flex;
@@ -325,6 +367,7 @@
   .leftActions, .rightActions {
     display: flex;
     gap: 0.5rem;
+    
   }
   .rightPane {
     background-color: #fff;

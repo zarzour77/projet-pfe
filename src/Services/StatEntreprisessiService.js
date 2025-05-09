@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8181/api/propositions/stats/entreprise';
-const API_URL_EARNINGS = 'http://localhost:8181/api/payments/enterprise';
-const API_URL_CONSULTANT_STATS = 'http://localhost:8181/api/entreprises'; // Base URL pour les endpoints liés aux entreprises
+const API_URL = 'http://localhost:8081/api/propositions/stats/entreprise';
+const API_URL_EARNINGS = 'http://localhost:8081/api/payments/enterprise';
+const API_URL_CONSULTANT_STATS = 'http://localhost:8081/api/entreprises'; // Base URL pour les endpoints liés aux entreprises
 
 const getEntreprisessiStats = async (entrepriseId, periodDays) => {
   const token = localStorage.getItem("token");

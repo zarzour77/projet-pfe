@@ -1,5 +1,4 @@
-/* eslint-disable react/no-unescaped-entities */
-import  { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Bar } from 'react-chartjs-2';
 import {

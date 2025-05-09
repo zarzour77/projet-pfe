@@ -19,13 +19,13 @@ const Subscription = () => {
     Standard: {
       price: 0,
       features: [
-        "Marché mondial des freelances d'Upwork",
+        "Marché mondial des freelances de Trade for Talent",
         "Fonctionnalités alimentées par l'IA",
         "Outils de collaboration",
-        "Rapports standard",
+        "Accès au badges gamifiés",
         "Paiement au fil du travail"
       ],
-      fee: "Frais de service : 5%"
+      fee: ""
     },
     Premium: {
       price: 30000, // Montant en centimes (30000 = 300.00€)
@@ -33,10 +33,9 @@ const Subscription = () => {
         "Tout inclus dans Standard",
         "Top 1% des talents présélectionnés",
         "Appariement expert des talents",
-        "Support premium 24/7",
-        "Facturation mensuelle"
+        "Visibilité et option de collaboration avec des entreprises SSI"
       ],
-      fee: "Frais de service : 10%"
+      fee: ""
     }
   };
   useEffect(() => {
@@ -157,8 +156,6 @@ const Subscription = () => {
           </div>
         ))}
       </div>
-
-      {message && <div className={styles.message}>{message}</div>}
     </div>
   );
 };

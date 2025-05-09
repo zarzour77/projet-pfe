@@ -312,33 +312,41 @@ const AdminDispute = () => {
               <div className={styles.detailEvidence}>
                 <strong>Preuve :</strong><br />
                 {selectedDispute.evidence.startsWith('data:image') ? (
-                  <img src={selectedDispute.evidence} alt="Preuve" className={styles.evidenceImage} onClick={() => window.open(selectedDispute.evidence, '_blank')} style={{ cursor: 'pointer' }} />
-                ) : selectedDispute.evidence.startsWith('data:application/pdf') ? (
-                  <div onClick={() => { setPdfPreviewEvidence(selectedDispute.evidence); setShowPdfModal(true); }} style={{ cursor: 'pointer', display: 'inline-block' }}>
-                    {getFileIcon('application/pdf')}
-                  </div>
+  <img 
+    src={selectedDispute.evidence} 
+    alt="Preuve" 
+    className={styles.evidenceImage} 
+    onClick={(e) => {
+      // Create a temporary anchor element
+      const link = document.createElement('a');
+      link.href = selectedDispute.evidence;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      
+      // Simulate click
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }}
+    style={{ cursor: 'pointer' }} 
+  />
+
                 ) : (
                   <div onClick={() => window.open(selectedDispute.evidence, '_blank')} style={{ cursor: 'pointer', display: 'inline-block' }}>
                     {getFileIcon(getMimeType(selectedDispute.evidence))}
                   </div>
                 )}
               </div>
-              <div className={styles.detailTransaction}>
-                <strong>Transaction associée :</strong>
-                <p>
-                  {formattedTransaction ? (
-                    <>
-                      {formattedTransaction.type} – {formattedTransaction.statut}<br />
-                      Date : {formattedTransaction.date}<br />
-                      Montant : {formattedTransaction.montant} {formattedTransaction.currency}
-                    </>
-                  ) : (
-                    <>
-                      –<br />Date : –<br />Montant : – USD
-                    </>
-                  )}
-                </p>
-              </div>
+              {formattedTransaction && (
+  <div className={styles.detailTransaction}>
+    <strong>Transaction associée :</strong>
+    <p>
+      {formattedTransaction.type} – {formattedTransaction.statut}<br />
+      Date : {formattedTransaction.date}<br />
+      Montant : {formattedTransaction.montant} {formattedTransaction.currency}
+    </p>
+  </div>
+)}
               {/* "Résoudre le paiement" button appears above the admin response */}
               {selectedDispute.subject === 'Problème de paiement' && (
                 <div className={styles.detailActions}>
